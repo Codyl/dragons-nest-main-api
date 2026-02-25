@@ -20,10 +20,15 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.997.0",
+    "@aws-sdk/credential-provider-node": "^3.972.12",
     "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
     "@nestjs/mapped-types": "*",
+    "@nestjs/mongoose": "^11.0.4",
     "@nestjs/platform-express": "^11.0.1",
+    "mongoose": "^9.2.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },

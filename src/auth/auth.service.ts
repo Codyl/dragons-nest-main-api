@@ -1,18 +1,42 @@
-import { Body, Injectable } from '@nestjs/common';
+import {
+  CognitoIdentityProviderClient,
+  SignUpCommand,
+} from '@aws-sdk/client-cognito-identity-provider';
+import { Body, Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
-  get() {
-    return {
-      message: 'get auth',
-    };
-  }
+  constructor(
+    @Inject('COGNITO_CLIENT')
+    private readonly cognitoClient: CognitoIdentityProviderClient,
+  ) {}
 
   async initiateSignup(@Body() body: { email: string; password: string }) {
-    await Promise.resolve();
+    const { password, email } = body;
+
+    const command = new SignUpCommand({
+      ClientId: process.env.COGNITO_CLIENT_ID!,
+      Username: email,
+      Password: password,
+      UserAttributes: [
+        {
+          Name: 'email',
+          Value: email,
+        },
+        {
+          Name: 'updated_at',
+          Value: Date.now().toString(),
+        },
+      ],
+    });
+
+    const response = await this.cognitoClient.send(command);
+
     return {
       message: 'Signup initiated successfully',
-      data: body,
+      data: {
+        Session: response.CodeDeliveryDetails?.Destination ?? undefined,
+      },
     };
   }
 

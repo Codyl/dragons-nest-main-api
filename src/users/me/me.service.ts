@@ -1,26 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { CreateMeDto } from './dto/create-me.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
+import { Types } from 'mongoose';
+import { User } from '../entities/user.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class MeService {
-  create(createMeDto: CreateMeDto) {
-    return 'This action adds a new me';
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+
+  async getMe(_id: Types.ObjectId) {
+    return this.userModel.findById(_id);
   }
 
-  findAll() {
-    return `This action returns all me`;
+  async updateMe(_id: Types.ObjectId, updateMeDto: UpdateMeDto) {
+    return this.userModel.findByIdAndUpdate(_id, updateMeDto, { new: true });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} me`;
-  }
-
-  update(id: number, updateMeDto: UpdateMeDto) {
-    return `This action updates a #${id} me`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} me`;
+  async deleteMe(_id: Types.ObjectId) {
+    return this.userModel.findByIdAndDelete(_id);
   }
 }
