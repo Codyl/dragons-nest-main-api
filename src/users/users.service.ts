@@ -9,19 +9,27 @@ import { Model } from 'mongoose';
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  findAll() {
-    return `This action returns all users`;
+  createUser(sub: string, hasPassword: boolean) {
+    return this.userModel.create({ cognitoSub: sub, hasPassword });
   }
 
-  findOne(_id: Types.ObjectId) {
+  findAll() {
+    return this.userModel.find();
+  }
+
+  findOneById(_id: Types.ObjectId) {
     return this.userModel.findById(_id);
   }
 
-  update(_id: Types.ObjectId, updateUserDto: UpdateUserDto) {
+  findOneByCognitoSub(sub: string) {
+    return this.userModel.findOne({ cognitoSub: sub });
+  }
+
+  updateById(_id: Types.ObjectId, updateUserDto: UpdateUserDto) {
     return this.userModel.findByIdAndUpdate(_id, updateUserDto, { new: true });
   }
 
-  remove(_id: Types.ObjectId) {
+  removeById(_id: Types.ObjectId) {
     return this.userModel.findByIdAndDelete(_id);
   }
 }
