@@ -25,6 +25,39 @@ export class UsersService {
     return this.userModel.findOne({ cognitoSub: sub });
   }
 
+  updateByCognitoSub(
+    cognitoSub: string,
+    update: Partial<Pick<User, 'hasPassword' | 'linkedProviders' | 'linkedProviderSubjects'>>,
+  ) {
+    return this.userModel.findOneAndUpdate(
+      { cognitoSub },
+      update,
+      { new: true },
+    );
+  }
+
+  addLinkGoogle(cognitoSub: string, googleSub: string) {
+    return this.userModel.findOneAndUpdate(
+      { cognitoSub },
+      {
+        $addToSet: { linkedProviders: 'GOOGLE' },
+        $set: { 'linkedProviderSubjects.GOOGLE': googleSub },
+      },
+      { upsert: true, new: true },
+    );
+  }
+
+  removeLinkGoogle(cognitoSub: string) {
+    return this.userModel.findOneAndUpdate(
+      { cognitoSub },
+      {
+        $pull: { linkedProviders: 'GOOGLE' },
+        $unset: { 'linkedProviderSubjects.GOOGLE': '' },
+      },
+      { new: true },
+    );
+  }
+
   updateById(_id: Types.ObjectId, updateUserDto: UpdateUserDto) {
     return this.userModel.findByIdAndUpdate(_id, updateUserDto, { new: true });
   }

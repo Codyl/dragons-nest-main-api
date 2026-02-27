@@ -1,9 +1,24 @@
 import { Module } from '@nestjs/common';
 import { GoogleService } from './google.service';
 import { GoogleController } from './google.controller';
+import { OAuth2Client } from 'google-auth-library';
+import { MongooseModule } from '@nestjs/mongoose';
+import { User, UserSchema } from 'src/users/entities/user.entity';
 
 @Module({
-  providers: [GoogleService],
-  controllers: [GoogleController]
+  imports: [
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+  ],
+  providers: [
+    GoogleService,
+    {
+      provide: 'GOOGLE_OAUTH2_CLIENT',
+      useFactory: () => {
+        return new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+      },
+    },
+  ],
+  controllers: [GoogleController],
+  exports: [GoogleService],
 })
 export class GoogleModule {}

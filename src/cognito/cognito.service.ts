@@ -1,21 +1,32 @@
 import {
+  AdminDisableProviderForUserCommand,
   AdminGetUserCommand,
+  AdminLinkProviderForUserCommand,
   AssociateSoftwareTokenCommand,
   AuthFlowType,
   ChallengeNameType,
   CognitoIdentityProviderClient,
+  ChangePasswordCommand,
   ConfirmDeviceCommand,
   ConfirmForgotPasswordCommand,
   ConfirmSignUpCommand,
+  DeleteUserCommand,
+  DeviceRememberedStatusType,
   DeviceSecretVerifierConfigType,
+  ForgetDeviceCommand,
   ForgotPasswordCommand,
   GetDeviceCommand,
   GetUserCommand,
   GlobalSignOutCommand,
   InitiateAuthCommand,
+  ListDevicesCommand,
   ResendConfirmationCodeCommand,
   RespondToAuthChallengeCommand,
+  SetUserMFAPreferenceCommand,
   SignUpCommand,
+  UpdateDeviceStatusCommand,
+  UpdateUserAttributesCommand,
+  VerifySoftwareTokenCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 import {
   BadRequestException,
@@ -33,11 +44,19 @@ import {
   wrapInitiateAuth,
 } from 'cognito-srp-helper';
 
+interface JwtVerifier {
+  verify(token: string): Promise<unknown>;
+}
+
 @Injectable()
 export class CognitoService {
   constructor(
     @Inject('COGNITO_CLIENT')
     private readonly cognitoClient: CognitoIdentityProviderClient,
+    @Inject('ACCESS_TOKEN_VERIFIER')
+    private readonly accessTokenVerifier: JwtVerifier,
+    @Inject('ID_TOKEN_VERIFIER')
+    private readonly idTokenVerifier: JwtVerifier,
   ) {}
 
   async authenticateWithSrp(
@@ -428,6 +447,281 @@ export class CognitoService {
         }
       }
       throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  async verifySoftwareToken(
+    session: string,
+    userCode: string,
+    friendlyDeviceName: string,
+    accessToken: string,
+  ) {
+    try {
+      const command = new VerifySoftwareTokenCommand({
+        Session: session,
+        UserCode: userCode,
+        FriendlyDeviceName: friendlyDeviceName,
+        AccessToken: accessToken,
+      });
+
+      const response = await this.cognitoClient.send(command);
+
+      return response;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'NotAuthorizedException') {
+          throw new UnauthorizedException('Not authorized.');
+        }
+      }
+      throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  async setUserMFAPreference(accessToken: string) {
+    try {
+      const command = new SetUserMFAPreferenceCommand({
+        AccessToken: accessToken,
+      });
+
+      const response = await this.cognitoClient.send(command);
+
+      return response;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'NotAuthorizedException') {
+          throw new UnauthorizedException('Not authorized.');
+        }
+      }
+      throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  async setUserMFAPreferenceWithSettings(
+    accessToken: string,
+    options: {
+      smsMfaEnabled?: boolean;
+      smsPreferred?: boolean;
+      softwareTokenMfaEnabled?: boolean;
+      softwareTokenPreferred?: boolean;
+    },
+  ) {
+    try {
+      const command = new SetUserMFAPreferenceCommand({
+        AccessToken: accessToken,
+        SMSMfaSettings:
+          options.smsMfaEnabled !== undefined
+            ? {
+                Enabled: options.smsMfaEnabled,
+                PreferredMfa: options.smsPreferred ?? false,
+              }
+            : undefined,
+        SoftwareTokenMfaSettings:
+          options.softwareTokenMfaEnabled !== undefined
+            ? {
+                Enabled: options.softwareTokenMfaEnabled,
+                PreferredMfa: options.softwareTokenPreferred ?? false,
+              }
+            : undefined,
+      });
+
+      const response = await this.cognitoClient.send(command);
+
+      return response;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'NotAuthorizedException') {
+          throw new UnauthorizedException('Not authorized.');
+        }
+      }
+      throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  async updateUserAttributes(
+    accessToken: string,
+    attributes: { Name: string; Value: string }[],
+  ) {
+    try {
+      const command = new UpdateUserAttributesCommand({
+        AccessToken: accessToken,
+        UserAttributes: attributes,
+      });
+
+      await this.cognitoClient.send(command);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'NotAuthorizedException') {
+          throw new UnauthorizedException('Not authorized.');
+        }
+      }
+      throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  async changePassword(
+    accessToken: string,
+    previousPassword: string,
+    proposedPassword: string,
+  ) {
+    try {
+      const command = new ChangePasswordCommand({
+        AccessToken: accessToken,
+        PreviousPassword: previousPassword,
+        ProposedPassword: proposedPassword,
+      });
+
+      await this.cognitoClient.send(command);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'NotAuthorizedException') {
+          throw new UnauthorizedException('Not authorized.');
+        }
+      }
+      throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  async deleteUser(accessToken: string) {
+    try {
+      const command = new DeleteUserCommand({
+        AccessToken: accessToken,
+      });
+
+      await this.cognitoClient.send(command);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'NotAuthorizedException') {
+          throw new UnauthorizedException('Not authorized.');
+        }
+      }
+      throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  async updateDeviceStatus(
+    accessToken: string,
+    deviceKey: string,
+    deviceRememberedStatus: DeviceRememberedStatusType,
+  ) {
+    try {
+      const command = new UpdateDeviceStatusCommand({
+        AccessToken: accessToken,
+        DeviceKey: deviceKey,
+        DeviceRememberedStatus: deviceRememberedStatus,
+      });
+
+      const response = await this.cognitoClient.send(command);
+
+      return response;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'DeviceNotFoundException') {
+          throw new NotFoundException('Device not found.');
+        }
+      }
+      throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  async forgetDevice(accessToken: string, deviceKey: string) {
+    try {
+      const command = new ForgetDeviceCommand({
+        AccessToken: accessToken,
+        DeviceKey: deviceKey,
+      });
+
+      await this.cognitoClient.send(command);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'DeviceNotFoundException') {
+          throw new NotFoundException('Device not found.');
+        }
+      }
+      throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  async listDevices(accessToken: string) {
+    try {
+      const command = new ListDevicesCommand({
+        AccessToken: accessToken,
+      });
+
+      const response = await this.cognitoClient.send(command);
+
+      return response;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'NotAuthorizedException') {
+          throw new UnauthorizedException('Not authorized.');
+        }
+      }
+      throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  async adminDisableProviderForUser(
+    providerName: string,
+    providerAttributeValue: string,
+  ) {
+    try {
+      const command = new AdminDisableProviderForUserCommand({
+        UserPoolId: process.env.COGNITO_USER_POOL_ID,
+        User: {
+          ProviderName: providerName,
+          ProviderAttributeName: 'Cognito_Subject',
+          ProviderAttributeValue: providerAttributeValue,
+        },
+      });
+
+      await this.cognitoClient.send(command);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'UserNotFoundException') {
+          throw new NotFoundException('User not found.');
+        }
+      }
+      throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  async adminLinkProviderForUser(
+    cognitoSub: string,
+    sourceProviderSub: string,
+    sourceProviderName: string,
+  ) {
+    try {
+      const command = new AdminLinkProviderForUserCommand({
+        UserPoolId: process.env.COGNITO_USER_POOL_ID,
+        DestinationUser: {
+          ProviderName: 'Cognito',
+          ProviderAttributeName: 'Cognito_Subject',
+          ProviderAttributeValue: cognitoSub,
+        },
+        SourceUser: {
+          ProviderName: sourceProviderName,
+          ProviderAttributeName: 'Cognito_Subject',
+          ProviderAttributeValue: sourceProviderSub,
+        },
+      });
+
+      await this.cognitoClient.send(command);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'UserNotFoundException') {
+          throw new NotFoundException('User not found.');
+        }
+      }
+      throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  async verifyTokensForSetSession(AccessToken: string, IdToken: string) {
+    try {
+      if (AccessToken) await this.accessTokenVerifier.verify(AccessToken);
+      if (IdToken) await this.idTokenVerifier.verify(IdToken);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token');
     }
   }
 }

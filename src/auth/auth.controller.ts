@@ -1,7 +1,8 @@
 import { Body, Controller, NotFoundException, Post, Res } from '@nestjs/common';
-import type { Response, Request } from 'express';
+import type { Response } from 'express';
 import { ApiCookieAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
+import type { SetSessionBody } from './auth.service';
 import { setAuthCookies } from 'src/common/utils/cookies';
 import { Cookies } from 'src/common/decorators/cookies.decorator';
 
@@ -12,8 +13,18 @@ export class AuthController {
 
   // Signup
   @Post('initiate-signup')
-  initiateSignup(@Body() body: { email: string; password: string }) {
-    return this.authService.initiateSignup(body.email, body.password);
+  async initiateSignup(@Body() body: { email: string; password: string }) {
+    const response = await this.authService.initiateSignup(
+      body.email,
+      body.password,
+    );
+
+    return {
+      message: 'Signup initiated successfully',
+      data: {
+        Session: response.CodeDeliveryDetails ? response.Session : undefined,
+      },
+    };
   }
 
   @Post('confirm-signup')
@@ -27,20 +38,27 @@ export class AuthController {
     },
     @Res({ passthrough: true }) res: Response,
   ) {
-    const response = await this.authService.confirmSignup(
+    const tokens = await this.authService.confirmSignup(
       body.email,
       body.code,
       body.session,
       body.password,
     );
-    if (response.AccessToken && response.IdToken && response.RefreshToken) {
+    if (tokens.AccessToken && tokens.IdToken && tokens.RefreshToken) {
       setAuthCookies(res, {
-        AccessToken: response.AccessToken,
-        IdToken: response.IdToken,
-        RefreshToken: response.RefreshToken,
+        AccessToken: tokens.AccessToken,
+        IdToken: tokens.IdToken,
+        RefreshToken: tokens.RefreshToken,
       });
     }
-    return response;
+    return {
+      message: 'Signup confirmed successfully',
+      data: {
+        Session: undefined,
+        challengeName: undefined,
+        AuthenticationResult: tokens.AccessToken ? {} : undefined,
+      },
+    };
   }
 
   @Post('confirm-signup/resend-code')
@@ -97,7 +115,17 @@ export class AuthController {
   }
 
   @Post('mfa/connect-authenticator-app')
-  connectAuthenticatorApp(@Body() body: { email: string; password: string }) {
+  connectAuthenticatorApp(
+    @Body()
+    body: {
+      session: string;
+      userCode: string;
+      friendlyDeviceName: string;
+      accessToken: string;
+      username: string;
+      password: string;
+    },
+  ) {
     return this.authService.connectAuthenticatorApp(
       body.session,
       body.userCode,
@@ -110,8 +138,18 @@ export class AuthController {
 
   // Login
   @Post('verify-username')
-  verifyUsername(@Body() body: { email: string; password: string }) {
-    return this.authService.verifyUsername(body.email, body.password);
+  async verifyUsername(@Body() body: { email: string; password: string }) {
+    const data = await this.authService.verifyUsername(
+      body.email,
+      body.password,
+    );
+    return {
+      message: 'Username verified successfully',
+      data: {
+        Session: data.Session,
+        AvailableChallenges: data.AvailableChallenges,
+      },
+    };
   }
 
   @Post('initiate-login')
@@ -149,35 +187,78 @@ export class AuthController {
   }
 
   @Post('refresh-token')
-  refreshToken(@Cookies('REFRESH_TOKEN') refreshToken: string) {
-    return this.authService.refreshToken(refreshToken);
+  async refreshToken(
+    @Cookies('REFRESH_TOKEN') refreshToken: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.refreshToken(refreshToken);
+
+    if (result?.AuthenticationResult) {
+      setAuthCookies(res, result.AuthenticationResult);
+    }
+
+    return {
+      message: 'Token refreshed successfully',
+      data: {},
+    };
   }
 
+  /**
+   * Session handoff: frontend performs SRP with Cognito (password never leaves browser),
+   * then sends tokens here. Backend verifies tokens and sets HttpOnly cookies.
+   */
   @Post('set-session')
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setSession(@Body() body: { email: string; password: string }) {
-    // return this.authService.setSession(body.email, body.password);
+  async setSession(
+    @Body() body: SetSessionBody,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.authService.verifyTokensForSetSession(body);
+    setAuthCookies(res, {
+      ...(body.AccessToken && { AccessToken: body.AccessToken }),
+      ...(body.IdToken && { IdToken: body.IdToken }),
+      ...(body.RefreshToken && { RefreshToken: body.RefreshToken }),
+    });
+    return {
+      message: 'Session set successfully',
+      data: {},
+    };
   }
 
   @Post('logout')
-  logout(@Cookies('ACCESS_TOKEN') accessToken: string) {
-    return this.authService.logout(accessToken);
+  async logout(
+    @Cookies('ACCESS_TOKEN') accessToken: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    if (accessToken) {
+      await this.authService.logout(accessToken);
+    }
+
+    // Clear auth cookies regardless of Cognito logout result
+    res.clearCookie('ACCESS_TOKEN');
+    res.clearCookie('ID_TOKEN');
+    res.clearCookie('REFRESH_TOKEN');
+
+    return {
+      message: 'Logged out successfully',
+      data: {},
+    };
   }
 
   // Forgot password
   @Post('forgot-password')
   forgotPassword(@Body() body: { email: string; password: string }) {
-    return this.authService.forgotPassword(body.email, body.password);
+    return this.authService.forgotPassword(body.email);
   }
 
   @Post('confirm-forgot-password')
   confirmForgotPassword(
     @Body() body: { email: string; code: string; password: string },
   ) {
-    return this.authService.confirmForgotPassword(
-      body.email,
-      body.code,
-      body.password,
-    );
+    return this.authService
+      .confirmForgotPassword(body.email, body.code, body.password)
+      .then(() => ({
+        message: 'Password reset confirmed successfully',
+        data: {},
+      }));
   }
 }

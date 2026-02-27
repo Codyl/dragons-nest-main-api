@@ -17,7 +17,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "signin": "aws sso login --profile member"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.997.0",
@@ -29,7 +30,11 @@
     "@nestjs/mongoose": "^11.0.4",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.6",
+    "@simplewebauthn/server": "^11.0.0",
+    "aws-jwt-verify": "^5.1.1",
+    "cookie-parser": "^1.4.7",
     "cognito-srp-helper": "^2.3.5",
+    "google-auth-library": "^10.6.1",
     "joi": "^18.0.2",
     "mongoose": "^9.2.2",
     "reflect-metadata": "^0.2.2",

@@ -3,14 +3,21 @@ import {
   DeviceType,
 } from '@aws-sdk/client-cognito-identity-provider';
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { createDeviceVerifier } from 'cognito-srp-helper';
 import { CognitoService } from 'src/cognito/cognito.service';
 import { UsersService } from 'src/users/users.service';
-import type { Response } from 'express';
+
+export interface SetSessionBody {
+  AccessToken?: string;
+  IdToken?: string;
+  RefreshToken?: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -118,12 +125,12 @@ export class AuthService {
   }
 
   async connectAuthenticatorApp(
-    session,
-    userCode,
-    friendlyDeviceName,
-    accessToken,
-    username,
-    password,
+    session: string | undefined,
+    userCode: string,
+    friendlyDeviceName: string | undefined,
+    accessToken: string | undefined,
+    username: string | undefined,
+    password: string | undefined,
   ) {
     const commandParams: {
       Session?: string;
@@ -131,16 +138,21 @@ export class AuthService {
       FriendlyDeviceName?: string;
       AccessToken?: string;
     } = {
-      UserCode: userCode as string,
-      FriendlyDeviceName: (friendlyDeviceName as string) ?? 'Authenticator App',
+      UserCode: userCode,
+      FriendlyDeviceName: friendlyDeviceName ?? 'Authenticator App',
     };
     if (accessToken) {
       commandParams.AccessToken = accessToken;
     } else {
-      commandParams.Session = sessionStr;
+      commandParams.Session = session ?? '';
     }
 
-    await this.cognitoService.verifySoftwareToken(commandParams);
+    await this.cognitoService.verifySoftwareToken(
+      commandParams.Session ?? '',
+      commandParams.UserCode,
+      commandParams.FriendlyDeviceName ?? 'Authenticator App',
+      commandParams.AccessToken ?? '',
+    );
 
     const hasPassword = typeof password === 'string' && password.trim() !== '';
     const hasUsername = typeof username === 'string' && username.trim() !== '';
@@ -247,26 +259,39 @@ export class AuthService {
     return response;
   }
 
-  // async setSession(email: string, password: string) {
-  //   await Promise.resolve();
-  //   return null;
-  // }
+  /**
+   * Session handoff: verifies AccessToken and/or IdToken from frontend (e.g. after SRP in browser),
+   * then caller sets HttpOnly cookies. At least one of AccessToken or IdToken is required.
+   */
+  async verifyTokensForSetSession(body: SetSessionBody): Promise<void> {
+    const { AccessToken, IdToken } = body;
 
-  async logout(accessToken: string) {
-    await this.cognitoService.globalSignOut(accessToken);
-
-    return {
-      message: 'Logged out successfully',
-      data: {},
-    };
+    if (!AccessToken && !IdToken) {
+      throw new BadRequestException('AccessToken or IdToken required');
+    }
+    try {
+      await this.cognitoService.verifyTokensForSetSession(
+        AccessToken ?? '',
+        IdToken ?? '',
+      );
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
   }
 
-  async forgotPassword(email: string, password: string) {
+  async logout(accessToken: string): Promise<void> {
+    await this.cognitoService.globalSignOut(accessToken);
+  }
+
+  async forgotPassword(email: string): Promise<void> {
     await this.cognitoService.forgotPassword(email);
   }
 
-  async confirmForgotPassword(email: string, code: string, password: string) {
+  async confirmForgotPassword(
+    email: string,
+    code: string,
+    password: string,
+  ): Promise<void> {
     await this.cognitoService.confirmForgotPassword(email, code, password);
-    return null;
   }
 }

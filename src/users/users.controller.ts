@@ -14,19 +14,19 @@ export class UsersController {
 
   @Get(':id')
   findOne(@Param('id') id: Types.ObjectId) {
-    return this.usersService.findOne(id);
+    return this.usersService.findOneById(id);
   }
 
   @Patch(':id')
   update(
-    @Param('_id') id: Types.ObjectId,
+    @Param('id') id: Types.ObjectId,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.usersService.update(id, updateUserDto);
+    return this.usersService.updateById(id, updateUserDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: Types.ObjectId) {
-    return this.usersService.remove(id);
+    return this.usersService.removeById(id);
   }
 }
