@@ -7,6 +7,7 @@ import { UserSchema } from 'src/users/entities/user.entity';
 import { GoogleModule } from 'src/google/google.module';
 import { PasskeyModule } from 'src/passkey/passkey.module';
 import { UsersModule } from 'src/users/users.module';
+import { MaxmindModule } from 'src/maxmind/maxmind.module';
 
 @Module({
   controllers: [ProfileController],
@@ -16,6 +17,7 @@ import { UsersModule } from 'src/users/users.module';
     GoogleModule,
     PasskeyModule,
     UsersModule,
+    MaxmindModule,
   ],
 })
 export class ProfileModule {}

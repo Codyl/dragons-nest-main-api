@@ -16,6 +16,7 @@ import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RememberDeviceDto } from './dto/remember-device.dto';
 import { ForgetDeviceDto } from './dto/forget-device.dto';
+import { MaxmindService } from 'src/maxmind/maxmind.service';
 
 export interface GetMeData {
   [key: string]: string | string[] | boolean | undefined;
@@ -32,6 +33,7 @@ export class ProfileService {
     private readonly cognitoService: CognitoService,
     private readonly usersService: UsersService,
     private readonly googleService: GoogleService,
+    private readonly maxmindService: MaxmindService,
   ) {}
 
   async getMe(accessToken: string): Promise<GetMeData> {
@@ -230,30 +232,23 @@ export class ProfileService {
   > {
     const response = await this.cognitoService.listDevices(accessToken);
     const devices = response.Devices ?? [];
-    const ipstackKey = process.env.IPSTACK_KEY;
+    const maxmindKey = process.env.MAXMIND_KEY;
     const deviceData = await Promise.all(
       devices.map(async (device) => {
         const lastIPUsed = device.DeviceAttributes?.find(
           (a) => a.Name === 'last_ip_used',
         )?.Value;
-        let City: string | undefined;
-        let Region: string | undefined;
-        let Country: string | undefined;
-        if (lastIPUsed && ipstackKey) {
+        let city: string | undefined;
+        let region: string | undefined;
+        let country: string | undefined;
+        if (lastIPUsed && maxmindKey) {
           try {
-            const res = await fetch(
-              `https://api.ipstack.com/${lastIPUsed}?access_key=${ipstackKey}`,
-            );
-            const data = (await res.json()) as {
-              city?: string;
-              region_name?: string;
-              country_name?: string;
-            };
-            City = data.city;
-            Region = data.region_name;
-            Country = data.country_name;
-          } catch {
-            // ignore
+            const location = await this.maxmindService.getLocation(lastIPUsed);
+            city = location.city?.names?.en;
+            region = location.subdivisions?.[0]?.names?.en;
+            country = location.country?.names?.en;
+          } catch (error) {
+            console.error('Error getting location from Maxmind', error);
           }
         }
 
@@ -267,12 +262,13 @@ export class ProfileService {
           DeviceCreateDate: device.DeviceCreateDate,
           DeviceLastAuthenticatedDate: device.DeviceLastAuthenticatedDate,
           DeviceLastModifiedDate: device.DeviceLastModifiedDate,
-          City,
-          Region,
-          Country,
+          City: city,
+          Region: region,
+          Country: country,
         };
       }),
     );
+
     return deviceData;
   }
 }

@@ -10,6 +10,7 @@ import Joi from 'joi';
 import { ProfileModule } from './profile/profile.module';
 import { PasskeyModule } from './passkey/passkey.module';
 import { GoogleModule } from './google/google.module';
+import { MaxmindModule } from './maxmind/maxmind.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { GoogleModule } from './google/google.module';
     ProfileModule,
     PasskeyModule,
     GoogleModule,
+    MaxmindModule,
   ],
   controllers: [AppController],
   providers: [AppService],

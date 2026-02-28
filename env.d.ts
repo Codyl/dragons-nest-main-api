@@ -11,6 +11,8 @@ declare namespace NodeJS {
     COGNITO_CALLBACK_URL: string;
 
     IPSTACK_KEY: string;
+    MAXMIND_ACCOUNT_ID: string;
+    MAXMIND_KEY: string;
 
     GOOGLE_CLIENT_SECRET: string;
     GOOGLE_CLIENT_ID: string;
