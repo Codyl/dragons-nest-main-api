@@ -54,6 +54,7 @@ export class GoogleController {
         AuthenticationResult: result.AuthenticationResult?.ExpiresIn
           ? { ExpiresIn: result.AuthenticationResult.ExpiresIn }
           : undefined,
+        loginProvider: 'google',
       },
     };
   }
