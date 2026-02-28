@@ -51,6 +51,7 @@ export class AuthController {
         RefreshToken: tokens.RefreshToken,
       });
     }
+
     return {
       message: 'Signup confirmed successfully',
       data: {
@@ -90,6 +91,7 @@ export class AuthController {
     if (response.AuthenticationResult) {
       setAuthCookies(res, response.AuthenticationResult);
     }
+
     return response;
   }
 
@@ -106,6 +108,7 @@ export class AuthController {
     if (!response) {
       throw new NotFoundException('Secret not found.');
     }
+
     return {
       message: 'Authenticator secret generated successfully',
       data: {

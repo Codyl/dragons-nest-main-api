@@ -38,7 +38,15 @@ export class PasskeyService {
       excludeCredentials: userPasskeys.map((passkey) => ({
         id: passkey.id,
         transports: passkey.transports as
-          | ('ble' | 'cable' | 'hybrid' | 'internal' | 'nfc' | 'smart-card' | 'usb')[]
+          | (
+              | 'ble'
+              | 'cable'
+              | 'hybrid'
+              | 'internal'
+              | 'nfc'
+              | 'smart-card'
+              | 'usb'
+            )[]
           | undefined,
       })),
       authenticatorSelection: {
@@ -67,6 +75,7 @@ export class PasskeyService {
         'No registration in progress. Request options first.',
       );
     }
+
     const verification = await verifyRegistrationResponse({
       response: responseBody as Parameters<
         typeof verifyRegistrationResponse
@@ -91,6 +100,7 @@ export class PasskeyService {
         transports: credential.transports,
       });
     }
+
     return { verified };
   }
 }

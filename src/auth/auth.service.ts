@@ -45,6 +45,7 @@ export class AuthService {
     if (!adminGetUserResponse || !adminGetUserResponse.UserAttributes) {
       throw new NotFoundException('User not found.');
     }
+
     const sub = adminGetUserResponse.UserAttributes.find(
       (a) => a.Name === 'sub',
     )?.Value;
@@ -67,9 +68,11 @@ export class AuthService {
     if (!authResponse) {
       throw new NotFoundException('User not found.');
     }
+
     if (!authResponse.AuthenticationResult) {
       throw new NotFoundException('User not found.');
     }
+
     if (!authResponse.AuthenticationResult.AccessToken) {
       throw new NotFoundException('User not found.');
     }
@@ -117,6 +120,7 @@ export class AuthService {
           (a) => a.Name === 'email' || a.Name === 'preferred_username',
         )?.Value ?? 'user';
     }
+
     const qrString = `otpauth://totp/${process.env.COGNITO_CLIENT_ID}:${usernameForQr ?? 'user'}?secret=${response.SecretCode}&issuer=${process.env.COGNITO_CLIENT_ID}`;
     return {
       response,
@@ -167,6 +171,7 @@ export class AuthService {
     if (!response) {
       throw new NotFoundException('User not found.');
     }
+
     return response;
   }
 
@@ -186,9 +191,11 @@ export class AuthService {
     if (!response.AuthenticationResult) {
       throw new NotFoundException('User not found.');
     }
+
     if (!response.AuthenticationResult.AccessToken) {
       throw new NotFoundException('User not found.');
     }
+
     const newDeviceMetadata = response.AuthenticationResult?.NewDeviceMetadata;
 
     let device: DeviceType | undefined;
@@ -216,6 +223,7 @@ export class AuthService {
           if (!deviceResponse?.Device) {
             throw new NotFoundException('Device not found.');
           }
+
           device = deviceResponse.Device;
         } catch {
           device = undefined;
@@ -230,6 +238,7 @@ export class AuthService {
       if (!response.Session) {
         throw new NotFoundException('Session not found.');
       }
+
       const deviceSrpResponse =
         await this.cognitoService.respondToDeviceSRPAuthChallenge(
           email,
@@ -239,6 +248,7 @@ export class AuthService {
       if (!deviceSrpResponse) {
         throw new NotFoundException('Device not found.');
       }
+
       response = deviceSrpResponse;
     }
 
@@ -264,6 +274,7 @@ export class AuthService {
     if (!AccessToken && !IdToken) {
       throw new BadRequestException('AccessToken or IdToken required');
     }
+
     try {
       await this.cognitoService.verifyTokensForSetSession(
         AccessToken ?? '',
@@ -299,6 +310,7 @@ export class AuthService {
     if (!sub) {
       throw new NotFoundException('User not found.');
     }
+
     if (sub) {
       await this.usersService.updateByCognitoSub(sub, {
         hasPassword: true,

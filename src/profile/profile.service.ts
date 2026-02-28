@@ -39,9 +39,11 @@ export class ProfileService {
     if (!response?.UserAttributes) {
       throw new UnauthorizedException('Not authenticated');
     }
+
     const attributes = (response.UserAttributes ?? []).reduce(
       (acc, a) => {
         if (a.Name != null && a.Value != null) acc[a.Name] = a.Value;
+
         return acc;
       },
       {} as Record<string, string>,
@@ -50,10 +52,12 @@ export class ProfileService {
     if (!sub || typeof sub !== 'string') {
       throw new UnauthorizedException('Not authenticated');
     }
+
     const user = await this.usersService.findOneByCognitoSub(sub);
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
     const loginMethods = user.linkedProviders ?? [];
     const hasPassword = user.hasPassword ?? true;
     const softwareTokenMfaEnabled =
@@ -75,15 +79,21 @@ export class ProfileService {
     const attributes: { Name: string; Value: string }[] = [];
     if (dto.email !== undefined)
       attributes.push({ Name: 'email', Value: dto.email });
+
     if (dto.given_name !== undefined)
       attributes.push({ Name: 'given_name', Value: dto.given_name });
+
     if (dto.family_name !== undefined)
       attributes.push({ Name: 'family_name', Value: dto.family_name });
+
     if (dto.middle_name !== undefined)
       attributes.push({ Name: 'middle_name', Value: dto.middle_name });
+
     if (dto.phone_number !== undefined)
       attributes.push({ Name: 'phone_number', Value: dto.phone_number });
+
     if (attributes.length === 0) return;
+
     await this.cognitoService.updateUserAttributes(accessToken, attributes);
   }
 
@@ -130,6 +140,7 @@ export class ProfileService {
         'Google account email must match your account email.',
       );
     }
+
     await this.cognitoService.adminLinkProviderForUser(
       cognitoSub,
       googleSub,
@@ -143,20 +154,24 @@ export class ProfileService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
     if (!user.linkedProviders?.includes('GOOGLE')) {
       throw new BadRequestException('Google account is not linked');
     }
+
     if (!user.hasPassword) {
       throw new BadRequestException(
         'You must create a password before you can disconnect your Google account.',
       );
     }
+
     const googleSub = user.linkedProviderSubjects?.GOOGLE;
     if (!googleSub) {
       throw new BadRequestException(
         'Unable to unlink Google (missing provider subject).',
       );
     }
+
     await this.cognitoService.adminDisableProviderForUser('Google', googleSub);
     await this.usersService.removeLinkGoogle(cognitoSub);
   }
@@ -169,6 +184,7 @@ export class ProfileService {
     if (!username) {
       throw new UnauthorizedException('Invalid password');
     }
+
     const authResponse = await this.cognitoService.authenticateWithSrp(
       username,
       password,
@@ -176,6 +192,7 @@ export class ProfileService {
     if (!authResponse?.AuthenticationResult) {
       throw new UnauthorizedException('Invalid password');
     }
+
     await this.cognitoService.deleteUser(accessToken);
     const sub = payload?.UserAttributes?.find((a) => a.Name === 'sub')?.Value;
     if (sub) {
@@ -183,17 +200,15 @@ export class ProfileService {
     }
   }
 
-  async rememberDevice(
-    accessToken: string,
-    dto: RememberDeviceDto,
-  ): Promise<Awaited<ReturnType<CognitoService['updateDeviceStatus']>>> {
-    return this.cognitoService.updateDeviceStatus(
+  async rememberDevice(accessToken: string, dto: RememberDeviceDto) {
+    const response = await this.cognitoService.updateDeviceStatus(
       accessToken,
       dto.deviceKey,
       dto.shouldRememberDevice
         ? DeviceRememberedStatusType.REMEMBERED
         : DeviceRememberedStatusType.NOT_REMEMBERED,
     );
+    return response;
   }
 
   async forgetDevice(accessToken: string, dto: ForgetDeviceDto): Promise<void> {
@@ -241,6 +256,7 @@ export class ProfileService {
             // ignore
           }
         }
+
         const DeviceName = device.DeviceAttributes?.find(
           (a) => a.Name === 'device_name',
         )?.Value;

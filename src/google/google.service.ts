@@ -42,6 +42,7 @@ export class GoogleService {
     if (!credential || typeof credential !== 'string') {
       throw new BadRequestException('Google credential (ID token) is required');
     }
+
     const ticket = await this.googleOAuthClient.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -50,6 +51,7 @@ export class GoogleService {
     if (!payload?.email || payload.sub == null) {
       throw new UnauthorizedException('Invalid Google ID token');
     }
+
     return { email: payload.email, sub: payload.sub };
   }
 
@@ -148,6 +150,7 @@ export class GoogleService {
           'An account with this email already exists. Please sign in.',
         );
       }
+
       throw new InternalServerErrorException('Failed to create user');
     }
 

@@ -130,6 +130,7 @@ export class CognitoService {
         if (error.name === 'UsernameExistsException') {
           throw new ConflictException('This email is already registered.');
         }
+
         if (error.name === 'InvalidPasswordException') {
           throw new BadRequestException(
             'Password does not meet complexity requirements.',
@@ -372,6 +373,7 @@ export class CognitoService {
           throw new UnauthorizedException('Not authorized.');
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -396,6 +398,7 @@ export class CognitoService {
           throw new UnauthorizedException('Not authorized.');
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -415,10 +418,12 @@ export class CognitoService {
         if (error.name === 'UserNotFoundException') {
           throw new NotFoundException('User not found.');
         }
+
         if (error.name === 'LimitExceededException') {
           throw new BadRequestException(error.message);
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -440,15 +445,18 @@ export class CognitoService {
         if (error.name === 'UserNotFoundException') {
           throw new NotFoundException('User not found.');
         }
+
         if (error.name === 'ExpiredCodeException') {
           throw new BadRequestException('Code expired.');
         }
+
         if (error.name === 'InvalidPasswordException') {
           throw new BadRequestException(
             'Password does not meet complexity requirements.',
           );
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -475,14 +483,18 @@ export class CognitoService {
         if (error.name === 'NotAuthorizedException') {
           throw new UnauthorizedException('Not authorized.');
         }
+
         if (error.name === 'ExpiredSessionException') {
           throw new BadRequestException('Session expired.');
         }
+
         if (error.name === 'EnableSoftwareTokenMFAException') {
           throw new BadRequestException('Software token MFA is not enabled.');
         }
+
         throw new InternalServerErrorException(error.message);
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -506,6 +518,7 @@ export class CognitoService {
           throw new UnauthorizedException('Not authorized.');
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -547,6 +560,7 @@ export class CognitoService {
           throw new UnauthorizedException('Not authorized.');
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -568,6 +582,7 @@ export class CognitoService {
           throw new UnauthorizedException('Not authorized.');
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -591,6 +606,7 @@ export class CognitoService {
           throw new UnauthorizedException('Not authorized.');
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -608,6 +624,7 @@ export class CognitoService {
           throw new UnauthorizedException('Not authorized.');
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -633,6 +650,7 @@ export class CognitoService {
           throw new NotFoundException('Device not found.');
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -651,6 +669,7 @@ export class CognitoService {
           throw new NotFoundException('Device not found.');
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -670,6 +689,7 @@ export class CognitoService {
           throw new UnauthorizedException('Not authorized.');
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -695,6 +715,7 @@ export class CognitoService {
           throw new NotFoundException('User not found.');
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -726,6 +747,7 @@ export class CognitoService {
           throw new NotFoundException('User not found.');
         }
       }
+
       throw new InternalServerErrorException('Authentication service failed');
     }
   }
@@ -733,6 +755,7 @@ export class CognitoService {
   async verifyTokensForSetSession(AccessToken: string, IdToken: string) {
     try {
       if (AccessToken) await this.accessTokenVerifier.verify(AccessToken);
+
       if (IdToken) await this.idTokenVerifier.verify(IdToken);
     } catch {
       throw new UnauthorizedException('Invalid or expired token');

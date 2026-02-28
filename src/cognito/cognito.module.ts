@@ -39,6 +39,11 @@ import { CognitoService } from './cognito.service';
     },
     CognitoService,
   ],
-  exports: ['COGNITO_CLIENT', 'ACCESS_TOKEN_VERIFIER', 'ID_TOKEN_VERIFIER', CognitoService],
+  exports: [
+    'COGNITO_CLIENT',
+    'ACCESS_TOKEN_VERIFIER',
+    'ID_TOKEN_VERIFIER',
+    CognitoService,
+  ],
 })
 export class CognitoModule {}

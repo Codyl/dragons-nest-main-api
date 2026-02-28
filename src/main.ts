@@ -12,12 +12,11 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const options = new DocumentBuilder()
-    .addCookieAuth('ACCESS_TOKEN')
-    .build();
+  const options = new DocumentBuilder().addCookieAuth('ACCESS_TOKEN').build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);
 
   await app.listen(process.env.PORT ?? 8080);
 }
+
 bootstrap();

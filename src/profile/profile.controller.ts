@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call -- Nest DI types not fully resolved by ESLint */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment -- Controller returns typed message/data */
 import {
   Body,
   Controller,
@@ -44,6 +42,7 @@ export class ProfileController {
     MessageDataResponse<Awaited<ReturnType<ProfileService['getMe']>>>
   > {
     const data = await this.profileService.getMe(accessToken);
+
     return {
       message: 'User retrieved successfully',
       data,
@@ -84,6 +83,7 @@ export class ProfileController {
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
     }
+
     await this.profileService.changePassword(accessToken, cognitoSub, dto);
     return {
       message: 'Password changed successfully',
@@ -101,6 +101,7 @@ export class ProfileController {
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
     }
+
     await this.profileService.linkGoogle(
       accessToken,
       cognitoSub,
@@ -121,6 +122,7 @@ export class ProfileController {
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
     }
+
     await this.profileService.unlinkGoogle(accessToken, cognitoSub);
     return {
       message: 'Google account disconnected successfully',
@@ -192,6 +194,7 @@ export class ProfileController {
     if (!sub || typeof sub !== 'string') {
       throw new Error('Not authenticated');
     }
+
     const options = await this.passkeyService.getRegistrationOptions(
       accessToken,
       sub,
@@ -211,6 +214,7 @@ export class ProfileController {
     if (!sub || typeof sub !== 'string') {
       throw new Error('Not authenticated');
     }
+
     const result = await this.passkeyService.verifyRegistration(sub, body);
     return {
       message: result.verified
