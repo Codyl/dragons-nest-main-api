@@ -7,8 +7,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CognitoModule } from './cognito/cognito.module';
 import Joi from 'joi';
-import { MeModule } from './users/me/me.module';
 import { ProfileModule } from './profile/profile.module';
+import { PasskeyModule } from './passkey/passkey.module';
+import { GoogleModule } from './google/google.module';
 
 @Module({
   imports: [
@@ -31,10 +32,11 @@ import { ProfileModule } from './profile/profile.module';
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI),
     AuthModule,
-    MeModule,
     UsersModule,
     CognitoModule,
     ProfileModule,
+    PasskeyModule,
+    GoogleModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -95,12 +95,13 @@ export class AuthController {
 
   @Post('mfa/generate-authenticator-secret')
   async generateAuthenticatorSecret(
-    @Body() body: { email: string; session: string; accessToken: string },
+    @Body() body: { username: string; session: string; accessToken: string },
+    @Cookies('ACCESS_TOKEN') cookieAccessToken: string,
   ) {
     const response = await this.authService.generateAuthenticatorSecret(
-      body.email,
+      body.username,
       body.session,
-      body.accessToken,
+      body.accessToken || cookieAccessToken,
     );
     if (!response) {
       throw new NotFoundException('Secret not found.');
@@ -115,7 +116,7 @@ export class AuthController {
   }
 
   @Post('mfa/connect-authenticator-app')
-  connectAuthenticatorApp(
+  async connectAuthenticatorApp(
     @Body()
     body: {
       session: string;
@@ -125,15 +126,22 @@ export class AuthController {
       username: string;
       password: string;
     },
+    @Res({ passthrough: true }) res: Response,
+    @Cookies('ACCESS_TOKEN') cookieAccessToken: string,
   ) {
-    return this.authService.connectAuthenticatorApp(
+    await this.authService.connectAuthenticatorApp(
       body.session,
       body.userCode,
       body.friendlyDeviceName,
-      body.accessToken,
+      body.accessToken || cookieAccessToken,
       body.username,
       body.password,
     );
+
+    return {
+      message: 'Authenticator app connected successfully',
+      data: {},
+    };
   }
 
   // Login
@@ -213,11 +221,13 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     await this.authService.verifyTokensForSetSession(body);
+
     setAuthCookies(res, {
       ...(body.AccessToken && { AccessToken: body.AccessToken }),
       ...(body.IdToken && { IdToken: body.IdToken }),
       ...(body.RefreshToken && { RefreshToken: body.RefreshToken }),
     });
+
     return {
       message: 'Session set successfully',
       data: {},
@@ -246,19 +256,33 @@ export class AuthController {
 
   // Forgot password
   @Post('forgot-password')
-  forgotPassword(@Body() body: { email: string; password: string }) {
-    return this.authService.forgotPassword(body.email);
+  async forgotPassword(@Body() body: { username: string }) {
+    await this.authService.forgotPassword(body.username);
+    return {
+      message: 'Password reset code sent successfully',
+      data: {},
+    };
   }
 
   @Post('confirm-forgot-password')
-  confirmForgotPassword(
-    @Body() body: { email: string; code: string; password: string },
+  async confirmForgotPassword(
+    @Body() body: { username: string; code: string; password: string },
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService
-      .confirmForgotPassword(body.email, body.code, body.password)
-      .then(() => ({
-        message: 'Password reset confirmed successfully',
-        data: {},
-      }));
+    const response = await this.authService.confirmForgotPassword(
+      body.username,
+      body.code,
+      body.password,
+    );
+    if (response.AuthenticationResult) {
+      setAuthCookies(res, response.AuthenticationResult);
+    }
+
+    return {
+      message: 'Password reset confirmed successfully',
+      data: {
+        AuthenticationResult: response.AuthenticationResult ? {} : undefined,
+      },
+    };
   }
 }

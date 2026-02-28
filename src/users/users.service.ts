@@ -27,13 +27,13 @@ export class UsersService {
 
   updateByCognitoSub(
     cognitoSub: string,
-    update: Partial<Pick<User, 'hasPassword' | 'linkedProviders' | 'linkedProviderSubjects'>>,
+    update: Partial<
+      Pick<User, 'hasPassword' | 'linkedProviders' | 'linkedProviderSubjects'>
+    >,
   ) {
-    return this.userModel.findOneAndUpdate(
-      { cognitoSub },
-      update,
-      { new: true },
-    );
+    return this.userModel.findOneAndUpdate({ cognitoSub }, update, {
+      new: true,
+    });
   }
 
   addLinkGoogle(cognitoSub: string, googleSub: string) {

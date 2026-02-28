@@ -6,6 +6,6 @@ export const Cookies = createParamDecorator(
     const request = ctx.switchToHttp().getRequest<Request>();
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
-    return data ? request.cookies?.[data] : request.cookies;
+    return data ? request.signedCookies?.[data] : request.signedCookies;
   },
 );

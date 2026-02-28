@@ -102,7 +102,7 @@ export class AuthService {
     accessToken: string,
   ) {
     const response = await this.cognitoService.associateSoftwareToken(
-      email,
+      accessToken,
       session,
     );
     if (!response) {
@@ -160,11 +160,6 @@ export class AuthService {
     if (accessToken && (!hasUsername || !hasPassword)) {
       await this.cognitoService.setUserMFAPreference(accessToken);
     }
-
-    return await this.cognitoService.authenticateWithSrp(
-      username as string,
-      password as string,
-    );
   }
 
   async verifyUsername(email: string, password: string) {
@@ -287,11 +282,33 @@ export class AuthService {
     await this.cognitoService.forgotPassword(email);
   }
 
-  async confirmForgotPassword(
-    email: string,
-    code: string,
-    password: string,
-  ): Promise<void> {
-    await this.cognitoService.confirmForgotPassword(email, code, password);
+  async confirmForgotPassword(email: string, code: string, password: string) {
+    const response = await this.cognitoService.confirmForgotPassword(
+      email,
+      code,
+      password,
+    );
+    if (!response) {
+      throw new NotFoundException('Password reset code not found.');
+    }
+
+    const adminGetUserResponse = await this.cognitoService.adminGetUser(email);
+    const sub = adminGetUserResponse?.UserAttributes?.find(
+      (a) => a.Name === 'sub',
+    )?.Value;
+    if (!sub) {
+      throw new NotFoundException('User not found.');
+    }
+    if (sub) {
+      await this.usersService.updateByCognitoSub(sub, {
+        hasPassword: true,
+      });
+    }
+
+    const authResponse = await this.cognitoService.authenticateWithSrp(
+      email,
+      password,
+    );
+    return authResponse;
   }
 }

@@ -305,8 +305,8 @@ export class CognitoService {
   async associateSoftwareToken(accessToken: string, session: string) {
     try {
       const command = new AssociateSoftwareTokenCommand({
-        Session: session,
-        AccessToken: accessToken,
+        Session: session ? session : undefined,
+        AccessToken: accessToken ? accessToken : undefined,
       });
 
       const response = await this.cognitoClient.send(command);
@@ -415,6 +415,9 @@ export class CognitoService {
         if (error.name === 'UserNotFoundException') {
           throw new NotFoundException('User not found.');
         }
+        if (error.name === 'LimitExceededException') {
+          throw new BadRequestException(error.message);
+        }
       }
       throw new InternalServerErrorException('Authentication service failed');
     }
@@ -458,7 +461,7 @@ export class CognitoService {
   ) {
     try {
       const command = new VerifySoftwareTokenCommand({
-        Session: session,
+        Session: session ? session : undefined,
         UserCode: userCode,
         FriendlyDeviceName: friendlyDeviceName,
         AccessToken: accessToken,
@@ -472,6 +475,13 @@ export class CognitoService {
         if (error.name === 'NotAuthorizedException') {
           throw new UnauthorizedException('Not authorized.');
         }
+        if (error.name === 'ExpiredSessionException') {
+          throw new BadRequestException('Session expired.');
+        }
+        if (error.name === 'EnableSoftwareTokenMFAException') {
+          throw new BadRequestException('Software token MFA is not enabled.');
+        }
+        throw new InternalServerErrorException(error.message);
       }
       throw new InternalServerErrorException('Authentication service failed');
     }
@@ -481,6 +491,10 @@ export class CognitoService {
     try {
       const command = new SetUserMFAPreferenceCommand({
         AccessToken: accessToken,
+        SoftwareTokenMfaSettings: {
+          Enabled: true,
+          PreferredMfa: true,
+        },
       });
 
       const response = await this.cognitoClient.send(command);
