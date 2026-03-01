@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { MaxmindService } from './maxmind.service';
 import { WebServiceClient } from '@maxmind/geoip2-node';
 
@@ -6,10 +7,11 @@ import { WebServiceClient } from '@maxmind/geoip2-node';
   providers: [
     {
       provide: 'MAXMIND_CLIENT',
-      useFactory: () => {
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
         return new WebServiceClient(
-          process.env.MAXMIND_ACCOUNT_ID,
-          process.env.MAXMIND_KEY,
+          config.get<string>('MAXMIND_ACCOUNT_ID')!,
+          config.get<string>('MAXMIND_KEY')!,
           { host: 'geolite.info' },
         );
       },

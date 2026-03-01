@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { GoogleService } from './google.service';
 import { GoogleController } from './google.controller';
 import { OAuth2Client } from 'google-auth-library';
@@ -13,8 +14,9 @@ import { User, UserSchema } from 'src/users/entities/user.entity';
     GoogleService,
     {
       provide: 'GOOGLE_OAUTH2_CLIENT',
-      useFactory: () => {
-        return new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        return new OAuth2Client(config.get<string>('GOOGLE_CLIENT_ID'));
       },
     },
   ],

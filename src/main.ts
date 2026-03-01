@@ -1,13 +1,15 @@
 import { NestFactory } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(cookieParser(process.env.COOKIE_SECRET ?? 'cookie-secret'));
+  const config = app.get(ConfigService);
+  app.use(cookieParser(config.get<string>('COOKIE_SECRET') ?? 'cookie-secret'));
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: config.get<string>('FRONTEND_URL'),
     credentials: true,
   });
 
@@ -15,7 +17,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT ?? 8080);
+  const port = config.get<string>('PORT');
+  await app.listen(port ? Number(port) : 8080);
 }
 
 void bootstrap();

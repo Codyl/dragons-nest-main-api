@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
   Inject,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   AdminCreateUserCommand,
   AdminInitiateAuthCommand,
@@ -33,6 +34,7 @@ export class GoogleService {
     private readonly cognitoClient: CognitoIdentityProviderClient,
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
+    private readonly configService: ConfigService,
   ) {}
 
   /** Verify Google ID token and return email + sub. Used by link-google and auth flows. */
@@ -45,7 +47,7 @@ export class GoogleService {
 
     const ticket = await this.googleOAuthClient.verifyIdToken({
       idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
     });
     const payload = ticket.getPayload();
     if (!payload?.email || payload.sub == null) {
@@ -66,7 +68,7 @@ export class GoogleService {
 
     const ticket = await this.googleOAuthClient.verifyIdToken({
       idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
     });
     const payload = ticket.getPayload();
 
@@ -94,7 +96,7 @@ export class GoogleService {
         .replace(/=/g, '');
 
     const createUserCommand = new AdminCreateUserCommand({
-      UserPoolId: process.env.COGNITO_USER_POOL_ID,
+      UserPoolId: this.configService.get<string>('COGNITO_USER_POOL_ID'),
       Username: email,
       TemporaryPassword: temporaryPassword,
       MessageAction: 'SUPPRESS',
@@ -120,7 +122,7 @@ export class GoogleService {
       }
 
       const linkCommand = new AdminLinkProviderForUserCommand({
-        UserPoolId: process.env.COGNITO_USER_POOL_ID,
+        UserPoolId: this.configService.get<string>('COGNITO_USER_POOL_ID'),
         DestinationUser: {
           ProviderName: 'Cognito',
           ProviderAttributeName: 'Cognito_Subject',
@@ -155,8 +157,8 @@ export class GoogleService {
     }
 
     const authCommand = new AdminInitiateAuthCommand({
-      UserPoolId: process.env.COGNITO_USER_POOL_ID,
-      ClientId: process.env.COGNITO_CLIENT_ID,
+      UserPoolId: this.configService.get<string>('COGNITO_USER_POOL_ID'),
+      ClientId: this.configService.get<string>('COGNITO_CLIENT_ID'),
       AuthFlow: AuthFlowType.ADMIN_USER_PASSWORD_AUTH,
       AuthParameters: {
         USERNAME: email,
@@ -182,7 +184,7 @@ export class GoogleService {
 
     const ticket = await this.googleOAuthClient.verifyIdToken({
       idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
     });
     const payload = ticket.getPayload();
 
@@ -192,8 +194,8 @@ export class GoogleService {
 
     const email = payload.email;
     const googleSub = payload.sub;
-    const userPoolId = process.env.COGNITO_USER_POOL_ID;
-    const clientId = process.env.COGNITO_CLIENT_ID;
+    const userPoolId = this.configService.get<string>('COGNITO_USER_POOL_ID');
+    const clientId = this.configService.get<string>('COGNITO_CLIENT_ID');
 
     if (!userPoolId || !clientId) {
       throw new InternalServerErrorException('Cognito configuration missing');

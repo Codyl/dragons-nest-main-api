@@ -1,4 +1,5 @@
 import { Body, Controller, NotFoundException, Post, Res } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { ApiCookieAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -9,7 +10,16 @@ import { Cookies } from 'src/common/decorators/cookies.decorator';
 @ApiCookieAuth('ACCESS_TOKEN')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  private get cookieOptions() {
+    return {
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+    };
+  }
 
   // Signup
   @Post('initiate-signup')
@@ -45,11 +55,15 @@ export class AuthController {
       body.password,
     );
     if (tokens.AccessToken && tokens.IdToken && tokens.RefreshToken) {
-      setAuthCookies(res, {
-        AccessToken: tokens.AccessToken,
-        IdToken: tokens.IdToken,
-        RefreshToken: tokens.RefreshToken,
-      });
+      setAuthCookies(
+        res,
+        {
+          AccessToken: tokens.AccessToken,
+          IdToken: tokens.IdToken,
+          RefreshToken: tokens.RefreshToken,
+        },
+        this.cookieOptions,
+      );
     }
 
     return {
@@ -89,7 +103,7 @@ export class AuthController {
     }
 
     if (response.AuthenticationResult) {
-      setAuthCookies(res, response.AuthenticationResult);
+      setAuthCookies(res, response.AuthenticationResult, this.cookieOptions);
     }
 
     return response;
@@ -184,7 +198,11 @@ export class AuthController {
     );
 
     if (response.response.AuthenticationResult) {
-      setAuthCookies(res, response.response.AuthenticationResult);
+      setAuthCookies(
+        res,
+        response.response.AuthenticationResult,
+        this.cookieOptions,
+      );
     }
 
     return {
@@ -205,7 +223,7 @@ export class AuthController {
     const result = await this.authService.refreshToken(refreshToken);
 
     if (result?.AuthenticationResult) {
-      setAuthCookies(res, result.AuthenticationResult);
+      setAuthCookies(res, result.AuthenticationResult, this.cookieOptions);
     }
 
     return {
@@ -225,11 +243,15 @@ export class AuthController {
   ) {
     await this.authService.verifyTokensForSetSession(body);
 
-    setAuthCookies(res, {
-      ...(body.AccessToken && { AccessToken: body.AccessToken }),
-      ...(body.IdToken && { IdToken: body.IdToken }),
-      ...(body.RefreshToken && { RefreshToken: body.RefreshToken }),
-    });
+    setAuthCookies(
+      res,
+      {
+        ...(body.AccessToken && { AccessToken: body.AccessToken }),
+        ...(body.IdToken && { IdToken: body.IdToken }),
+        ...(body.RefreshToken && { RefreshToken: body.RefreshToken }),
+      },
+      this.cookieOptions,
+    );
 
     return {
       message: 'Session set successfully',
@@ -278,7 +300,7 @@ export class AuthController {
       body.password,
     );
     if (response.AuthenticationResult) {
-      setAuthCookies(res, response.AuthenticationResult);
+      setAuthCookies(res, response.AuthenticationResult, this.cookieOptions);
     }
 
     return {

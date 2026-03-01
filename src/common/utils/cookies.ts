@@ -6,28 +6,41 @@ export interface AuthResult {
   RefreshToken?: string;
 }
 
-const AUTH_COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
-  signed: true,
-  maxAge: 3600000, // 1 hour for Access/Id
-};
+export interface SetAuthCookiesOptions {
+  secure?: boolean;
+}
 
 const REFRESH_COOKIE_MAX_AGE = 30 * 24 * 3600000; // 30 days
 
-export function setAuthCookies(res: Response, authResult: AuthResult): void {
+function getAuthCookieOptions(secure: boolean) {
+  return {
+    httpOnly: true,
+    secure,
+    sameSite: 'strict' as const,
+    signed: true,
+    maxAge: 3600000, // 1 hour for Access/Id
+  };
+}
+
+export function setAuthCookies(
+  res: Response,
+  authResult: AuthResult,
+  options?: SetAuthCookiesOptions,
+): void {
+  const secure = options?.secure ?? false;
+  const authCookieOptions = getAuthCookieOptions(secure);
+
   if (authResult.AccessToken) {
-    res.cookie('ACCESS_TOKEN', authResult.AccessToken, AUTH_COOKIE_OPTIONS);
+    res.cookie('ACCESS_TOKEN', authResult.AccessToken, authCookieOptions);
   }
 
   if (authResult.IdToken) {
-    res.cookie('ID_TOKEN', authResult.IdToken, AUTH_COOKIE_OPTIONS);
+    res.cookie('ID_TOKEN', authResult.IdToken, authCookieOptions);
   }
 
   if (authResult.RefreshToken) {
     res.cookie('REFRESH_TOKEN', authResult.RefreshToken, {
-      ...AUTH_COOKIE_OPTIONS,
+      ...authCookieOptions,
       maxAge: REFRESH_COOKIE_MAX_AGE,
     });
   }

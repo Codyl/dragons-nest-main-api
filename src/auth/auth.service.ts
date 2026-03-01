@@ -9,6 +9,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { createDeviceVerifier } from 'cognito-srp-helper';
 import { CognitoService } from 'src/cognito/cognito.service';
 import { UsersService } from 'src/users/users.service';
@@ -24,6 +25,7 @@ export class AuthService {
   constructor(
     private readonly cognitoService: CognitoService,
     private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
   ) {}
 
   async initiateSignup(email: string, password: string) {
@@ -121,7 +123,8 @@ export class AuthService {
         )?.Value ?? 'user';
     }
 
-    const qrString = `otpauth://totp/${process.env.COGNITO_CLIENT_ID}:${usernameForQr ?? 'user'}?secret=${response.SecretCode}&issuer=${process.env.COGNITO_CLIENT_ID}`;
+    const clientId = this.configService.get<string>('COGNITO_CLIENT_ID');
+    const qrString = `otpauth://totp/${clientId}:${usernameForQr ?? 'user'}?secret=${response.SecretCode}&issuer=${clientId}`;
     return {
       response,
       qrString,

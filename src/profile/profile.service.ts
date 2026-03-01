@@ -4,6 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DeviceRememberedStatusType } from '@aws-sdk/client-cognito-identity-provider';
@@ -34,6 +35,7 @@ export class ProfileService {
     private readonly usersService: UsersService,
     private readonly googleService: GoogleService,
     private readonly maxmindService: MaxmindService,
+    private readonly configService: ConfigService,
   ) {}
 
   async getMe(accessToken: string): Promise<GetMeData> {
@@ -232,7 +234,7 @@ export class ProfileService {
   > {
     const response = await this.cognitoService.listDevices(accessToken);
     const devices = response.Devices ?? [];
-    const maxmindKey = process.env.MAXMIND_KEY;
+    const maxmindKey = this.configService.get<string>('MAXMIND_KEY');
     const deviceData = await Promise.all(
       devices.map(async (device) => {
         const lastIPUsed = device.DeviceAttributes?.find(
