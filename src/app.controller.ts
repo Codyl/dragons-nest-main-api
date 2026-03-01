@@ -7,6 +7,11 @@ export class AppController {
 
   @Get('health')
   getHealth() {
-    return this.appService.getHealth();
+    const data = this.appService.getHealth();
+
+    return {
+      message: 'OK',
+      data,
+    };
   }
 }
