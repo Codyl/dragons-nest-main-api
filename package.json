@@ -34,6 +34,8 @@
     "@nestjs/swagger": "^11.2.6",
     "@simplewebauthn/server": "^11.0.0",
     "aws-jwt-verify": "^5.1.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
     "cognito-srp-helper": "^2.3.5",
     "cookie-parser": "^1.4.7",
     "google-auth-library": "^10.6.1",
@@ -75,6 +77,9 @@
       "ts"
     ],
     "rootDir": "src",
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
+    },
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"

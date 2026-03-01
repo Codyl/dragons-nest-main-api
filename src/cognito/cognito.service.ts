@@ -49,6 +49,13 @@ interface JwtVerifier {
   verify(token: string): Promise<unknown>;
 }
 
+/** Narrow type for getUser result; avoids exposing full AWS SDK shape to callers and tests. */
+export interface GetUserResult {
+  UserAttributes?: Array<{ Name?: string; Value?: string }>;
+  UserMFASettingList?: string[];
+  PreferredMfaSetting?: string;
+}
+
 @Injectable()
 export class CognitoService {
   constructor(
@@ -324,7 +331,7 @@ export class CognitoService {
     }
   }
 
-  async getUser(accessToken: string) {
+  async getUser(accessToken: string): Promise<GetUserResult | undefined> {
     try {
       const command = new GetUserCommand({
         AccessToken: accessToken,
@@ -332,7 +339,12 @@ export class CognitoService {
 
       const response = await this.cognitoClient.send(command);
 
-      return response;
+      const result: GetUserResult = {
+        UserAttributes: response.UserAttributes,
+        UserMFASettingList: response.UserMFASettingList,
+        PreferredMfaSetting: response.PreferredMfaSetting,
+      };
+      return result;
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'UserNotFoundException') {
@@ -537,13 +549,6 @@ export class CognitoService {
     try {
       const command = new SetUserMFAPreferenceCommand({
         AccessToken: accessToken,
-        SMSMfaSettings:
-          options.smsMfaEnabled !== undefined
-            ? {
-                Enabled: options.smsMfaEnabled,
-                PreferredMfa: options.smsPreferred ?? false,
-              }
-            : undefined,
         SoftwareTokenMfaSettings:
           options.softwareTokenMfaEnabled !== undefined
             ? {
@@ -577,7 +582,8 @@ export class CognitoService {
         UserAttributes: attributes,
       });
 
-      await this.cognitoClient.send(command);
+      const response = await this.cognitoClient.send(command);
+      return response;
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'NotAuthorizedException') {
@@ -619,7 +625,9 @@ export class CognitoService {
         AccessToken: accessToken,
       });
 
-      await this.cognitoClient.send(command);
+      const response = await this.cognitoClient.send(command);
+
+      return response;
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'NotAuthorizedException') {
@@ -664,7 +672,9 @@ export class CognitoService {
         DeviceKey: deviceKey,
       });
 
-      await this.cognitoClient.send(command);
+      const response = await this.cognitoClient.send(command);
+
+      return response;
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'DeviceNotFoundException') {
@@ -710,7 +720,9 @@ export class CognitoService {
         },
       });
 
-      await this.cognitoClient.send(command);
+      const response = await this.cognitoClient.send(command);
+
+      return response;
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'UserNotFoundException') {

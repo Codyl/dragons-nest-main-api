@@ -5,6 +5,16 @@ import { User } from './entities/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
+/** Plain user document shape for return types; avoids Mongoose Document in callers/tests. */
+export interface UserDoc {
+  _id: Types.ObjectId;
+  cognitoSub: string;
+  linkedProviders?: string[];
+  linkedProviderSubjects?: { GOOGLE?: string };
+  hasPassword?: boolean;
+  email?: string;
+}
+
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
@@ -21,16 +31,11 @@ export class UsersService {
     return this.userModel.findById(_id);
   }
 
-  findOneByCognitoSub(sub: string) {
-    return this.userModel.findOne({ cognitoSub: sub });
+  findOneByCognitoSub(sub: string): Promise<UserDoc | null> {
+    return this.userModel.findOne({ cognitoSub: sub }).lean();
   }
 
-  updateByCognitoSub(
-    cognitoSub: string,
-    update: Partial<
-      Pick<User, 'hasPassword' | 'linkedProviders' | 'linkedProviderSubjects'>
-    >,
-  ) {
+  updateByCognitoSub(cognitoSub: string, update: Partial<User>) {
     return this.userModel.findOneAndUpdate({ cognitoSub }, update, {
       new: true,
     });

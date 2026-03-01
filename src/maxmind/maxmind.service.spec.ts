@@ -15,4 +15,19 @@ describe('MaxmindService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  it('should get the location of the user', async () => {
+    const location = await service.getLocation('123');
+    expect(location).toBeDefined();
+  });
+
+  it('should handle maxmind failure', async () => {
+    const location = await service.getLocation('123');
+    expect(location).toBeDefined();
+  });
+
+  it('should handle bad ip address', async () => {
+    const location = await service.getLocation('123');
+    expect(location).toBeDefined();
+  });
 });

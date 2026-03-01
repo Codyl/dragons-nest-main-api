@@ -1,4 +1,4 @@
-import { City, WebServiceClient } from '@maxmind/geoip2-node';
+import { WebServiceClient } from '@maxmind/geoip2-node';
 import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -7,7 +7,7 @@ export class MaxmindService {
     @Inject('MAXMIND_CLIENT') private readonly maxmindClient: WebServiceClient,
   ) {}
 
-  async getLocation(ip: string): Promise<City> {
+  async getLocation(ip: string) {
     const response = await this.maxmindClient.city(ip);
     return response;
   }

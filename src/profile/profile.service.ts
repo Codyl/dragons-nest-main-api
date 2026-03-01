@@ -1,22 +1,17 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { DeviceRememberedStatusType } from '@aws-sdk/client-cognito-identity-provider';
 import { CognitoService } from 'src/cognito/cognito.service';
 import { UsersService } from 'src/users/users.service';
 import { GoogleService } from 'src/google/google.service';
-import { User } from 'src/users/entities/user.entity';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { RememberDeviceDto } from './dto/remember-device.dto';
-import { ForgetDeviceDto } from './dto/forget-device.dto';
 import { MaxmindService } from 'src/maxmind/maxmind.service';
 
 export interface GetMeData {
@@ -30,7 +25,6 @@ export interface GetMeData {
 @Injectable()
 export class ProfileService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
     private readonly cognitoService: CognitoService,
     private readonly usersService: UsersService,
     private readonly googleService: GoogleService,
@@ -67,6 +61,7 @@ export class ProfileService {
     const softwareTokenMfaEnabled =
       response.UserMFASettingList?.includes('SOFTWARE_TOKEN_MFA') ?? false;
     const preferredMfa = response.PreferredMfaSetting ?? undefined;
+
     return {
       ...attributes,
       loginMethods,
@@ -76,10 +71,7 @@ export class ProfileService {
     };
   }
 
-  async updateAccount(
-    accessToken: string,
-    dto: UpdateAccountDto,
-  ): Promise<void> {
+  async updateAccount(accessToken: string, dto: UpdateAccountDto) {
     const attributes: { Name: string; Value: string }[] = [];
     if (dto.email !== undefined)
       attributes.push({ Name: 'email', Value: dto.email });
@@ -98,45 +90,68 @@ export class ProfileService {
 
     if (attributes.length === 0) return;
 
-    await this.cognitoService.updateUserAttributes(accessToken, attributes);
+    const response = await this.cognitoService.updateUserAttributes(
+      accessToken,
+      attributes,
+    );
+    if (!response) {
+      throw new InternalServerErrorException(
+        'Failed to update user attributes',
+      );
+    }
+
+    return response;
   }
 
-  async setMfaPreference(
-    accessToken: string,
-    dto: MfaPreferenceDto,
-  ): Promise<void> {
-    await this.cognitoService.setUserMFAPreferenceWithSettings(accessToken, {
-      smsMfaEnabled: dto.smsMfaEnabled,
-      smsPreferred: dto.preferredMfa === 'sms',
-      softwareTokenMfaEnabled: dto.softwareTokenMfaEnabled,
-      softwareTokenPreferred: dto.preferredMfa === 'softwareToken',
-    });
+  async setMfaPreference(accessToken: string, dto: MfaPreferenceDto) {
+    const response = await this.cognitoService.setUserMFAPreferenceWithSettings(
+      accessToken,
+      {
+        softwareTokenMfaEnabled: dto.softwareTokenMfaEnabled,
+        softwareTokenPreferred: dto.preferredMfa === 'softwareToken',
+      },
+    );
+
+    if (!response) {
+      throw new InternalServerErrorException('Failed to set MFA preference');
+    }
+
+    return response;
   }
 
   async changePassword(
     accessToken: string,
     cognitoSub: string,
     dto: ChangePasswordDto,
-  ): Promise<void> {
-    await this.cognitoService.changePassword(
+  ) {
+    const cognitoResponse = await this.cognitoService.changePassword(
       accessToken,
       dto.currentPassword,
       dto.newPassword,
     );
-    await this.usersService.updateByCognitoSub(cognitoSub, {
-      hasPassword: true,
-    });
+
+    const userResponse = await this.usersService.updateByCognitoSub(
+      cognitoSub,
+      {
+        hasPassword: true,
+      },
+    );
+
+    return {
+      cognitoResponse,
+      userResponse,
+    };
   }
 
   async linkGoogle(
     accessToken: string,
     cognitoSub: string,
     credential: string,
-  ): Promise<void> {
+  ) {
     const { email: googleEmail, sub: googleSub } =
       await this.googleService.verifyCredential(credential);
-    const userResponse = await this.cognitoService.getUser(accessToken);
-    const cognitoEmail = userResponse?.UserAttributes?.find(
+    const cognitoUser = await this.cognitoService.getUser(accessToken);
+    const cognitoEmail = cognitoUser?.UserAttributes?.find(
       (a) => a.Name === 'email' || a.Name === 'preferred_username',
     )?.Value;
     if (cognitoEmail && cognitoEmail !== googleEmail) {
@@ -145,15 +160,23 @@ export class ProfileService {
       );
     }
 
-    await this.cognitoService.adminLinkProviderForUser(
+    const cognitoResponse = await this.cognitoService.adminLinkProviderForUser(
       cognitoSub,
       googleSub,
       'Google',
     );
-    await this.usersService.addLinkGoogle(cognitoSub, googleSub);
+    const userResponse = await this.usersService.addLinkGoogle(
+      cognitoSub,
+      googleSub,
+    );
+
+    return {
+      cognitoResponse,
+      userResponse,
+    };
   }
 
-  async unlinkGoogle(accessToken: string, cognitoSub: string): Promise<void> {
+  async unlinkGoogle(accessToken: string, cognitoSub: string) {
     const user = await this.usersService.findOneByCognitoSub(cognitoSub);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -176,11 +199,23 @@ export class ProfileService {
       );
     }
 
-    await this.cognitoService.adminDisableProviderForUser('Google', googleSub);
-    await this.usersService.removeLinkGoogle(cognitoSub);
+    const cognitoResponse =
+      await this.cognitoService.adminDisableProviderForUser(
+        'Google',
+        googleSub,
+      );
+    const userResponse = await this.usersService.removeLinkGoogle(cognitoSub);
+    if (!cognitoResponse || !userResponse) {
+      throw new InternalServerErrorException('Failed to unlink Google account');
+    }
+
+    return {
+      cognitoResponse,
+      userResponse,
+    };
   }
 
-  async deleteMe(accessToken: string, password: string): Promise<void> {
+  async deleteMe(accessToken: string, password: string) {
     const payload = await this.cognitoService.getUser(accessToken);
     const username = payload?.UserAttributes?.find(
       (a) => a.Name === 'email' || a.Name === 'preferred_username',
@@ -189,6 +224,7 @@ export class ProfileService {
       throw new UnauthorizedException('Invalid password');
     }
 
+    // verify user has authorization to delete their account
     const authResponse = await this.cognitoService.authenticateWithSrp(
       username,
       password,
@@ -197,26 +233,27 @@ export class ProfileService {
       throw new UnauthorizedException('Invalid password');
     }
 
-    await this.cognitoService.deleteUser(accessToken);
+    const cognitoResponse = await this.cognitoService.deleteUser(accessToken);
+    if (!cognitoResponse) {
+      throw new InternalServerErrorException('Failed to delete user');
+    }
+
+    const userResponse: { deleted: boolean; result: number } | null = null;
+
     const sub = payload?.UserAttributes?.find((a) => a.Name === 'sub')?.Value;
     if (sub) {
-      await this.userModel.deleteOne({ cognitoSub: sub });
+      const deleteResult = await this.usersService.updateByCognitoSub(sub, {
+        deleted: true,
+      });
+      if (!deleteResult) {
+        throw new InternalServerErrorException('Failed to delete user');
+      }
     }
-  }
 
-  async rememberDevice(accessToken: string, dto: RememberDeviceDto) {
-    const response = await this.cognitoService.updateDeviceStatus(
-      accessToken,
-      dto.deviceKey,
-      dto.shouldRememberDevice
-        ? DeviceRememberedStatusType.REMEMBERED
-        : DeviceRememberedStatusType.NOT_REMEMBERED,
-    );
-    return response;
-  }
-
-  async forgetDevice(accessToken: string, dto: ForgetDeviceDto): Promise<void> {
-    await this.cognitoService.forgetDevice(accessToken, dto.deviceKey);
+    return {
+      cognitoResponse,
+      userResponse,
+    };
   }
 
   async getKnownDevices(accessToken: string): Promise<
@@ -240,6 +277,7 @@ export class ProfileService {
         const lastIPUsed = device.DeviceAttributes?.find(
           (a) => a.Name === 'last_ip_used',
         )?.Value;
+
         let city: string | undefined;
         let region: string | undefined;
         let country: string | undefined;

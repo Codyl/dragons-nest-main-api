@@ -17,8 +17,6 @@ import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
-import { RememberDeviceDto } from './dto/remember-device.dto';
-import { ForgetDeviceDto } from './dto/forget-device.dto';
 import { PasskeyService } from '../passkey/passkey.service';
 
 interface MessageDataResponse<T = object> {
@@ -138,32 +136,6 @@ export class ProfileController {
     await this.profileService.deleteMe(accessToken, dto.password);
     return {
       message: 'User deleted successfully',
-      data: {},
-    };
-  }
-
-  @Post('remember-device')
-  async rememberDevice(
-    @AccessToken() accessToken: string,
-    @Body() dto: RememberDeviceDto,
-  ): Promise<
-    MessageDataResponse<Awaited<ReturnType<ProfileService['rememberDevice']>>>
-  > {
-    const data = await this.profileService.rememberDevice(accessToken, dto);
-    return {
-      message: 'Device remembered successfully',
-      data,
-    };
-  }
-
-  @Post('forget-device')
-  async forgetDevice(
-    @AccessToken() accessToken: string,
-    @Body() dto: ForgetDeviceDto,
-  ): Promise<MessageDataResponse<Record<string, never>>> {
-    await this.profileService.forgetDevice(accessToken, dto);
-    return {
-      message: 'Device forgotten successfully',
       data: {},
     };
   }
