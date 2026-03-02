@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MaxmindService } from './maxmind.service';
 import { WebServiceClient } from '@maxmind/geoip2-node';
-import { MAXMIND_ACCOUNT_ID, MAXMIND_KEY } from 'env.constants';
-import { EnvironmentVariables } from 'env.config';
+import { MAXMIND_ACCOUNT_ID, MAXMIND_KEY } from 'src/env.constants';
+import { EnvironmentVariables } from 'src/env.config';
 
 @Module({
   providers: [

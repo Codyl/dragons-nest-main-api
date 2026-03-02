@@ -4,8 +4,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
-import { COOKIE_SECRET, FRONTEND_URL, PORT } from 'env.constants';
-import { EnvironmentVariables } from 'env.config';
+import { COOKIE_SECRET, FRONTEND_URL, PORT } from 'src/env.constants';
+import { EnvironmentVariables } from 'src/env.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

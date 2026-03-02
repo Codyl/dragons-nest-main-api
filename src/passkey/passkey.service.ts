@@ -12,8 +12,8 @@ import {
   WEBAUTHN_RP_ID,
   WEBAUTHN_RP_NAME,
   WEBAUTHN_AUTHENTICATOR_ATTACHMENT,
-} from 'env.constants';
-import { EnvironmentVariables } from 'env.config';
+} from 'src/env.constants';
+import { EnvironmentVariables } from 'src/env.config';
 
 @Injectable()
 export class PasskeyService {

@@ -6,8 +6,8 @@ import {
   MongooseHealthIndicator,
 } from '@nestjs/terminus';
 import { ConfigService } from '@nestjs/config';
-import { EnvironmentVariables } from 'env.config';
-import { AWS_REGION, COGNITO_USER_POOL_ID } from 'env.constants';
+import { EnvironmentVariables } from 'src/env.config';
+import { AWS_REGION, COGNITO_USER_POOL_ID } from 'src/env.constants';
 
 @Controller('health')
 export class HealthController {

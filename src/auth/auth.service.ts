@@ -11,8 +11,8 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createDeviceVerifier } from 'cognito-srp-helper';
-import { COGNITO_CLIENT_ID } from 'env.constants';
-import { EnvironmentVariables } from 'env.config';
+import { COGNITO_CLIENT_ID } from 'src/env.constants';
+import { EnvironmentVariables } from 'src/env.config';
 import { CognitoService } from 'src/cognito/cognito.service';
 import { UsersService } from 'src/users/users.service';
 import type { SetSessionDto } from './dto/set-session.dto';

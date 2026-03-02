@@ -4,8 +4,8 @@ import type { Response } from 'express';
 import { GoogleService } from './google.service';
 import { GoogleCredentialDto } from './dto/google-credential.dto';
 import { setAuthCookies } from 'src/common/utils/cookies';
-import { NODE_ENV } from 'env.constants';
-import { EnvironmentVariables } from 'env.config';
+import { NODE_ENV } from 'src/env.constants';
+import { EnvironmentVariables } from 'src/env.config';
 
 @Controller('auth')
 export class GoogleController {

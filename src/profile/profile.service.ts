@@ -13,8 +13,8 @@ import { UpdateAccountDto } from './dto/update-account.dto';
 import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { MaxmindService } from 'src/maxmind/maxmind.service';
-import { MAXMIND_KEY } from 'env.constants';
-import { EnvironmentVariables } from 'env.config';
+import { MAXMIND_KEY } from 'src/env.constants';
+import { EnvironmentVariables } from 'src/env.config';
 
 export interface GetMeData {
   [key: string]: string | string[] | boolean | undefined;
@@ -54,7 +54,7 @@ export class ProfileService {
     }
 
     const user = await this.usersService.findOneByCognitoSub(sub);
-    if (!user) {
+    if (!user || user.deleted) {
       throw new NotFoundException('User not found');
     }
 

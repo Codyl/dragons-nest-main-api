@@ -5,8 +5,8 @@ import { GoogleController } from './google.controller';
 import { OAuth2Client } from 'google-auth-library';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/users/entities/user.entity';
-import { GOOGLE_CLIENT_ID } from 'env.constants';
-import { EnvironmentVariables } from 'env.config';
+import { GOOGLE_CLIENT_ID } from 'src/env.constants';
+import { EnvironmentVariables } from 'src/env.config';
 
 @Module({
   imports: [

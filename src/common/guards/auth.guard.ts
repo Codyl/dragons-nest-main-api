@@ -7,8 +7,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { Request } from 'express';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
-import { COGNITO_CLIENT_ID, COGNITO_USER_POOL_ID } from 'env.constants';
-import { EnvironmentVariables } from 'env.config';
+import { COGNITO_CLIENT_ID, COGNITO_USER_POOL_ID } from 'src/env.constants';
+import { EnvironmentVariables } from 'src/env.config';
 
 export interface AuthenticatedRequest extends Request {
   user?: Record<string, unknown> & { sub?: string; email?: string };

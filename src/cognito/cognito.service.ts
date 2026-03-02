@@ -49,7 +49,7 @@ import {
   COGNITO_CLIENT,
   ID_TOKEN_VERIFIER,
 } from './cognito.constants';
-import { COGNITO_CLIENT_ID, COGNITO_USER_POOL_ID } from 'env.constants';
+import { COGNITO_CLIENT_ID, COGNITO_USER_POOL_ID } from 'src/env.constants';
 
 interface JwtVerifier {
   verify(token: string): Promise<unknown>;

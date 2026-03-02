@@ -13,6 +13,7 @@ export interface UserDoc {
   linkedProviderSubjects?: { GOOGLE?: string };
   hasPassword?: boolean;
   email?: string;
+  deleted?: boolean;
 }
 
 @Injectable()

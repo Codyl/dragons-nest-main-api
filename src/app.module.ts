@@ -9,8 +9,8 @@ import { ProfileModule } from './profile/profile.module';
 import { PasskeyModule } from './passkey/passkey.module';
 import { GoogleModule } from './google/google.module';
 import { MaxmindModule } from './maxmind/maxmind.module';
-import { MONGODB_URI } from 'env.constants';
-import { EnvironmentVariables } from 'env.config';
+import { MONGODB_URI } from 'src/env.constants';
+import { EnvironmentVariables } from 'src/env.config';
 import { HealthModule } from './health/health.module';
 
 @Module({
