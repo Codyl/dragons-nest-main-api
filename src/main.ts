@@ -26,7 +26,12 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const options = new DocumentBuilder().addCookieAuth('ACCESS_TOKEN').build();
+  const options = new DocumentBuilder()
+    .setTitle('Passkey API')
+    .setDescription('API for the Passkey project')
+    .setVersion('1.0')
+    .addCookieAuth('ACCESS_TOKEN')
+    .build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);
 

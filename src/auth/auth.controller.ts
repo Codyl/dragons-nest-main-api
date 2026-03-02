@@ -3,11 +3,21 @@ import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { ApiCookieAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import type { SetSessionBody } from './auth.service';
 import { setAuthCookies } from 'src/common/utils/cookies';
 import { Cookies } from 'src/common/decorators/cookies.decorator';
 import { NODE_ENV } from 'env.constants';
 import { EnvironmentVariables } from 'env.config';
+import { InitiateSignupDto } from './dto/initiate-signup.dto';
+import { ConfirmSignupDto } from './dto/confirm-signup.dto';
+import { ConfirmSignupResendCodeDto } from './dto/confirm-signup-resend-code.dto';
+import { MfaDto } from './dto/mfa.dto';
+import { GenerateAuthenticatorSecretDto } from './dto/generate-authenticator-secret.dto';
+import { ConnectAuthenticatorAppDto } from './dto/connect-authenticator-app.dto';
+import { VerifyUsernameDto } from './dto/verify-username.dto';
+import { InitiateLoginDto } from './dto/initiate-login.dto';
+import { SetSessionDto } from './dto/set-session.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ConfirmForgotPasswordDto } from './dto/confirm-forgot-password.dto';
 
 @ApiCookieAuth('ACCESS_TOKEN')
 @Controller('auth')
@@ -27,7 +37,7 @@ export class AuthController {
 
   // Signup
   @Post('initiate-signup')
-  async initiateSignup(@Body() body: { email: string; password: string }) {
+  async initiateSignup(@Body() body: InitiateSignupDto) {
     const response = await this.authService.initiateSignup(
       body.email,
       body.password,
@@ -43,13 +53,7 @@ export class AuthController {
 
   @Post('confirm-signup')
   async confirmSignup(
-    @Body()
-    body: {
-      email: string;
-      code: string;
-      session: string;
-      password: string;
-    },
+    @Body() body: ConfirmSignupDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     const tokens = await this.authService.confirmSignup(
@@ -81,19 +85,14 @@ export class AuthController {
   }
 
   @Post('confirm-signup/resend-code')
-  confirmSignupResendCode(@Body() body: { email: string; password: string }) {
+  confirmSignupResendCode(@Body() body: ConfirmSignupResendCodeDto) {
     return this.authService.confirmSignupResendCode(body.email);
   }
 
   // MFA
   @Post('mfa')
   async mfa(
-    @Body()
-    body: {
-      email: string;
-      session: string;
-      softwareTokenMfaCode: string;
-    },
+    @Body() body: MfaDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     const response = await this.authService.mfa(
@@ -115,7 +114,7 @@ export class AuthController {
 
   @Post('mfa/generate-authenticator-secret')
   async generateAuthenticatorSecret(
-    @Body() body: { username: string; session: string; accessToken: string },
+    @Body() body: GenerateAuthenticatorSecretDto,
     @Cookies('ACCESS_TOKEN') cookieAccessToken: string,
   ) {
     const response = await this.authService.generateAuthenticatorSecret(
@@ -138,15 +137,7 @@ export class AuthController {
 
   @Post('mfa/connect-authenticator-app')
   async connectAuthenticatorApp(
-    @Body()
-    body: {
-      session: string;
-      userCode: string;
-      friendlyDeviceName: string;
-      accessToken: string;
-      username: string;
-      password: string;
-    },
+    @Body() body: ConnectAuthenticatorAppDto,
     @Res({ passthrough: true }) res: Response,
     @Cookies('ACCESS_TOKEN') cookieAccessToken: string,
   ) {
@@ -167,7 +158,7 @@ export class AuthController {
 
   // Login
   @Post('verify-username')
-  async verifyUsername(@Body() body: { email: string; password: string }) {
+  async verifyUsername(@Body() body: VerifyUsernameDto) {
     const data = await this.authService.verifyUsername(
       body.email,
       body.password,
@@ -183,14 +174,7 @@ export class AuthController {
 
   @Post('initiate-login')
   async initiateLogin(
-    @Body()
-    body: {
-      email: string;
-      password: string;
-      session: string;
-      deviceKey: string;
-      deviceName: string;
-    },
+    @Body() body: InitiateLoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     const response = await this.authService.initiateLogin(
@@ -242,7 +226,7 @@ export class AuthController {
    */
   @Post('set-session')
   async setSession(
-    @Body() body: SetSessionBody,
+    @Body() body: SetSessionDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     await this.authService.verifyTokensForSetSession(body);
@@ -285,7 +269,7 @@ export class AuthController {
 
   // Forgot password
   @Post('forgot-password')
-  async forgotPassword(@Body() body: { username: string }) {
+  async forgotPassword(@Body() body: ForgotPasswordDto) {
     await this.authService.forgotPassword(body.username);
     return {
       message: 'Password reset code sent successfully',
@@ -295,7 +279,7 @@ export class AuthController {
 
   @Post('confirm-forgot-password')
   async confirmForgotPassword(
-    @Body() body: { username: string; code: string; password: string },
+    @Body() body: ConfirmForgotPasswordDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     const response = await this.authService.confirmForgotPassword(

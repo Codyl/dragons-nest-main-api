@@ -15,12 +15,9 @@ import { COGNITO_CLIENT_ID } from 'env.constants';
 import { EnvironmentVariables } from 'env.config';
 import { CognitoService } from 'src/cognito/cognito.service';
 import { UsersService } from 'src/users/users.service';
+import type { SetSessionDto } from './dto/set-session.dto';
 
-export interface SetSessionBody {
-  AccessToken?: string;
-  IdToken?: string;
-  RefreshToken?: string;
-}
+export type SetSessionBody = SetSessionDto;
 
 @Injectable()
 export class AuthService {
@@ -275,7 +272,7 @@ export class AuthService {
    * Session handoff: verifies AccessToken and/or IdToken from frontend (e.g. after SRP in browser),
    * then caller sets HttpOnly cookies. At least one of AccessToken or IdToken is required.
    */
-  async verifyTokensForSetSession(body: SetSessionBody): Promise<void> {
+  async verifyTokensForSetSession(body: SetSessionDto): Promise<void> {
     const { AccessToken, IdToken } = body;
 
     if (!AccessToken && !IdToken) {

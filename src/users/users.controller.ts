@@ -2,6 +2,7 @@ import { Controller, Get, Patch, Param, Delete, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Types } from 'mongoose';
+import { MongoIdPipe } from 'src/common/pipes/mongo-id.pipe';
 
 @Controller('users')
 export class UsersController {
@@ -13,20 +14,20 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: Types.ObjectId) {
+  findOne(@Param('id', MongoIdPipe) id: Types.ObjectId) {
     return this.usersService.findOneById(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: Types.ObjectId,
+    @Param('id', MongoIdPipe) id: Types.ObjectId,
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.usersService.updateById(id, updateUserDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: Types.ObjectId) {
+  remove(@Param('id', MongoIdPipe) id: Types.ObjectId) {
     return this.usersService.removeById(id);
   }
 }

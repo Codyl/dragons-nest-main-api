@@ -17,6 +17,7 @@ import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
+import { PasskeyVerifyRegistrationDto } from './dto/passkey-verify-registration.dto';
 import { PasskeyService } from '../passkey/passkey.service';
 
 interface MessageDataResponse<T = object> {
@@ -180,14 +181,14 @@ export class ProfileController {
   @Post('passkey/register/verify')
   async passkeyRegisterVerify(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
-    @Body() body: unknown,
+    @Body() dto: PasskeyVerifyRegistrationDto,
   ): Promise<MessageDataResponse<{ verified: boolean }>> {
     const sub = user?.sub;
     if (!sub || typeof sub !== 'string') {
       throw new Error('Not authenticated');
     }
 
-    const result = await this.passkeyService.verifyRegistration(sub, body);
+    const result = await this.passkeyService.verifyRegistration(sub, dto);
     return {
       message: result.verified
         ? 'Passkey registered successfully'
