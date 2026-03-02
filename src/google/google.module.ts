@@ -5,6 +5,8 @@ import { GoogleController } from './google.controller';
 import { OAuth2Client } from 'google-auth-library';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/users/entities/user.entity';
+import { GOOGLE_CLIENT_ID } from 'env.constants';
+import { EnvironmentVariables } from 'env.config';
 
 @Module({
   imports: [
@@ -14,9 +16,11 @@ import { User, UserSchema } from 'src/users/entities/user.entity';
     GoogleService,
     {
       provide: 'GOOGLE_OAUTH2_CLIENT',
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        return new OAuth2Client(config.get<string>('GOOGLE_CLIENT_ID'));
+      inject: [ConfigService<EnvironmentVariables>],
+      useFactory: (config: ConfigService<EnvironmentVariables>) => {
+        return new OAuth2Client(
+          config.getOrThrow(GOOGLE_CLIENT_ID, { infer: true }),
+        );
       },
     },
   ],

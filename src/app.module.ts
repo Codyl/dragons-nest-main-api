@@ -11,6 +11,8 @@ import { ProfileModule } from './profile/profile.module';
 import { PasskeyModule } from './passkey/passkey.module';
 import { GoogleModule } from './google/google.module';
 import { MaxmindModule } from './maxmind/maxmind.module';
+import { MONGODB_URI } from 'env.constants';
+import { EnvironmentVariables } from 'env.config';
 
 @Module({
   imports: [
@@ -18,23 +20,54 @@ import { MaxmindModule } from './maxmind/maxmind.module';
       envFilePath: '.env.development.local',
       isGlobal: true,
       validationSchema: Joi.object({
+        // Environment
         NODE_ENV: Joi.string()
           .valid('development', 'production', 'test')
-          .required(),
-        MONGODB_URI: Joi.string().required(),
+          .default('development'),
+        APP_ENV: Joi.string()
+          .valid('development', 'production', 'staging')
+          .default('development'),
+
+        PORT: Joi.number().port().default(3000),
+
+        // Auth & Security
+        COOKIE_SECRET: Joi.string().min(32).required(),
+        JWT_SECRET: Joi.string().min(32).required(),
+
+        // Cognito
         COGNITO_CLIENT_ID: Joi.string().required(),
         COGNITO_USER_POOL_ID: Joi.string().required(),
-        COGNITO_CALLBACK_URL: Joi.string().required(),
+        COGNITO_CALLBACK_URL: Joi.string().uri().required(),
+        AWS_REGION: Joi.string().default('us-east-1'),
+
+        // Third Party
         IPSTACK_KEY: Joi.string().required(),
-        GOOGLE_CLIENT_SECRET: Joi.string().required(),
+        MAXMIND_ACCOUNT_ID: Joi.string().required(),
+        MAXMIND_KEY: Joi.string().required(),
+
         GOOGLE_CLIENT_ID: Joi.string().required(),
-        FRONTEND_URL: Joi.string().required(),
+        GOOGLE_CLIENT_SECRET: Joi.string().required(),
+
+        // Database
+        MONGODB_URI: Joi.string()
+          .uri({ scheme: [/mongodb(\+srv)?/] })
+          .required(),
+
+        FRONTEND_URL: Joi.string().uri().required(),
+
+        // WebAuthn
+        WEBAUTHN_RP_ID: Joi.string().hostname().required(),
+        WEBAUTHN_RP_NAME: Joi.string().required(),
+        WEBAUTHN_ORIGIN: Joi.string().uri().required(),
+        WEBAUTHN_AUTHENTICATOR_ATTACHMENT: Joi.string()
+          .valid('platform', 'cross-platform', 'any')
+          .default('platform'),
       }),
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('MONGODB_URI'),
+      useFactory: (config: ConfigService<EnvironmentVariables>) => ({
+        uri: config.getOrThrow(MONGODB_URI, { infer: true }),
       }),
     }),
     AuthModule,

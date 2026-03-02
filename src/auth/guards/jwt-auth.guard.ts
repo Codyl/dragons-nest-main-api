@@ -7,6 +7,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { Request } from 'express';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
+import { COGNITO_CLIENT_ID, COGNITO_USER_POOL_ID } from 'env.constants';
+import { EnvironmentVariables } from 'env.config';
 
 export interface AuthenticatedRequest extends Request {
   user?: Record<string, unknown> & { sub?: string };
@@ -22,11 +24,17 @@ type CognitoAccessVerifier = {
 export class JwtAuthGuard implements CanActivate {
   private readonly verifier: CognitoAccessVerifier;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService<EnvironmentVariables>,
+  ) {
     this.verifier = CognitoJwtVerifier.create({
-      userPoolId: this.configService.get<string>('COGNITO_USER_POOL_ID')!,
+      userPoolId: this.configService.getOrThrow(COGNITO_USER_POOL_ID, {
+        infer: true,
+      }),
       tokenUse: 'access',
-      clientId: this.configService.get<string>('COGNITO_CLIENT_ID')!,
+      clientId: this.configService.getOrThrow(COGNITO_CLIENT_ID, {
+        infer: true,
+      }),
     });
   }
 

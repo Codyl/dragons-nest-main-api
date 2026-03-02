@@ -13,6 +13,8 @@ import { UpdateAccountDto } from './dto/update-account.dto';
 import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { MaxmindService } from 'src/maxmind/maxmind.service';
+import { MAXMIND_KEY } from 'env.constants';
+import { EnvironmentVariables } from 'env.config';
 
 export interface GetMeData {
   [key: string]: string | string[] | boolean | undefined;
@@ -29,7 +31,7 @@ export class ProfileService {
     private readonly usersService: UsersService,
     private readonly googleService: GoogleService,
     private readonly maxmindService: MaxmindService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
   async getMe(accessToken: string): Promise<GetMeData> {
@@ -271,7 +273,9 @@ export class ProfileService {
   > {
     const response = await this.cognitoService.listDevices(accessToken);
     const devices = response.Devices ?? [];
-    const maxmindKey = this.configService.get<string>('MAXMIND_KEY');
+    const maxmindKey = this.configService.getOrThrow(MAXMIND_KEY, {
+      infer: true,
+    });
     const deviceData = await Promise.all(
       devices.map(async (device) => {
         const lastIPUsed = device.DeviceAttributes?.find(

@@ -7,23 +7,30 @@ import {
 import { PasskeyStoreService } from './passkey-store.service';
 import type { RegistrationChallengeOptions } from './passkey-store.service';
 import { CognitoService } from 'src/cognito/cognito.service';
+import {
+  WEBAUTHN_ORIGIN,
+  WEBAUTHN_RP_ID,
+  WEBAUTHN_RP_NAME,
+  WEBAUTHN_AUTHENTICATOR_ATTACHMENT,
+} from 'env.constants';
+import { EnvironmentVariables } from 'env.config';
 
 @Injectable()
 export class PasskeyService {
   constructor(
     private readonly passkeyStore: PasskeyStoreService,
     private readonly cognitoService: CognitoService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
   async getRegistrationOptions(
     accessToken: string,
     sub: string,
   ): Promise<RegistrationChallengeOptions & Record<string, unknown>> {
-    const rpID =
-      this.configService.get<string>('WEBAUTHN_RP_ID') ?? 'localhost';
-    const rpName =
-      this.configService.get<string>('WEBAUTHN_RP_NAME') ?? 'Auth App';
+    const rpID = this.configService.getOrThrow(WEBAUTHN_RP_ID, { infer: true });
+    const rpName = this.configService.getOrThrow(WEBAUTHN_RP_NAME, {
+      infer: true,
+    });
     const userPasskeys = this.passkeyStore.getPasskeys(sub);
     const userResponse = await this.cognitoService.getUser(accessToken);
     const username =
@@ -54,9 +61,9 @@ export class PasskeyService {
       authenticatorSelection: {
         residentKey: 'preferred',
         userVerification: 'preferred',
-        ...(this.configService.get<string>(
-          'WEBAUTHN_AUTHENTICATOR_ATTACHMENT',
-        ) === 'platform' && {
+        ...(this.configService.getOrThrow(WEBAUTHN_AUTHENTICATOR_ATTACHMENT, {
+          infer: true,
+        }) === 'platform' && {
           authenticatorAttachment: 'platform' as const,
         }),
       },
@@ -74,10 +81,9 @@ export class PasskeyService {
     responseBody: unknown,
   ): Promise<{ verified: boolean }> {
     const expectedOrigin =
-      this.configService.get<string>('WEBAUTHN_ORIGIN') ??
+      this.configService.getOrThrow(WEBAUTHN_ORIGIN, { infer: true }) ??
       'http://localhost:5173';
-    const rpID =
-      this.configService.get<string>('WEBAUTHN_RP_ID') ?? 'localhost';
+    const rpID = this.configService.getOrThrow(WEBAUTHN_RP_ID, { infer: true });
     const currentOptions = this.passkeyStore.getRegistrationChallenge(sub);
     if (!currentOptions) {
       throw new BadRequestException(

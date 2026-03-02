@@ -6,18 +6,22 @@ import { AuthService } from './auth.service';
 import type { SetSessionBody } from './auth.service';
 import { setAuthCookies } from 'src/common/utils/cookies';
 import { Cookies } from 'src/common/decorators/cookies.decorator';
+import { NODE_ENV } from 'env.constants';
+import { EnvironmentVariables } from 'env.config';
 
 @ApiCookieAuth('ACCESS_TOKEN')
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
   private get cookieOptions() {
     return {
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      secure:
+        this.configService.getOrThrow(NODE_ENV, { infer: true }) ===
+        'production',
     };
   }
 

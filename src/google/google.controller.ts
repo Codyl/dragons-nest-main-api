@@ -4,17 +4,21 @@ import type { Response } from 'express';
 import { GoogleService } from './google.service';
 import { GoogleCredentialDto } from './dto/google-credential.dto';
 import { setAuthCookies } from 'src/common/utils/cookies';
+import { NODE_ENV } from 'env.constants';
+import { EnvironmentVariables } from 'env.config';
 
 @Controller('auth')
 export class GoogleController {
   constructor(
     private readonly googleService: GoogleService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
   private get cookieOptions() {
     return {
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      secure:
+        this.configService.getOrThrow(NODE_ENV, { infer: true }) ===
+        'production',
     };
   }
 

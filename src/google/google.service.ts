@@ -24,6 +24,9 @@ import { GoogleCredentialDto } from './dto/google-credential.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from 'src/users/entities/user.entity';
+import { COGNITO_CLIENT_ID, GOOGLE_CLIENT_ID } from 'env.constants';
+import { COGNITO_USER_POOL_ID } from 'env.constants';
+import { EnvironmentVariables } from 'env.config';
 
 @Injectable()
 export class GoogleService {
@@ -34,7 +37,7 @@ export class GoogleService {
     private readonly cognitoClient: CognitoIdentityProviderClient,
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
   /** Verify Google ID token and return email + sub. Used by link-google and auth flows. */
@@ -47,7 +50,9 @@ export class GoogleService {
 
     const ticket = await this.googleOAuthClient.verifyIdToken({
       idToken: credential,
-      audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+      audience: this.configService.getOrThrow(GOOGLE_CLIENT_ID, {
+        infer: true,
+      }),
     });
     const payload = ticket.getPayload();
     if (!payload?.email || payload.sub == null) {
@@ -68,7 +73,9 @@ export class GoogleService {
 
     const ticket = await this.googleOAuthClient.verifyIdToken({
       idToken: credential,
-      audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+      audience: this.configService.getOrThrow(GOOGLE_CLIENT_ID, {
+        infer: true,
+      }),
     });
     const payload = ticket.getPayload();
 
@@ -96,7 +103,9 @@ export class GoogleService {
         .replace(/=/g, '');
 
     const createUserCommand = new AdminCreateUserCommand({
-      UserPoolId: this.configService.get<string>('COGNITO_USER_POOL_ID'),
+      UserPoolId: this.configService.getOrThrow(COGNITO_USER_POOL_ID, {
+        infer: true,
+      }),
       Username: email,
       TemporaryPassword: temporaryPassword,
       MessageAction: 'SUPPRESS',
@@ -122,7 +131,9 @@ export class GoogleService {
       }
 
       const linkCommand = new AdminLinkProviderForUserCommand({
-        UserPoolId: this.configService.get<string>('COGNITO_USER_POOL_ID'),
+        UserPoolId: this.configService.getOrThrow(COGNITO_USER_POOL_ID, {
+          infer: true,
+        }),
         DestinationUser: {
           ProviderName: 'Cognito',
           ProviderAttributeName: 'Cognito_Subject',
@@ -157,8 +168,12 @@ export class GoogleService {
     }
 
     const authCommand = new AdminInitiateAuthCommand({
-      UserPoolId: this.configService.get<string>('COGNITO_USER_POOL_ID'),
-      ClientId: this.configService.get<string>('COGNITO_CLIENT_ID'),
+      UserPoolId: this.configService.getOrThrow(COGNITO_USER_POOL_ID, {
+        infer: true,
+      }),
+      ClientId: this.configService.getOrThrow(COGNITO_CLIENT_ID, {
+        infer: true,
+      }),
       AuthFlow: AuthFlowType.ADMIN_USER_PASSWORD_AUTH,
       AuthParameters: {
         USERNAME: email,
@@ -184,7 +199,9 @@ export class GoogleService {
 
     const ticket = await this.googleOAuthClient.verifyIdToken({
       idToken: credential,
-      audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+      audience: this.configService.getOrThrow(GOOGLE_CLIENT_ID, {
+        infer: true,
+      }),
     });
     const payload = ticket.getPayload();
 
@@ -194,12 +211,12 @@ export class GoogleService {
 
     const email = payload.email;
     const googleSub = payload.sub;
-    const userPoolId = this.configService.get<string>('COGNITO_USER_POOL_ID');
-    const clientId = this.configService.get<string>('COGNITO_CLIENT_ID');
-
-    if (!userPoolId || !clientId) {
-      throw new InternalServerErrorException('Cognito configuration missing');
-    }
+    const userPoolId = this.configService.getOrThrow(COGNITO_USER_POOL_ID, {
+      infer: true,
+    });
+    const clientId = this.configService.getOrThrow(COGNITO_CLIENT_ID, {
+      infer: true,
+    });
 
     let cognitoUsername = email;
     const listResult = await this.cognitoClient.send(

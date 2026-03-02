@@ -44,6 +44,12 @@ import {
   wrapAuthChallenge,
   wrapInitiateAuth,
 } from 'cognito-srp-helper';
+import {
+  ACCESS_TOKEN_VERIFIER,
+  COGNITO_CLIENT,
+  ID_TOKEN_VERIFIER,
+} from './cognito.constants';
+import { COGNITO_CLIENT_ID, COGNITO_USER_POOL_ID } from 'env.constants';
 
 interface JwtVerifier {
   verify(token: string): Promise<unknown>;
@@ -59,11 +65,11 @@ export interface GetUserResult {
 @Injectable()
 export class CognitoService {
   constructor(
-    @Inject('COGNITO_CLIENT')
+    @Inject(COGNITO_CLIENT)
     private readonly cognitoClient: CognitoIdentityProviderClient,
-    @Inject('ACCESS_TOKEN_VERIFIER')
+    @Inject(ACCESS_TOKEN_VERIFIER)
     private readonly accessTokenVerifier: JwtVerifier,
-    @Inject('ID_TOKEN_VERIFIER')
+    @Inject(ID_TOKEN_VERIFIER)
     private readonly idTokenVerifier: JwtVerifier,
     private readonly configService: ConfigService,
   ) {}
@@ -74,8 +80,8 @@ export class CognitoService {
     deviceKey?: string,
     session?: string,
   ) {
-    const clientId = this.configService.get<string>('COGNITO_CLIENT_ID')!;
-    const poolId = this.configService.get<string>('COGNITO_USER_POOL_ID')!;
+    const clientId = this.configService.get<string>(COGNITO_CLIENT_ID)!;
+    const poolId = this.configService.get<string>(COGNITO_USER_POOL_ID)!;
 
     const srpSession = createSrpSession(username, password, poolId, false);
     const initiateInput = wrapInitiateAuth(srpSession, {
@@ -116,7 +122,7 @@ export class CognitoService {
   async signUp(email: string, password: string) {
     try {
       const command = new SignUpCommand({
-        ClientId: this.configService.get<string>('COGNITO_CLIENT_ID'),
+        ClientId: this.configService.get<string>(COGNITO_CLIENT_ID)!,
         Username: email,
         Password: password,
         UserAttributes: [
@@ -155,7 +161,7 @@ export class CognitoService {
   async confirmSignUp(email: string, code: string, session: string) {
     try {
       const command = new ConfirmSignUpCommand({
-        ClientId: this.configService.get<string>('COGNITO_CLIENT_ID'),
+        ClientId: this.configService.get<string>(COGNITO_CLIENT_ID)!,
         Username: email,
         ConfirmationCode: code,
         Session: session,
@@ -176,7 +182,7 @@ export class CognitoService {
   async adminGetUser(email: string) {
     try {
       const command = new AdminGetUserCommand({
-        UserPoolId: this.configService.get<string>('COGNITO_USER_POOL_ID'),
+        UserPoolId: this.configService.get<string>(COGNITO_USER_POOL_ID)!,
         Username: email,
       });
 
@@ -195,7 +201,7 @@ export class CognitoService {
   async resendConfirmationCode(email: string) {
     try {
       const command = new ResendConfirmationCodeCommand({
-        ClientId: this.configService.get<string>('COGNITO_CLIENT_ID'),
+        ClientId: this.configService.get<string>(COGNITO_CLIENT_ID)!,
         Username: email,
       });
 
@@ -263,7 +269,7 @@ export class CognitoService {
   ) {
     try {
       const command = new RespondToAuthChallengeCommand({
-        ClientId: this.configService.get<string>('COGNITO_CLIENT_ID'),
+        ClientId: this.configService.get<string>(COGNITO_CLIENT_ID)!,
         ChallengeName: ChallengeNameType.DEVICE_SRP_AUTH,
         ChallengeResponses: {
           USERNAME: username,
@@ -291,7 +297,7 @@ export class CognitoService {
   ) {
     try {
       const command = new RespondToAuthChallengeCommand({
-        ClientId: this.configService.get<string>('COGNITO_CLIENT_ID'),
+        ClientId: this.configService.get<string>(COGNITO_CLIENT_ID)!,
         ChallengeName: ChallengeNameType.SOFTWARE_TOKEN_MFA,
         ChallengeResponses: {
           USERNAME: username,
@@ -358,7 +364,7 @@ export class CognitoService {
     try {
       const command = new InitiateAuthCommand({
         AuthFlow: AuthFlowType.REFRESH_TOKEN_AUTH,
-        ClientId: this.configService.get<string>('COGNITO_CLIENT_ID'),
+        ClientId: this.configService.get<string>(COGNITO_CLIENT_ID)!,
         AuthParameters: {
           REFRESH_TOKEN: refreshToken,
         },
@@ -396,7 +402,7 @@ export class CognitoService {
     try {
       const command = new InitiateAuthCommand({
         AuthFlow: AuthFlowType.USER_AUTH,
-        ClientId: this.configService.get<string>('COGNITO_CLIENT_ID'),
+        ClientId: this.configService.get<string>(COGNITO_CLIENT_ID)!,
         AuthParameters: {
           USERNAME: email,
         },
@@ -420,7 +426,7 @@ export class CognitoService {
   async forgotPassword(email: string) {
     try {
       const command = new ForgotPasswordCommand({
-        ClientId: this.configService.get<string>('COGNITO_CLIENT_ID'),
+        ClientId: this.configService.get<string>(COGNITO_CLIENT_ID)!,
         Username: email,
       });
 
@@ -445,7 +451,7 @@ export class CognitoService {
   async confirmForgotPassword(email: string, code: string, password: string) {
     try {
       const command = new ConfirmForgotPasswordCommand({
-        ClientId: this.configService.get<string>('COGNITO_CLIENT_ID'),
+        ClientId: this.configService.get<string>(COGNITO_CLIENT_ID)!,
         Username: email,
         ConfirmationCode: code,
         Password: password,
@@ -712,7 +718,7 @@ export class CognitoService {
   ) {
     try {
       const command = new AdminDisableProviderForUserCommand({
-        UserPoolId: this.configService.get<string>('COGNITO_USER_POOL_ID'),
+        UserPoolId: this.configService.get<string>(COGNITO_USER_POOL_ID)!,
         User: {
           ProviderName: providerName,
           ProviderAttributeName: 'Cognito_Subject',
@@ -741,7 +747,7 @@ export class CognitoService {
   ) {
     try {
       const command = new AdminLinkProviderForUserCommand({
-        UserPoolId: this.configService.get<string>('COGNITO_USER_POOL_ID'),
+        UserPoolId: this.configService.get<string>(COGNITO_USER_POOL_ID)!,
         DestinationUser: {
           ProviderName: 'Cognito',
           ProviderAttributeName: 'Cognito_Subject',

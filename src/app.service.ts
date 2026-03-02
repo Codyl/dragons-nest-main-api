@@ -1,13 +1,15 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectConnection } from '@nestjs/mongoose';
+import { APP_ENV, NODE_ENV } from 'env.constants';
 import { Connection } from 'mongoose';
+import { EnvironmentVariables } from 'env.config';
 
 @Injectable()
 export class AppService {
   constructor(
     @InjectConnection() private readonly connection: Connection,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
   getHealth() {
@@ -27,14 +29,18 @@ export class AppService {
     };
 
     // Sensitive detail only for development/local
-    if (this.configService.get<string>('APP_ENV') !== 'production') {
+    if (
+      this.configService.getOrThrow(APP_ENV, { infer: true }) !== 'production'
+    ) {
       return {
         ...status,
         debug: {
           dbName: this.connection.name, // "test" vs "myRealDb"
           host: this.connection.host,
-          nodeEnv: this.configService.get<string>('NODE_ENV'),
-          appEnv: this.configService.get<string>('APP_ENV'),
+          nodeEnv: this.configService.getOrThrow(NODE_ENV, {
+            infer: true,
+          }),
+          appEnv: this.configService.getOrThrow(APP_ENV, { infer: true }),
         },
       };
     }

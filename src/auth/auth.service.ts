@@ -11,6 +11,8 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createDeviceVerifier } from 'cognito-srp-helper';
+import { COGNITO_CLIENT_ID } from 'env.constants';
+import { EnvironmentVariables } from 'env.config';
 import { CognitoService } from 'src/cognito/cognito.service';
 import { UsersService } from 'src/users/users.service';
 
@@ -25,7 +27,7 @@ export class AuthService {
   constructor(
     private readonly cognitoService: CognitoService,
     private readonly usersService: UsersService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
   async initiateSignup(email: string, password: string) {
@@ -123,7 +125,9 @@ export class AuthService {
         )?.Value ?? 'user';
     }
 
-    const clientId = this.configService.get<string>('COGNITO_CLIENT_ID');
+    const clientId = this.configService.getOrThrow(COGNITO_CLIENT_ID, {
+      infer: true,
+    });
     const qrString = `otpauth://totp/${clientId}:${usernameForQr ?? 'user'}?secret=${response.SecretCode}&issuer=${clientId}`;
     return {
       response,
