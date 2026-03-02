@@ -3,8 +3,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { CognitoModule } from './cognito/cognito.module';
 import Joi from 'joi';
 import { ProfileModule } from './profile/profile.module';
@@ -13,6 +11,7 @@ import { GoogleModule } from './google/google.module';
 import { MaxmindModule } from './maxmind/maxmind.module';
 import { MONGODB_URI } from 'env.constants';
 import { EnvironmentVariables } from 'env.config';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -77,8 +76,9 @@ import { EnvironmentVariables } from 'env.config';
     PasskeyModule,
     GoogleModule,
     MaxmindModule,
+    HealthModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

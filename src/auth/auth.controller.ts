@@ -91,10 +91,7 @@ export class AuthController {
 
   // MFA
   @Post('mfa')
-  async mfa(
-    @Body() body: MfaDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async mfa(@Body() body: MfaDto, @Res({ passthrough: true }) res: Response) {
     const response = await this.authService.mfa(
       body.email,
       body.session,
