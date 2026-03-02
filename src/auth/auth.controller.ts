@@ -18,6 +18,14 @@ import { InitiateLoginDto } from './dto/initiate-login.dto';
 import { SetSessionDto } from './dto/set-session.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ConfirmForgotPasswordDto } from './dto/confirm-forgot-password.dto';
+import { InitiateSignupResponseDto } from './dto/out/initiate-signup-response.dto';
+import { ConfirmSignupResponseDto } from './dto/out/confirm-signup-response.dto';
+import { MfaResponseDto } from './dto/out/mfa-response.dto';
+import { GenerateAuthenticatorSecretResponseDto } from './dto/out/generate-authenticator-secret-response.dto';
+import { VerifyUsernameResponseDto } from './dto/out/verify-username-response.dto';
+import { InitiateLoginResponseDto } from './dto/out/initiate-login-response.dto';
+import { ConfirmForgotPasswordResponseDto } from './dto/out/confirm-forgot-password-response.dto';
+import { ApiResponseDto, EmptyDataDto } from 'src/common/dto/api-response.dto';
 
 @ApiCookieAuth('ACCESS_TOKEN')
 @Controller('auth')
@@ -37,17 +45,20 @@ export class AuthController {
 
   // Signup
   @Post('initiate-signup')
-  async initiateSignup(@Body() body: InitiateSignupDto) {
+  async initiateSignup(
+    @Body() body: InitiateSignupDto,
+  ): Promise<ApiResponseDto<InitiateSignupResponseDto>> {
     const response = await this.authService.initiateSignup(
       body.email,
       body.password,
     );
 
+    const data: InitiateSignupResponseDto = {
+      Session: response.CodeDeliveryDetails ? response.Session : undefined,
+    };
     return {
       message: 'Signup initiated successfully',
-      data: {
-        Session: response.CodeDeliveryDetails ? response.Session : undefined,
-      },
+      data,
     };
   }
 
@@ -55,7 +66,7 @@ export class AuthController {
   async confirmSignup(
     @Body() body: ConfirmSignupDto,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<ApiResponseDto<ConfirmSignupResponseDto>> {
     const tokens = await this.authService.confirmSignup(
       body.email,
       body.code,
@@ -74,19 +85,26 @@ export class AuthController {
       );
     }
 
+    const data: ConfirmSignupResponseDto = {
+      Session: undefined,
+      challengeName: undefined,
+      AuthenticationResult: tokens.AccessToken ? {} : undefined,
+    };
     return {
       message: 'Signup confirmed successfully',
-      data: {
-        Session: undefined,
-        challengeName: undefined,
-        AuthenticationResult: tokens.AccessToken ? {} : undefined,
-      },
+      data,
     };
   }
 
   @Post('confirm-signup/resend-code')
-  confirmSignupResendCode(@Body() body: ConfirmSignupResendCodeDto) {
-    return this.authService.confirmSignupResendCode(body.email);
+  async confirmSignupResendCode(
+    @Body() body: ConfirmSignupResendCodeDto,
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
+    await this.authService.confirmSignupResendCode(body.email);
+    return {
+      message: 'Verification code resent successfully',
+      data: {},
+    };
   }
 
   // MFA
@@ -106,14 +124,22 @@ export class AuthController {
       setAuthCookies(res, response.AuthenticationResult, this.cookieOptions);
     }
 
-    return response;
+    const data: MfaResponseDto = {
+      Session: response.Session,
+      ChallengeName: response.ChallengeName,
+      AuthenticationResult: response.AuthenticationResult ? {} : undefined,
+    };
+    return {
+      message: 'MFA verified successfully',
+      data,
+    };
   }
 
   @Post('mfa/generate-authenticator-secret')
   async generateAuthenticatorSecret(
     @Body() body: GenerateAuthenticatorSecretDto,
     @Cookies('ACCESS_TOKEN') cookieAccessToken: string,
-  ) {
+  ): Promise<ApiResponseDto<GenerateAuthenticatorSecretResponseDto>> {
     const response = await this.authService.generateAuthenticatorSecret(
       body.username,
       body.session,
@@ -123,12 +149,13 @@ export class AuthController {
       throw new NotFoundException('Secret not found.');
     }
 
+    const data: GenerateAuthenticatorSecretResponseDto = {
+      session: response.response.Session ?? '',
+      qrString: response.qrString,
+    };
     return {
       message: 'Authenticator secret generated successfully',
-      data: {
-        session: response.response.Session,
-        qrString: response.qrString,
-      },
+      data,
     };
   }
 
@@ -137,7 +164,7 @@ export class AuthController {
     @Body() body: ConnectAuthenticatorAppDto,
     @Res({ passthrough: true }) res: Response,
     @Cookies('ACCESS_TOKEN') cookieAccessToken: string,
-  ) {
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
     await this.authService.connectAuthenticatorApp(
       body.session,
       body.userCode,
@@ -155,17 +182,20 @@ export class AuthController {
 
   // Login
   @Post('verify-username')
-  async verifyUsername(@Body() body: VerifyUsernameDto) {
-    const data = await this.authService.verifyUsername(
+  async verifyUsername(
+    @Body() body: VerifyUsernameDto,
+  ): Promise<ApiResponseDto<VerifyUsernameResponseDto>> {
+    const result = await this.authService.verifyUsername(
       body.email,
       body.password,
     );
+    const data: VerifyUsernameResponseDto = {
+      Session: result.Session,
+      AvailableChallenges: result.AvailableChallenges,
+    };
     return {
       message: 'Username verified successfully',
-      data: {
-        Session: data.Session,
-        AvailableChallenges: data.AvailableChallenges,
-      },
+      data,
     };
   }
 
@@ -173,7 +203,7 @@ export class AuthController {
   async initiateLogin(
     @Body() body: InitiateLoginDto,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<ApiResponseDto<InitiateLoginResponseDto>> {
     const response = await this.authService.initiateLogin(
       body.email,
       body.password,
@@ -190,13 +220,14 @@ export class AuthController {
       );
     }
 
+    const data: InitiateLoginResponseDto = {
+      session: response.response.Session,
+      challengeName: response.response.ChallengeName,
+      device: response.device,
+    };
     return {
       message: 'Login initiated successfully',
-      data: {
-        session: response.response.Session,
-        challengeName: response.response.ChallengeName,
-        device: response.device,
-      },
+      data,
     };
   }
 
@@ -204,7 +235,7 @@ export class AuthController {
   async refreshToken(
     @Cookies('REFRESH_TOKEN') refreshToken: string,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
     const result = await this.authService.refreshToken(refreshToken);
 
     if (result?.AuthenticationResult) {
@@ -225,7 +256,7 @@ export class AuthController {
   async setSession(
     @Body() body: SetSessionDto,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
     await this.authService.verifyTokensForSetSession(body);
 
     setAuthCookies(
@@ -248,7 +279,7 @@ export class AuthController {
   async logout(
     @Cookies('ACCESS_TOKEN') accessToken: string,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
     if (accessToken) {
       await this.authService.logout(accessToken);
     }
@@ -266,7 +297,9 @@ export class AuthController {
 
   // Forgot password
   @Post('forgot-password')
-  async forgotPassword(@Body() body: ForgotPasswordDto) {
+  async forgotPassword(
+    @Body() body: ForgotPasswordDto,
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
     await this.authService.forgotPassword(body.username);
     return {
       message: 'Password reset code sent successfully',
@@ -278,7 +311,7 @@ export class AuthController {
   async confirmForgotPassword(
     @Body() body: ConfirmForgotPasswordDto,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<ApiResponseDto<ConfirmForgotPasswordResponseDto>> {
     const response = await this.authService.confirmForgotPassword(
       body.username,
       body.code,
@@ -288,11 +321,12 @@ export class AuthController {
       setAuthCookies(res, response.AuthenticationResult, this.cookieOptions);
     }
 
+    const data: ConfirmForgotPasswordResponseDto = {
+      AuthenticationResult: response.AuthenticationResult ? {} : undefined,
+    };
     return {
       message: 'Password reset confirmed successfully',
-      data: {
-        AuthenticationResult: response.AuthenticationResult ? {} : undefined,
-      },
+      data,
     };
   }
 }

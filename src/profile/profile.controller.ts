@@ -8,6 +8,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiCookieAuth } from '@nestjs/swagger';
+import type {
+  ApiResponseDto,
+  EmptyDataDto,
+} from 'src/common/dto/api-response.dto';
 import { ProfileService } from './profile.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
@@ -17,14 +21,11 @@ import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
-
-interface MessageDataResponse<T = object> {
-  message: string;
-  data: T;
-}
+import type { GetMeResponseDto } from './dto/out/get-me-response.dto';
+import type { KnownDeviceResponseDto } from './dto/out/known-device-response.dto';
 
 @ApiCookieAuth('ACCESS_TOKEN')
-@Controller('profile/passkey')
+@Controller('profile')
 @UseGuards(AuthGuard)
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
@@ -32,14 +33,12 @@ export class ProfileController {
   @Get()
   async getMe(
     @AccessToken() accessToken: string,
-  ): Promise<
-    MessageDataResponse<Awaited<ReturnType<ProfileService['getMe']>>>
-  > {
+  ): Promise<ApiResponseDto<GetMeResponseDto>> {
     const data = await this.profileService.getMe(accessToken);
 
     return {
       message: 'User retrieved successfully',
-      data,
+      data: data as GetMeResponseDto,
     };
   }
 
@@ -47,7 +46,7 @@ export class ProfileController {
   async updateAccount(
     @AccessToken() accessToken: string,
     @Body() dto: UpdateAccountDto,
-  ): Promise<MessageDataResponse<Record<string, never>>> {
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
     await this.profileService.updateAccount(accessToken, dto);
     return {
       message: 'User settings updated successfully',
@@ -59,7 +58,7 @@ export class ProfileController {
   async setMfaPreference(
     @AccessToken() accessToken: string,
     @Body() dto: MfaPreferenceDto,
-  ): Promise<MessageDataResponse<Record<string, never>>> {
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
     await this.profileService.setMfaPreference(accessToken, dto);
     return {
       message: 'MFA preferences updated successfully',
@@ -72,7 +71,7 @@ export class ProfileController {
     @AccessToken() accessToken: string,
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Body() dto: ChangePasswordDto,
-  ): Promise<MessageDataResponse<Record<string, never>>> {
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
@@ -90,7 +89,7 @@ export class ProfileController {
     @AccessToken() accessToken: string,
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Body() dto: LinkGoogleDto,
-  ): Promise<MessageDataResponse<Record<string, never>>> {
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
@@ -111,7 +110,7 @@ export class ProfileController {
   async unlinkGoogle(
     @AccessToken() accessToken: string,
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
-  ): Promise<MessageDataResponse<Record<string, never>>> {
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
@@ -128,7 +127,7 @@ export class ProfileController {
   async deleteMe(
     @AccessToken() accessToken: string,
     @Body() dto: DeleteMeDto,
-  ): Promise<MessageDataResponse<Record<string, never>>> {
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
     await this.profileService.deleteMe(accessToken, dto.password);
     return {
       message: 'User deleted successfully',
@@ -139,13 +138,11 @@ export class ProfileController {
   @Get('known-devices')
   async getKnownDevices(
     @AccessToken() accessToken: string,
-  ): Promise<
-    MessageDataResponse<Awaited<ReturnType<ProfileService['getKnownDevices']>>>
-  > {
+  ): Promise<ApiResponseDto<KnownDeviceResponseDto[]>> {
     const data = await this.profileService.getKnownDevices(accessToken);
     return {
       message: 'Known devices retrieved successfully',
-      data,
+      data: data as KnownDeviceResponseDto[],
     };
   }
 }

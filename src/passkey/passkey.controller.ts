@@ -2,7 +2,7 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { PasskeyService } from './passkey.service';
 import { AccessToken } from 'src/auth/decorators/access-token.decorator';
-import { PasskeyVerifyRegistrationDto } from 'src/profile/dto/passkey-verify-registration.dto';
+import { PasskeyVerifyRegistrationDto } from 'src/passkey/dto/passkey-verify-registration.dto';
 
 interface MessageDataResponse<T = object> {
   message: string;

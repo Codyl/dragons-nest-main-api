@@ -2,7 +2,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PasskeyController } from './passkey.controller';
 import { PasskeyService } from './passkey.service';
-import { PasskeyVerifyRegistrationDto } from 'src/profile/dto/passkey-verify-registration.dto';
+import { PasskeyVerifyRegistrationDto } from 'src/passkey/dto/passkey-verify-registration.dto';
 
 describe('PasskeyController', () => {
   let controller: PasskeyController;
