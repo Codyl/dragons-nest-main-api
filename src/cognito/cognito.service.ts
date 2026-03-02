@@ -398,7 +398,7 @@ export class CognitoService {
     }
   }
 
-  async initiateAuth(email: string, session: string) {
+  async initiateAuth(email: string, session?: string) {
     try {
       const command = new InitiateAuthCommand({
         AuthFlow: AuthFlowType.USER_AUTH,

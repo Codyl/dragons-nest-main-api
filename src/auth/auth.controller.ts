@@ -185,10 +185,7 @@ export class AuthController {
   async verifyUsername(
     @Body() body: VerifyUsernameDto,
   ): Promise<ApiResponseDto<VerifyUsernameResponseDto>> {
-    const result = await this.authService.verifyUsername(
-      body.email,
-      body.password,
-    );
+    const result = await this.authService.verifyUsername(body.email);
     const data: VerifyUsernameResponseDto = {
       Session: result.Session,
       AvailableChallenges: result.AvailableChallenges,

@@ -170,8 +170,8 @@ export class AuthService {
     }
   }
 
-  async verifyUsername(email: string, password: string) {
-    const response = await this.cognitoService.initiateAuth(email, password);
+  async verifyUsername(email: string) {
+    const response = await this.cognitoService.initiateAuth(email);
     if (!response) {
       throw new NotFoundException('User not found.');
     }
