@@ -17,8 +17,6 @@ import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
-import { PasskeyVerifyRegistrationDto } from './dto/passkey-verify-registration.dto';
-import { PasskeyService } from '../passkey/passkey.service';
 
 interface MessageDataResponse<T = object> {
   message: string;
@@ -26,13 +24,10 @@ interface MessageDataResponse<T = object> {
 }
 
 @ApiCookieAuth('ACCESS_TOKEN')
-@Controller('profile')
+@Controller('profile/passkey')
 @UseGuards(AuthGuard)
 export class ProfileController {
-  constructor(
-    private readonly profileService: ProfileService,
-    private readonly passkeyService: PasskeyService,
-  ) {}
+  constructor(private readonly profileService: ProfileService) {}
 
   @Get()
   async getMe(
@@ -151,49 +146,6 @@ export class ProfileController {
     return {
       message: 'Known devices retrieved successfully',
       data,
-    };
-  }
-
-  @Post('passkey/register/options')
-  async passkeyRegisterOptions(
-    @AccessToken() accessToken: string,
-    @CurrentUser() user: Record<string, unknown> & { sub?: string },
-  ): Promise<
-    MessageDataResponse<
-      Awaited<ReturnType<PasskeyService['getRegistrationOptions']>>
-    >
-  > {
-    const sub = user?.sub;
-    if (!sub || typeof sub !== 'string') {
-      throw new Error('Not authenticated');
-    }
-
-    const options = await this.passkeyService.getRegistrationOptions(
-      accessToken,
-      sub,
-    );
-    return {
-      message: 'Registration options',
-      data: options,
-    };
-  }
-
-  @Post('passkey/register/verify')
-  async passkeyRegisterVerify(
-    @CurrentUser() user: Record<string, unknown> & { sub?: string },
-    @Body() dto: PasskeyVerifyRegistrationDto,
-  ): Promise<MessageDataResponse<{ verified: boolean }>> {
-    const sub = user?.sub;
-    if (!sub || typeof sub !== 'string') {
-      throw new Error('Not authenticated');
-    }
-
-    const result = await this.passkeyService.verifyRegistration(sub, dto);
-    return {
-      message: result.verified
-        ? 'Passkey registered successfully'
-        : 'Passkey verification failed',
-      data: { verified: result.verified },
     };
   }
 }

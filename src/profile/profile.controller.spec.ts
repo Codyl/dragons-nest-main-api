@@ -2,8 +2,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProfileController } from './profile.controller';
 import { ProfileService } from './profile.service';
-import { PasskeyService } from '../passkey/passkey.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { MfaPreferenceDto } from './dto/mfa-preference.dto';
@@ -13,7 +12,6 @@ import { DeleteMeDto } from './dto/delete-me.dto';
 describe('ProfileController', () => {
   let controller: ProfileController;
   let profileService: jest.Mocked<ProfileService>;
-  let passkeyService: jest.Mocked<PasskeyService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -32,22 +30,14 @@ describe('ProfileController', () => {
             getKnownDevices: jest.fn(),
           },
         },
-        {
-          provide: PasskeyService,
-          useValue: {
-            getRegistrationOptions: jest.fn(),
-            verifyRegistration: jest.fn(),
-          },
-        },
       ],
     })
-      .overrideGuard(JwtAuthGuard)
+      .overrideGuard(AuthGuard)
       .useValue({ canActivate: jest.fn().mockResolvedValue(true) })
       .compile();
 
     controller = module.get<ProfileController>(ProfileController);
     profileService = module.get<jest.Mocked<ProfileService>>(ProfileService);
-    passkeyService = module.get<jest.Mocked<PasskeyService>>(PasskeyService);
   });
 
   it('should be defined', () => {
@@ -191,58 +181,6 @@ describe('ProfileController', () => {
     expect(profileService.getKnownDevices).toHaveBeenCalledWith('123');
   });
 
-  describe('passkey endpoints', () => {
-    it('should return passkey registration options', async () => {
-      const mockOptions = { challenge: 'challenge', rp: { name: 'Test' } };
-      passkeyService.getRegistrationOptions.mockResolvedValue(
-        mockOptions as never,
-      );
-      const result = await controller.passkeyRegisterOptions('token', {
-        sub: 'user-123',
-      });
-      expect(result).toEqual({
-        message: 'Registration options',
-        data: mockOptions,
-      });
-      expect(passkeyService.getRegistrationOptions).toHaveBeenCalledWith(
-        'token',
-        'user-123',
-      );
-    });
-
-    it('should verify passkey registration and return success message', async () => {
-      passkeyService.verifyRegistration.mockResolvedValue({
-        verified: true,
-      } as never);
-      const result = await controller.passkeyRegisterVerify(
-        { sub: 'user-123' },
-        { id: 'cred-id', response: {} },
-      );
-      expect(result).toEqual({
-        message: 'Passkey registered successfully',
-        data: { verified: true },
-      });
-      expect(passkeyService.verifyRegistration).toHaveBeenCalledWith(
-        'user-123',
-        { id: 'cred-id', response: {} },
-      );
-    });
-
-    it('should verify passkey registration and return failure message', async () => {
-      passkeyService.verifyRegistration.mockResolvedValue({
-        verified: false,
-      } as never);
-      const result = await controller.passkeyRegisterVerify(
-        { sub: 'user-123' },
-        {},
-      );
-      expect(result).toEqual({
-        message: 'Passkey verification failed',
-        data: { verified: false },
-      });
-    });
-  });
-
   describe('when user is not authenticated (missing sub)', () => {
     it('changePassword throws', async () => {
       await expect(
@@ -270,20 +208,6 @@ describe('ProfileController', () => {
         'Not authenticated',
       );
       expect(profileService.unlinkGoogle).not.toHaveBeenCalled();
-    });
-
-    it('passkeyRegisterOptions throws', async () => {
-      await expect(
-        controller.passkeyRegisterOptions('token', {}),
-      ).rejects.toThrow('Not authenticated');
-      expect(passkeyService.getRegistrationOptions).not.toHaveBeenCalled();
-    });
-
-    it('passkeyRegisterVerify throws', async () => {
-      await expect(controller.passkeyRegisterVerify({}, {})).rejects.toThrow(
-        'Not authenticated',
-      );
-      expect(passkeyService.verifyRegistration).not.toHaveBeenCalled();
     });
   });
 });
