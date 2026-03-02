@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiCookieAuth } from '@nestjs/swagger';
 import { ProfileService } from './profile.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AccessToken } from 'src/auth/decorators/access-token.decorator';
 import { UpdateAccountDto } from './dto/update-account.dto';
@@ -26,7 +26,7 @@ interface MessageDataResponse<T = object> {
 
 @ApiCookieAuth('ACCESS_TOKEN')
 @Controller('profile')
-@UseGuards(JwtAuthGuard)
+@UseGuards(AuthGuard)
 export class ProfileController {
   constructor(
     private readonly profileService: ProfileService,
