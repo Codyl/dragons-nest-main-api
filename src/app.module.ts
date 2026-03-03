@@ -16,7 +16,10 @@ import { HealthModule } from './health/health.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: '.env.development.local',
+      envFilePath:
+        process.env.NODE_ENV === 'test'
+          ? '.env.test.local'
+          : '.env.development.local',
       isGlobal: true,
       validationSchema: Joi.object({
         // Environment
@@ -24,7 +27,7 @@ import { HealthModule } from './health/health.module';
           .valid('development', 'production', 'test')
           .default('development'),
         APP_ENV: Joi.string()
-          .valid('development', 'production', 'staging')
+          .valid('development', 'production', 'staging', 'test')
           .default('development'),
 
         PORT: Joi.number().port().default(3000),

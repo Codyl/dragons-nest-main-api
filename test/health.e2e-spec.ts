@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { createTestApp } from './test-utils';
+import { HealthResponseDto } from 'src/health/dto/out/health-response.dto';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -18,10 +19,11 @@ describe('AppController (e2e)', () => {
       .get('/health')
       .expect(200)
       .expect((res) => {
-        expect(res.body.status).toBe('ok');
-        expect(res.body.info).toHaveProperty('cognito');
-        expect(res.body.info).toHaveProperty('google');
-        expect(res.body.info).toHaveProperty('database');
+        const healthResponse = res.body as HealthResponseDto;
+        expect(healthResponse.status).toBe('ok');
+        expect(healthResponse.info).toHaveProperty('cognito');
+        expect(healthResponse.info).toHaveProperty('google');
+        expect(healthResponse.info).toHaveProperty('database');
       });
   });
 });

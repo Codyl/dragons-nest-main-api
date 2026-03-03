@@ -6,7 +6,7 @@
  */
 export class ApiResponseDto<T = object> {
   message!: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   data!: T;
 }
 
@@ -15,3 +15,9 @@ export class ApiResponseDto<T = object> {
  * Kept as an empty class so the `data` property is still an object.
  */
 export class EmptyDataDto {}
+
+export class ApiErrorDto {
+  message: string;
+  error: string;
+  data: null; // Or undefined
+}
