@@ -11,7 +11,7 @@ import {
   WEBAUTHN_ORIGIN,
   WEBAUTHN_RP_ID,
   WEBAUTHN_RP_NAME,
-  WEBAUTHN_AUTHENTICATOR_ATTACHMENT,
+  // WEBAUTHN_AUTHENTICATOR_ATTACHMENT,
 } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
 
@@ -39,7 +39,7 @@ export class PasskeyService {
       )?.Value ?? sub;
     const options = await generateRegistrationOptions({
       rpName,
-      rpID: rpID as 'localhost',
+      rpID: rpID,
       userName: username,
       userID: new Uint8Array(Buffer.from(sub, 'utf8')),
       userDisplayName: username,
@@ -61,11 +61,11 @@ export class PasskeyService {
       authenticatorSelection: {
         residentKey: 'preferred',
         userVerification: 'preferred',
-        ...(this.configService.getOrThrow(WEBAUTHN_AUTHENTICATOR_ATTACHMENT, {
-          infer: true,
-        }) === 'platform' && {
-          authenticatorAttachment: 'platform' as const,
-        }),
+        // ...(this.configService.getOrThrow(WEBAUTHN_AUTHENTICATOR_ATTACHMENT, {
+        //   infer: true,
+        // }) === 'platform' && {
+        //   authenticatorAttachment: 'platform' as const,
+        // }),
       },
     });
     this.passkeyStore.setRegistrationChallenge(sub, {

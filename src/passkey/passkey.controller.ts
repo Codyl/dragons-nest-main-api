@@ -1,19 +1,21 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { PasskeyService } from './passkey.service';
 import { AccessToken } from 'src/auth/decorators/access-token.decorator';
 import { PasskeyVerifyRegistrationDto } from 'src/passkey/dto/passkey-verify-registration.dto';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 
 interface MessageDataResponse<T = object> {
   message: string;
   data: T;
 }
 
-@Controller('passkey')
+@Controller('profile/passkey')
+@UseGuards(AuthGuard)
 export class PasskeyController {
   constructor(private readonly passkeyService: PasskeyService) {}
 
-  @Post('passkey/register/options')
+  @Post('register/options')
   async passkeyRegisterOptions(
     @AccessToken() accessToken: string,
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
@@ -37,7 +39,7 @@ export class PasskeyController {
     };
   }
 
-  @Post('passkey/register/verify')
+  @Post('register/verify')
   async passkeyRegisterVerify(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Body() dto: PasskeyVerifyRegistrationDto,

@@ -1,6 +1,9 @@
 import {
+  IsArray,
   IsIn,
+  IsNumber,
   IsObject,
+  IsOptional,
   IsString,
   MinLength,
   ValidateNested,
@@ -15,12 +18,27 @@ export class PasskeyRegistrationResponseDto {
   @IsString()
   @MinLength(1, { message: 'attestationObject is required' })
   attestationObject: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  authenticatorData?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  publicKey?: string;
+
+  @IsOptional()
+  @IsNumber()
+  publicKeyAlgorithm?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  transports?: string[];
 }
 
-/**
- * WebAuthn registration verification payload (browser credential response).
- * Validates the minimal shape required by @simplewebauthn/server verifyRegistrationResponse.
- */
 export class PasskeyVerifyRegistrationDto {
   @IsString()
   @MinLength(1, { message: 'Credential id is required' })
@@ -37,4 +55,16 @@ export class PasskeyVerifyRegistrationDto {
   @ValidateNested()
   @Type(() => PasskeyRegistrationResponseDto)
   response: PasskeyRegistrationResponseDto;
+
+  @IsOptional()
+  @IsObject()
+  clientExtensionResults?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['platform', 'cross-platform'], {
+    message:
+      'authenticatorAttachment must be "platform" or "cross-platform" when present',
+  })
+  authenticatorAttachment?: string;
 }
