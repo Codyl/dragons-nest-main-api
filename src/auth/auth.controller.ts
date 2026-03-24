@@ -68,7 +68,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponseDto<ConfirmSignupResponseDto>> {
     const tokens = await this.authService.confirmSignup(
-      body.email,
+      body.username,
       body.code,
       body.session,
       body.password,

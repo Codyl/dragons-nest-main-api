@@ -6,7 +6,7 @@ export class GenerateAuthenticatorSecretDto {
   username: string;
 
   @IsString()
-  @MinLength(1, { message: 'Session is required' })
+  @IsOptional()
   session: string;
 
   @IsOptional()

@@ -2,7 +2,7 @@ import { IsEmail, IsString, MinLength } from 'class-validator';
 
 export class ConfirmSignupDto {
   @IsEmail()
-  email: string;
+  username: string;
 
   @IsString()
   @MinLength(1, { message: 'Verification code is required' })
