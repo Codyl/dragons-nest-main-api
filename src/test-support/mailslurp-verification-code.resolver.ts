@@ -17,9 +17,8 @@ const CONFIRM_SIGNUP_TIMEOUT_MS = 10_000;
 
 /**
  * When active (factory-gated: NODE_ENV + APP_ENV test + MailSlurp env),
- * reads verification codes from MailSlurp only if the client omitted the code
- * (empty/whitespace). Otherwise returns the client value so e2e can read the
- * inbox once and Cognito invalid-code tests still send wrong values.
+ * always loads the verification code from the MailSlurp inbox so Cypress/UI can
+ * submit placeholder digits while Cognito still receives the real emailed code.
  */
 @Injectable()
 export class MailslurpVerificationCodeResolver implements VerificationCodeResolver {
@@ -31,9 +30,7 @@ export class MailslurpVerificationCodeResolver implements VerificationCodeResolv
     codeFromClient: string,
     flow: VerificationFlow,
   ): Promise<string> {
-    if (codeFromClient.trim() !== '') {
-      return codeFromClient;
-    }
+    void codeFromClient;
 
     const apiKey = this.configService.get('MAILSLURP_API_KEY', { infer: true });
     const inboxId = this.configService.get('MAILSLURP_INBOX_ID', {

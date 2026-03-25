@@ -44,16 +44,21 @@ describe('MailslurpVerificationCodeResolver', () => {
     resolver = new MailslurpVerificationCodeResolver(configService);
   });
 
-  describe('client code passthrough', () => {
-    it('returns non-empty client code without calling MailSlurp', async () => {
-      await expect(resolver.resolve(' 999888 ', 'signup')).resolves.toBe(
-        ' 999888 ',
-      );
-      expect(createMailslurpClient).not.toHaveBeenCalled();
-    });
-  });
-
   describe('signup flow', () => {
+    it('reads MailSlurp even when client sends a placeholder code', async () => {
+      getVerificationCodeFromEmail.mockResolvedValue('111111');
+
+      await expect(resolver.resolve('999888', 'signup')).resolves.toBe(
+        '111111',
+      );
+      expect(createMailslurpClient).toHaveBeenCalled();
+      expect(getVerificationCodeFromEmail).toHaveBeenCalledWith(
+        mockClient,
+        'inbox-1',
+        10_000,
+      );
+    });
+
     it('uses MailSlurp code when present', async () => {
       getVerificationCodeFromEmail.mockResolvedValue('111111');
 
@@ -79,6 +84,19 @@ describe('MailslurpVerificationCodeResolver', () => {
 
       await expect(resolver.resolve('', 'forgot_password')).resolves.toBe(
         '222222',
+      );
+      expect(getVerificationCodeFromEmail).toHaveBeenCalledWith(
+        mockClient,
+        'inbox-1',
+        undefined,
+      );
+    });
+
+    it('reads MailSlurp when client sends a placeholder code', async () => {
+      getVerificationCodeFromEmail.mockResolvedValue('333333');
+
+      await expect(resolver.resolve('123456', 'forgot_password')).resolves.toBe(
+        '333333',
       );
       expect(getVerificationCodeFromEmail).toHaveBeenCalledWith(
         mockClient,
