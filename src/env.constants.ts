@@ -27,3 +27,6 @@ export const WEBAUTHN_RP_NAME = 'WEBAUTHN_RP_NAME';
 export const WEBAUTHN_ORIGIN = 'WEBAUTHN_ORIGIN';
 export const WEBAUTHN_AUTHENTICATOR_ATTACHMENT =
   'WEBAUTHN_AUTHENTICATOR_ATTACHMENT';
+
+/** Email for the seeded Cognito + Mongo user when NODE_ENV=test (E2E reset). */
+export const PREEXISTING_USER_EMAIL = 'PREEXISTING_USER_EMAIL';

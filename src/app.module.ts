@@ -12,6 +12,10 @@ import { MaxmindModule } from './maxmind/maxmind.module';
 import { MONGODB_URI } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
 import { HealthModule } from './health/health.module';
+import { TestSupportModule } from './test-support/test-support.module';
+
+const testOnlyImports =
+  process.env.NODE_ENV === 'test' ? [TestSupportModule] : [];
 
 @Module({
   imports: [
@@ -64,6 +68,12 @@ import { HealthModule } from './health/health.module';
         WEBAUTHN_AUTHENTICATOR_ATTACHMENT: Joi.string()
           .valid('platform', 'cross-platform', 'any')
           .default('platform'),
+
+        PREEXISTING_USER_EMAIL: Joi.string().email().when('NODE_ENV', {
+          is: 'test',
+          then: Joi.required(),
+          otherwise: Joi.optional(),
+        }),
       }),
     }),
     MongooseModule.forRootAsync({
@@ -80,6 +90,7 @@ import { HealthModule } from './health/health.module';
     GoogleModule,
     MaxmindModule,
     HealthModule,
+    ...testOnlyImports,
   ],
   controllers: [],
   providers: [],

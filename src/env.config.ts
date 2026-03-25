@@ -27,4 +27,7 @@ export interface EnvironmentVariables {
   WEBAUTHN_RP_NAME: string;
   WEBAUTHN_ORIGIN: string;
   WEBAUTHN_AUTHENTICATOR_ATTACHMENT: string;
+
+  /** Required when NODE_ENV is test (see Joi in app.module). */
+  PREEXISTING_USER_EMAIL?: string;
 }

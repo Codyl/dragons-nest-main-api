@@ -7,7 +7,8 @@ import {
 } from '@nestjs/terminus';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/env.config';
-import { AWS_REGION, COGNITO_USER_POOL_ID } from 'src/env.constants';
+import { AWS_REGION, COGNITO_USER_POOL_ID, NODE_ENV } from 'src/env.constants';
+import { ApiOperation } from '@nestjs/swagger';
 
 @Controller('health')
 export class HealthController {
@@ -18,10 +19,13 @@ export class HealthController {
     private config: ConfigService<EnvironmentVariables>,
   ) {}
 
+  @ApiOperation({
+    summary: 'Reports the health of the application and its dependencies',
+  })
   @Get()
   @HealthCheck()
-  check() {
-    return this.health.check([
+  async check() {
+    const result = await this.health.check([
       () =>
         this.http.pingCheck(
           'cognito',
@@ -38,5 +42,15 @@ export class HealthController {
         ),
       () => this.mongo.pingCheck('database'),
     ]);
+
+    const nodeEnv = this.config.get(NODE_ENV, { infer: true });
+    if (nodeEnv === 'test') {
+      return {
+        ...result,
+        debug: { nodeEnv },
+      };
+    }
+
+    return result;
   }
 }

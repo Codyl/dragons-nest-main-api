@@ -3,7 +3,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Types } from 'mongoose';
 import { User } from './entities/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { DeleteResult, Model } from 'mongoose';
 
 /** Plain user document shape for return types; avoids Mongoose Document in callers/tests. */
 export interface UserDoc {
@@ -70,5 +70,19 @@ export class UsersService {
 
   removeById(_id: Types.ObjectId) {
     return this.userModel.findByIdAndDelete(_id);
+  }
+
+  /** Clears all user documents (E2E test reset only). */
+  deleteAllUsers(): Promise<DeleteResult> {
+    return this.userModel.deleteMany({});
+  }
+
+  /** Seeds the pre-existing E2E user document after Cognito admin create. */
+  createSeedUser(cognitoSub: string, email: string): Promise<User> {
+    return this.userModel.create({
+      cognitoSub,
+      email,
+      hasPassword: true,
+    });
   }
 }
