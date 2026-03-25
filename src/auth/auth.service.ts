@@ -15,6 +15,10 @@ import { createDeviceVerifier } from 'cognito-srp-helper';
 import { COGNITO_CLIENT_ID } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
 import { CognitoService } from 'src/cognito/cognito.service';
+import {
+  createMailslurpClient,
+  emptyMailslurpInbox,
+} from 'src/test-support/mailslurp.client';
 import { UsersService } from 'src/users/users.service';
 import type { SetSessionDto } from './dto/set-session.dto';
 import {
@@ -34,7 +38,37 @@ export class AuthService {
     private readonly verificationCodeResolver: VerificationCodeResolver,
   ) {}
 
+  /**
+   * MailSlurp `waitForLatestEmail` returns immediately when the inbox already
+   * contains messages, so an old unread verification email would be reused.
+   * Empty the inbox before Cognito sends a new code (test + MailSlurp only).
+   */
+  private async emptyMailslurpInboxBeforeOutgoingVerificationEmail(): Promise<void> {
+    const nodeEnv = this.configService.get('NODE_ENV', { infer: true });
+    const appEnv = this.configService.get('APP_ENV', { infer: true });
+    const apiKey = this.configService.get('MAILSLURP_API_KEY', { infer: true });
+    const inboxId = this.configService.get('MAILSLURP_INBOX_ID', {
+      infer: true,
+    });
+    if (
+      nodeEnv !== 'test' ||
+      appEnv !== 'test' ||
+      !apiKey?.trim() ||
+      !inboxId?.trim()
+    ) {
+      return;
+    }
+
+    const client = createMailslurpClient(apiKey);
+    if (!client) {
+      return;
+    }
+
+    await emptyMailslurpInbox(client, inboxId).catch(() => {});
+  }
+
   async initiateSignup(email: string, password: string) {
+    await this.emptyMailslurpInboxBeforeOutgoingVerificationEmail();
     const response = await this.cognitoService.signUp(email, password);
 
     return response;
@@ -97,6 +131,7 @@ export class AuthService {
   }
 
   async confirmSignupResendCode(email: string) {
+    await this.emptyMailslurpInboxBeforeOutgoingVerificationEmail();
     await this.cognitoService.resendConfirmationCode(email);
   }
 
@@ -305,6 +340,7 @@ export class AuthService {
   }
 
   async forgotPassword(email: string): Promise<void> {
+    await this.emptyMailslurpInboxBeforeOutgoingVerificationEmail();
     await this.cognitoService.forgotPassword(email);
   }
 

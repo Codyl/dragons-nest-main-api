@@ -175,7 +175,33 @@ export class CognitoService {
         if (error.name === 'UserNotFoundException') {
           throw new NotFoundException('User not found.');
         }
+
+        if (error.name === 'CodeMismatchException') {
+          throw new BadRequestException('Invalid verification code.');
+        }
+
+        if (error.name === 'ExpiredCodeException') {
+          throw new BadRequestException('Verification code has expired.');
+        }
+
+        if (error.name === 'NotAuthorizedException') {
+          throw new UnauthorizedException('Not authorized.');
+        }
+
+        if (error.name === 'LimitExceededException') {
+          throw new BadRequestException(error.message);
+        }
+
+        if (error.name === 'TooManyFailedAttemptsException') {
+          throw new BadRequestException(error.message);
+        }
+
+        if (error.name === 'InvalidParameterException') {
+          throw new BadRequestException(error.message);
+        }
       }
+
+      throw new InternalServerErrorException('Authentication service failed');
     }
   }
 

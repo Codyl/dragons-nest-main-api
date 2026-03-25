@@ -1,10 +1,4 @@
-import {
-  IsEmail,
-  IsOptional,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateAccountDto {
   @IsOptional()
@@ -13,13 +7,11 @@ export class UpdateAccountDto {
 
   @IsOptional()
   @IsString()
-  @MinLength(1)
   @MaxLength(256)
   given_name?: string;
 
   @IsOptional()
   @IsString()
-  @MinLength(1)
   @MaxLength(256)
   family_name?: string;
 
