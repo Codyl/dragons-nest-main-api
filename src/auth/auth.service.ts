@@ -5,6 +5,7 @@ import {
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -16,6 +17,10 @@ import { EnvironmentVariables } from 'src/env.config';
 import { CognitoService } from 'src/cognito/cognito.service';
 import { UsersService } from 'src/users/users.service';
 import type { SetSessionDto } from './dto/set-session.dto';
+import {
+  VERIFICATION_CODE_RESOLVER,
+  type VerificationCodeResolver,
+} from './verification-code.resolver';
 
 export type SetSessionBody = SetSessionDto;
 
@@ -25,6 +30,8 @@ export class AuthService {
     private readonly cognitoService: CognitoService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService<EnvironmentVariables>,
+    @Inject(VERIFICATION_CODE_RESOLVER)
+    private readonly verificationCodeResolver: VerificationCodeResolver,
   ) {}
 
   async initiateSignup(email: string, password: string) {
@@ -39,7 +46,11 @@ export class AuthService {
     session: string,
     password: string,
   ) {
-    await this.cognitoService.confirmSignUp(email, code, session);
+    const resolvedCode = await this.verificationCodeResolver.resolve(
+      code,
+      'signup',
+    );
+    await this.cognitoService.confirmSignUp(email, resolvedCode, session);
 
     const adminGetUserResponse = await this.cognitoService.adminGetUser(email);
 
@@ -298,9 +309,13 @@ export class AuthService {
   }
 
   async confirmForgotPassword(email: string, code: string, password: string) {
+    const resolvedCode = await this.verificationCodeResolver.resolve(
+      code,
+      'forgot_password',
+    );
     const response = await this.cognitoService.confirmForgotPassword(
       email,
-      code,
+      resolvedCode,
       password,
     );
     if (!response) {

@@ -1,6 +1,6 @@
 export interface EnvironmentVariables {
   NODE_ENV: 'development' | 'production' | 'test';
-  APP_ENV: 'development' | 'production' | 'staging';
+  APP_ENV: 'development' | 'production' | 'staging' | 'test';
 
   PORT: number;
 
@@ -30,4 +30,9 @@ export interface EnvironmentVariables {
 
   /** Required when NODE_ENV is test (see Joi in app.module). */
   PREEXISTING_USER_EMAIL?: string;
+
+  /** Optional: used when MailSlurp verification resolver is active (e2e / test). */
+  MAILSLURP_API_KEY?: string;
+  MAILSLURP_INBOX_ID?: string;
+  MAILSLURP_EMAIL?: string;
 }

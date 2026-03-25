@@ -74,6 +74,10 @@ const testOnlyImports =
           then: Joi.required(),
           otherwise: Joi.optional(),
         }),
+
+        MAILSLURP_API_KEY: Joi.string().optional(),
+        MAILSLURP_INBOX_ID: Joi.string().optional(),
+        MAILSLURP_EMAIL: Joi.string().email().optional(),
       }),
     }),
     MongooseModule.forRootAsync({

@@ -1,16 +1,20 @@
-import MailSlurp from 'mailslurp-client';
+import type { MailslurpClientInstance } from '../src/test-support/mailslurp.client';
+import {
+  createMailslurpClient as createMailslurpClientWithKey,
+  emptyMailslurpInbox,
+  getVerificationCodeFromEmail as getCodeFromClient,
+} from '../src/test-support/mailslurp.client';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
+
+export type { MailslurpClientInstance };
 
 /**
  * Creates a MailSlurp client from env (MAILSLURP_API_KEY).
  * Returns null if MAILSLURP_API_KEY is not set.
  */
-export function createMailslurpClient(): InstanceType<typeof MailSlurp> | null {
-  const apiKey = process.env.MAILSLURP_API_KEY;
-  if (!apiKey) return null;
-
-  return new MailSlurp({ apiKey });
+export function createMailslurpClient(): MailslurpClientInstance | null {
+  return createMailslurpClientWithKey(process.env.MAILSLURP_API_KEY);
 }
 
 /**
@@ -26,15 +30,7 @@ export async function getVerificationCodeFromEmail(
   const client = createMailslurpClient();
   if (!client) return null;
 
-  const email = await client.waitForLatestEmail(
-    inboxId,
-    timeoutMs,
-    true, // unreadOnly
-  );
-
-  const body = email?.body ?? '';
-  const codeMatch = body.match(/\b\d{6}\b/);
-  return codeMatch ? codeMatch[0] : null;
+  return getCodeFromClient(client, inboxId, timeoutMs);
 }
 
 /**
@@ -44,5 +40,5 @@ export async function emptyInbox(inboxId: string): Promise<void> {
   const client = createMailslurpClient();
   if (!client) return;
 
-  await client.emptyInbox(inboxId);
+  await emptyMailslurpInbox(client, inboxId);
 }
