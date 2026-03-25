@@ -1,8 +1,12 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
+
+import { PasskeyVerifyRegistrationDto } from 'src/passkey/dto/passkey-verify-registration.dto';
+import { COGNITO_CLIENT_ID, COGNITO_USER_POOL_ID } from 'src/env.constants';
+
 import { PasskeyController } from './passkey.controller';
 import { PasskeyService } from './passkey.service';
-import { PasskeyVerifyRegistrationDto } from 'src/passkey/dto/passkey-verify-registration.dto';
 
 describe('PasskeyController', () => {
   let controller: PasskeyController;
@@ -12,6 +16,16 @@ describe('PasskeyController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PasskeyController],
       providers: [
+        {
+          provide: ConfigService,
+          useValue: {
+            getOrThrow: jest.fn((key: string) => {
+              if (key === COGNITO_USER_POOL_ID) return 'us-east-1_TestPool1';
+              if (key === COGNITO_CLIENT_ID) return 'testclientid0123456789abcd';
+              return 'test';
+            }),
+          },
+        },
         {
           provide: PasskeyService,
           useValue: {

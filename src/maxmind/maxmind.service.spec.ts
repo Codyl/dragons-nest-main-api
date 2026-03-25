@@ -6,7 +6,19 @@ describe('MaxmindService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [MaxmindService],
+      providers: [
+        MaxmindService,
+        {
+          provide: 'MAXMIND_CLIENT',
+          useValue: {
+            city: jest.fn().mockResolvedValue({
+              city: {},
+              subdivisions: [],
+              country: {},
+            }),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<MaxmindService>(MaxmindService);

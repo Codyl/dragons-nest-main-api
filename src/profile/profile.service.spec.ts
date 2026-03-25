@@ -12,6 +12,7 @@ import { GoogleService } from 'src/google/google.service';
 import { UsersService, UserDoc } from 'src/users/users.service';
 import { ConfigService } from '@nestjs/config';
 import { Types } from 'mongoose';
+import { MAXMIND_KEY } from 'src/env.constants';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
@@ -23,8 +24,24 @@ describe('ProfileService', () => {
   let maxmindService: jest.Mocked<MaxmindService>;
   let googleService: jest.Mocked<GoogleService>;
   let configService: jest.Mocked<ConfigService>;
+  let configGet: jest.Mock;
 
   beforeEach(async () => {
+    configGet = jest.fn();
+    const configServiceImpl = {
+      get: configGet,
+      getOrThrow: jest.fn((key: string) => {
+        const v = configGet(key);
+        if (v !== undefined && v !== null) {
+          return v;
+        }
+        if (key === MAXMIND_KEY) {
+          return '';
+        }
+        throw new Error(`Missing configuration key: ${key}`);
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProfileService,
@@ -72,9 +89,7 @@ describe('ProfileService', () => {
         },
         {
           provide: ConfigService,
-          useValue: {
-            get: jest.fn(),
-          },
+          useValue: configServiceImpl,
         },
       ],
     }).compile();

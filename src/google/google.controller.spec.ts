@@ -1,5 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
+
 import { GoogleController } from './google.controller';
+import { GoogleService } from './google.service';
 
 describe('GoogleController', () => {
   let controller: GoogleController;
@@ -7,6 +10,18 @@ describe('GoogleController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [GoogleController],
+      providers: [
+        {
+          provide: GoogleService,
+          useValue: {},
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            getOrThrow: jest.fn(() => 'development'),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<GoogleController>(GoogleController);
