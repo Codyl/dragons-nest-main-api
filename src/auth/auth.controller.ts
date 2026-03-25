@@ -1,7 +1,23 @@
-import { Body, Controller, NotFoundException, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  NotFoundException,
+  Post,
+  Res,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
-import { ApiCookieAuth } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiNotFoundResponse,
+  ApiResponse,
+  ApiForbiddenResponse,
+  ApiUnauthorizedResponse,
+  ApiTooManyRequestsResponse,
+  ApiInternalServerErrorResponse,
+  ApiBadRequestResponse,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { setAuthCookies } from 'src/common/utils/cookies';
 import { Cookies } from 'src/common/decorators/cookies.decorator';
@@ -43,7 +59,42 @@ export class AuthController {
     };
   }
 
-  // Signup
+  @ApiOperation({
+    summary:
+      'Initiates signup process with cognito sending a code to the users email',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Signup initiated successfully',
+    type: InitiateSignupResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid input or Cognito validation error',
+  })
+  @ApiUnauthorizedResponse({ description: 'Not authorized' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiNotFoundResponse({ description: 'Resource not found' })
+  @ApiTooManyRequestsResponse({ description: 'Too many requests' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  @ApiBadRequestResponse({
+    description: 'Cognito validation errors',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Authentication failure',
+  })
+  @ApiForbiddenResponse({
+    description: 'Access denied',
+  })
+  @ApiNotFoundResponse({
+    description: 'Resource not found',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Rate limited',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Cognito service error',
+  })
+  @HttpCode(200)
   @Post('initiate-signup')
   async initiateSignup(
     @Body() body: InitiateSignupDto,
@@ -62,6 +113,10 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({
+    summary:
+      'Confirms signup process with cognito verifying the code from the email and signing in the user',
+  })
   @Post('confirm-signup')
   async confirmSignup(
     @Body() body: ConfirmSignupDto,
@@ -73,6 +128,7 @@ export class AuthController {
       body.session,
       body.password,
     );
+
     if (tokens.AccessToken && tokens.IdToken && tokens.RefreshToken) {
       setAuthCookies(
         res,
@@ -96,6 +152,9 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({
+    summary: 'Resends the signup confirmation code to the users email',
+  })
   @Post('confirm-signup/resend-code')
   async confirmSignupResendCode(
     @Body() body: ConfirmSignupResendCodeDto,
@@ -107,7 +166,10 @@ export class AuthController {
     };
   }
 
-  // MFA
+  @ApiOperation({
+    summary:
+      'Verifies the TOTP MFA code and signs in the user when the user has enabled MFA prior to signing in',
+  })
   @Post('mfa')
   async mfa(@Body() body: MfaDto, @Res({ passthrough: true }) res: Response) {
     const response = await this.authService.mfa(
@@ -135,6 +197,10 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({
+    summary:
+      'Generates a TOTP authenticator secret for the user to later scan and add to their authenticator app',
+  })
   @Post('mfa/generate-authenticator-secret')
   async generateAuthenticatorSecret(
     @Body() body: GenerateAuthenticatorSecretDto,
@@ -159,6 +225,10 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({
+    summary:
+      'Connects the authenticator app to the user by adding the code to the users authenticator app',
+  })
   @Post('mfa/connect-authenticator-app')
   async connectAuthenticatorApp(
     @Body() body: ConnectAuthenticatorAppDto,
@@ -180,7 +250,11 @@ export class AuthController {
     };
   }
 
-  // Login
+  @ApiOperation({
+    summary:
+      'Verifies the username and returns the available challenges. If the email is not found the response will still be successful.',
+  })
+  @HttpCode(200)
   @Post('verify-username')
   async verifyUsername(
     @Body() body: VerifyUsernameDto,
@@ -196,13 +270,18 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({
+    summary:
+      'Initiates the login process with cognito verifying the username and password.',
+  })
   @Post('initiate-login')
+  @HttpCode(200)
   async initiateLogin(
     @Body() body: InitiateLoginDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponseDto<InitiateLoginResponseDto>> {
     const response = await this.authService.initiateLogin(
-      body.email,
+      body.username,
       body.password,
       body.session,
       body.deviceKey,
@@ -228,6 +307,9 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({
+    summary: 'Refreshes the access token when the access token is expired',
+  })
   @Post('refresh-token')
   async refreshToken(
     @Cookies('REFRESH_TOKEN') refreshToken: string,
@@ -245,10 +327,10 @@ export class AuthController {
     };
   }
 
-  /**
-   * Session handoff: frontend performs SRP with Cognito (password never leaves browser),
-   * then sends tokens here. Backend verifies tokens and sets HttpOnly cookies.
-   */
+  @ApiOperation({
+    summary:
+      'Frontend performs SRP with Cognito (password never leaves browser), then sends tokens here. Backend verifies tokens and sets HttpOnly cookies.',
+  })
   @Post('set-session')
   async setSession(
     @Body() body: SetSessionDto,
@@ -272,6 +354,9 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({
+    summary: 'Logs out the user by clearing the auth cookies',
+  })
   @Post('logout')
   async logout(
     @Cookies('ACCESS_TOKEN') accessToken: string,
@@ -292,8 +377,12 @@ export class AuthController {
     };
   }
 
-  // Forgot password
+  @ApiOperation({
+    summary:
+      'Initiates the forgot password process with cognito sending a code to the users email',
+  })
   @Post('forgot-password')
+  @HttpCode(200)
   async forgotPassword(
     @Body() body: ForgotPasswordDto,
   ): Promise<ApiResponseDto<EmptyDataDto>> {
@@ -304,6 +393,10 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({
+    summary:
+      'Confirms the forgot password process with cognito verifying the code from the email and setting the new password',
+  })
   @Post('confirm-forgot-password')
   async confirmForgotPassword(
     @Body() body: ConfirmForgotPasswordDto,

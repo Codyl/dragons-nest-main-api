@@ -23,6 +23,7 @@ import { LinkGoogleDto } from './dto/link-google.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
 import type { GetMeResponseDto } from './dto/out/get-me-response.dto';
 import type { KnownDeviceResponseDto } from './dto/out/known-device-response.dto';
+import { ApiOperation } from '@nestjs/swagger';
 
 @ApiCookieAuth('ACCESS_TOKEN')
 @Controller('profile')
@@ -30,6 +31,9 @@ import type { KnownDeviceResponseDto } from './dto/out/known-device-response.dto
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
+  @ApiOperation({
+    summary: "Gets the logged in user's profile information",
+  })
   @Get()
   async getMe(
     @AccessToken() accessToken: string,
@@ -42,6 +46,9 @@ export class ProfileController {
     };
   }
 
+  @ApiOperation({
+    summary: "Updates the logged in user's cognito profile information",
+  })
   @Put('account')
   async updateAccount(
     @AccessToken() accessToken: string,
@@ -54,6 +61,10 @@ export class ProfileController {
     };
   }
 
+  @ApiOperation({
+    summary:
+      "Sets the logged in user's MFA preference to software token indicating that the user has setup and enabled TOTP MFA",
+  })
   @Post('mfa-preference')
   async setMfaPreference(
     @AccessToken() accessToken: string,
@@ -66,6 +77,9 @@ export class ProfileController {
     };
   }
 
+  @ApiOperation({
+    summary: "Changes the logged in user's password",
+  })
   @Post('change-password')
   async changePassword(
     @AccessToken() accessToken: string,
@@ -84,6 +98,10 @@ export class ProfileController {
     };
   }
 
+  @ApiOperation({
+    summary:
+      "Links a Google account to the logged in user's cognito profile and user document in the database",
+  })
   @Post('link-google')
   async linkGoogle(
     @AccessToken() accessToken: string,
@@ -106,6 +124,10 @@ export class ProfileController {
     };
   }
 
+  @ApiOperation({
+    summary:
+      "Unlinks a Google account from the logged in user's cognito profile and user document in the database",
+  })
   @Post('unlink-google')
   async unlinkGoogle(
     @AccessToken() accessToken: string,
@@ -123,6 +145,9 @@ export class ProfileController {
     };
   }
 
+  @ApiOperation({
+    summary: "Deletes the logged in user's account and all associated data",
+  })
   @Delete()
   async deleteMe(
     @AccessToken() accessToken: string,
@@ -135,6 +160,10 @@ export class ProfileController {
     };
   }
 
+  @ApiOperation({
+    summary:
+      "Gets the logged in user's known devices from cognito. This is used to remember the user's device and not require MFA when the user is on a known device.",
+  })
   @Get('known-devices')
   async getKnownDevices(
     @AccessToken() accessToken: string,

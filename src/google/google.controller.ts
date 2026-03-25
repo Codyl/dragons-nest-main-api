@@ -8,6 +8,7 @@ import type { GoogleAuthResponseDto } from './dto/out/google-auth-response.dto';
 import { setAuthCookies } from 'src/common/utils/cookies';
 import { NODE_ENV } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
+import { ApiOperation } from '@nestjs/swagger';
 
 @Controller('auth')
 export class GoogleController {
@@ -24,6 +25,9 @@ export class GoogleController {
     };
   }
 
+  @ApiOperation({
+    summary: 'Signs up the user with Google and logs them in',
+  })
   @Post('google-sso-signup')
   async googleSSOSignup(
     @Body() body: GoogleCredentialDto,
@@ -54,6 +58,9 @@ export class GoogleController {
     };
   }
 
+  @ApiOperation({
+    summary: 'Logs in the user with an existing account using Google',
+  })
   @Post('google-token-exchange')
   async googleTokenExchange(
     @Body() body: GoogleCredentialDto,

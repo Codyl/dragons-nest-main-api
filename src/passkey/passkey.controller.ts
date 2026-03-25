@@ -4,6 +4,7 @@ import { PasskeyService } from './passkey.service';
 import { AccessToken } from 'src/auth/decorators/access-token.decorator';
 import { PasskeyVerifyRegistrationDto } from 'src/passkey/dto/passkey-verify-registration.dto';
 import { AuthGuard } from 'src/common/guards/auth.guard';
+import { ApiOperation } from '@nestjs/swagger';
 
 interface MessageDataResponse<T = object> {
   message: string;
@@ -15,6 +16,9 @@ interface MessageDataResponse<T = object> {
 export class PasskeyController {
   constructor(private readonly passkeyService: PasskeyService) {}
 
+  @ApiOperation({
+    summary: 'Gets the passkey registration options for the logged in user',
+  })
   @Post('register/options')
   async passkeyRegisterOptions(
     @AccessToken() accessToken: string,
@@ -39,6 +43,11 @@ export class PasskeyController {
     };
   }
 
+  @ApiOperation({
+    summary: 'Verifies the passkey registration for the logged in user',
+    description:
+      "Verifies the passkey registration for the logged in user by verifying the passkey and returning the result. This is used to register the passkey with the user's account.",
+  })
   @Post('register/verify')
   async passkeyRegisterVerify(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
