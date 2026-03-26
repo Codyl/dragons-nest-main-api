@@ -159,7 +159,7 @@ export class AuthController {
   async confirmSignupResendCode(
     @Body() body: ConfirmSignupResendCodeDto,
   ): Promise<ApiResponseDto<EmptyDataDto>> {
-    await this.authService.confirmSignupResendCode(body.email);
+    await this.authService.confirmSignupResendCode(body.username);
     return {
       message: 'Verification code resent successfully',
       data: {},
