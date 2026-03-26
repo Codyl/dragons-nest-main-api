@@ -8,7 +8,11 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/env.config';
 import { AWS_REGION, COGNITO_USER_POOL_ID, NODE_ENV } from 'src/env.constants';
-import { ApiOperation } from '@nestjs/swagger';
+import {
+  ApiInternalServerErrorResponse,
+  ApiOperation,
+  ApiServiceUnavailableResponse,
+} from '@nestjs/swagger';
 
 @Controller('health')
 export class HealthController {
@@ -21,6 +25,13 @@ export class HealthController {
 
   @ApiOperation({
     summary: 'Reports the health of the application and its dependencies',
+  })
+  @ApiServiceUnavailableResponse({
+    description:
+      'One or more dependencies are unhealthy or unreachable (Cognito, Google, or database).',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected server failure while executing health checks.',
   })
   @Get()
   @HealthCheck()

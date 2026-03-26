@@ -8,7 +8,15 @@ import type { GoogleAuthResponseDto } from './dto/out/google-auth-response.dto';
 import { setAuthCookies } from 'src/common/utils/cookies';
 import { NODE_ENV } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
-import { ApiOperation } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiTooManyRequestsResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
 @Controller('auth')
 export class GoogleController {
@@ -27,6 +35,26 @@ export class GoogleController {
 
   @ApiOperation({
     summary: 'Signs up the user with Google and logs them in',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Google credential payload is invalid or token verification failed.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Google credential is expired, invalid, or cannot be trusted.',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'Google SSO signup is forbidden by account or provider policy.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Required user/provider context could not be found.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many Google signup attempts triggered rate limiting.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected server/Google/Cognito failure during SSO signup.',
   })
   @Post('google-sso-signup')
   async googleSSOSignup(
@@ -60,6 +88,27 @@ export class GoogleController {
 
   @ApiOperation({
     summary: 'Logs in the user with an existing account using Google',
+  })
+  @ApiBadRequestResponse({
+    description: 'Google credential payload is invalid or malformed.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Google credential is invalid, expired, or revoked.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Google token exchange is forbidden for this account state.',
+  })
+  @ApiNotFoundResponse({
+    description:
+      'No matching account/provider context found for the credential.',
+  })
+  @ApiTooManyRequestsResponse({
+    description:
+      'Too many Google token exchange attempts triggered throttling.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server/Google/Cognito failure during token exchange.',
   })
   @Post('google-token-exchange')
   async googleTokenExchange(

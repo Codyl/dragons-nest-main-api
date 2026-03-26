@@ -1,5 +1,10 @@
 import { Controller, Delete, HttpCode } from '@nestjs/common';
-import { ApiExcludeController } from '@nestjs/swagger';
+import {
+  ApiExcludeController,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
 import { TestUsersService } from './test-users.service';
 
@@ -13,6 +18,16 @@ export class TestUsersController {
 
   @Delete()
   @HttpCode(204)
+  @ApiUnauthorizedResponse({
+    description: 'Caller is not authenticated to execute test reset.',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'Route is unavailable outside allowed test environment policy.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected failure while resetting test users.',
+  })
   async reset(): Promise<void> {
     await this.testUsersService.resetTestUsers();
   }

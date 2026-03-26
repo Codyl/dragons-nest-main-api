@@ -8,15 +8,16 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
-import { ApiCookieAuth, ApiOperation } from '@nestjs/swagger';
 import {
-  ApiNotFoundResponse,
-  ApiResponse,
-  ApiForbiddenResponse,
-  ApiUnauthorizedResponse,
-  ApiTooManyRequestsResponse,
-  ApiInternalServerErrorResponse,
   ApiBadRequestResponse,
+  ApiCookieAuth,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTooManyRequestsResponse,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { setAuthCookies } from 'src/common/utils/cookies';
@@ -69,30 +70,27 @@ export class AuthController {
     type: InitiateSignupResponseDto,
   })
   @ApiBadRequestResponse({
-    description: 'Invalid input or Cognito validation error',
-  })
-  @ApiUnauthorizedResponse({ description: 'Not authorized' })
-  @ApiForbiddenResponse({ description: 'Forbidden' })
-  @ApiNotFoundResponse({ description: 'Resource not found' })
-  @ApiTooManyRequestsResponse({ description: 'Too many requests' })
-  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
-  @ApiBadRequestResponse({
-    description: 'Cognito validation errors',
+    description:
+      'Email/password payload is invalid or Cognito rejects signup parameters (e.g. password policy).',
   })
   @ApiUnauthorizedResponse({
-    description: 'Authentication failure',
+    description: 'Signup flow is blocked by an upstream authorization failure.',
   })
   @ApiForbiddenResponse({
-    description: 'Access denied',
+    description:
+      'Signup action is forbidden by configured policy or guard rules.',
   })
   @ApiNotFoundResponse({
-    description: 'Resource not found',
+    description:
+      'Required identity resource (such as user pool config) was not found.',
   })
   @ApiTooManyRequestsResponse({
-    description: 'Rate limited',
+    description:
+      'Too many signup attempts triggered Cognito/API rate limiting.',
   })
   @ApiInternalServerErrorResponse({
-    description: 'Cognito service error',
+    description:
+      'Unexpected server or Cognito integration failure while initiating signup.',
   })
   @HttpCode(200)
   @Post('initiate-signup')
@@ -116,6 +114,27 @@ export class AuthController {
   @ApiOperation({
     summary:
       'Confirms signup process with cognito verifying the code from the email and signing in the user',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Confirmation code, username, password, or session is invalid/expired.',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'User is not authorized to complete signup for this challenge.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Signup confirmation is forbidden for the current user state.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Expected signup challenge/session could not be found.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many confirmation attempts triggered rate limiting.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server or Cognito failure during signup confirmation.',
   })
   @Post('confirm-signup')
   async confirmSignup(
@@ -155,6 +174,24 @@ export class AuthController {
   @ApiOperation({
     summary: 'Resends the signup confirmation code to the users email',
   })
+  @ApiBadRequestResponse({
+    description: 'Username is missing/invalid or resend request is malformed.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Caller is not authorized to request a new signup code.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Resending signup code is forbidden for this user state.',
+  })
+  @ApiNotFoundResponse({
+    description: 'No user/challenge found for the provided username.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many resend-code requests were made in a short period.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected server or Cognito failure while resending code.',
+  })
   @Post('confirm-signup/resend-code')
   async confirmSignupResendCode(
     @Body() body: ConfirmSignupResendCodeDto,
@@ -169,6 +206,25 @@ export class AuthController {
   @ApiOperation({
     summary:
       'Verifies the TOTP MFA code and signs in the user when the user has enabled MFA prior to signing in',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Session or MFA code format is invalid, expired, or incorrect.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Caller is not authorized to complete the MFA challenge.',
+  })
+  @ApiForbiddenResponse({
+    description: 'MFA verification is forbidden for the current account state.',
+  })
+  @ApiNotFoundResponse({
+    description: 'No matching MFA challenge/session exists for the user.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many MFA attempts triggered temporary rate limiting.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected server or Cognito failure while verifying MFA.',
   })
   @Post('mfa')
   async mfa(@Body() body: MfaDto, @Res({ passthrough: true }) res: Response) {
@@ -201,6 +257,26 @@ export class AuthController {
     summary:
       'Generates a TOTP authenticator secret for the user to later scan and add to their authenticator app',
   })
+  @ApiBadRequestResponse({
+    description:
+      'Request body is invalid or required session/token details are missing.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @ApiForbiddenResponse({
+    description: 'User is not allowed to generate an authenticator secret.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Requested MFA setup context or user session was not found.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Secret generation requests were throttled due to volume.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server or Cognito failure while generating secret.',
+  })
   @Post('mfa/generate-authenticator-secret')
   async generateAuthenticatorSecret(
     @Body() body: GenerateAuthenticatorSecretDto,
@@ -229,6 +305,27 @@ export class AuthController {
     summary:
       'Connects the authenticator app to the user by adding the code to the users authenticator app',
   })
+  @ApiBadRequestResponse({
+    description:
+      'Provided authenticator code, session, username, or password is invalid.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token or credentials are invalid/expired.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Authenticator app connection is forbidden for this account.',
+  })
+  @ApiNotFoundResponse({
+    description: 'MFA setup session or user challenge context was not found.',
+  })
+  @ApiTooManyRequestsResponse({
+    description:
+      'Too many authenticator-connection attempts triggered throttling.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server or Cognito failure while connecting MFA app.',
+  })
   @Post('mfa/connect-authenticator-app')
   async connectAuthenticatorApp(
     @Body() body: ConnectAuthenticatorAppDto,
@@ -254,6 +351,23 @@ export class AuthController {
     summary:
       'Verifies the username and returns the available challenges. If the email is not found the response will still be successful.',
   })
+  @ApiBadRequestResponse({
+    description: 'Email payload is invalid or cannot be processed.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Caller is not authorized to perform username verification.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Username verification is forbidden by policy.',
+  })
+  @ApiTooManyRequestsResponse({
+    description:
+      'Too many verification attempts triggered temporary throttling.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server or Cognito failure while verifying username.',
+  })
   @HttpCode(200)
   @Post('verify-username')
   async verifyUsername(
@@ -273,6 +387,26 @@ export class AuthController {
   @ApiOperation({
     summary:
       'Initiates the login process with cognito verifying the username and password.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Username/password or optional device/session values are invalid or malformed.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Credentials are invalid or user cannot be authenticated.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Login is forbidden due to account policy/state restrictions.',
+  })
+  @ApiNotFoundResponse({
+    description:
+      'Expected auth challenge/session or user context was not found.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many login attempts triggered temporary rate limiting.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected server or Cognito failure while initiating login.',
   })
   @Post('initiate-login')
   @HttpCode(200)
@@ -310,6 +444,25 @@ export class AuthController {
   @ApiOperation({
     summary: 'Refreshes the access token when the access token is expired',
   })
+  @ApiBadRequestResponse({
+    description: 'Refresh token is missing or malformed.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Refresh token is invalid, revoked, or expired.',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'Token refresh is forbidden for the current session/user state.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Referenced refresh-token session was not found.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many refresh requests triggered temporary throttling.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected server or Cognito failure while refreshing token.',
+  })
   @Post('refresh-token')
   async refreshToken(
     @Cookies('REFRESH_TOKEN') refreshToken: string,
@@ -330,6 +483,26 @@ export class AuthController {
   @ApiOperation({
     summary:
       'Frontend performs SRP with Cognito (password never leaves browser), then sends tokens here. Backend verifies tokens and sets HttpOnly cookies.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Token payload is invalid, incomplete, or fails request validation.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Provided Access/ID token is invalid or expired.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Setting session cookies is forbidden for this token context.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Referenced session/token subject could not be resolved.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many session set requests were made in a short period.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server error while verifying tokens or setting session.',
   })
   @Post('set-session')
   async setSession(
@@ -357,6 +530,18 @@ export class AuthController {
   @ApiOperation({
     summary: 'Logs out the user by clearing the auth cookies',
   })
+  @ApiUnauthorizedResponse({
+    description: 'Caller is not authenticated or access token is invalid.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Logout operation is forbidden for the current auth context.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many logout requests triggered temporary throttling.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected server or Cognito failure while logging out.',
+  })
   @Post('logout')
   async logout(
     @Cookies('ACCESS_TOKEN') accessToken: string,
@@ -381,6 +566,25 @@ export class AuthController {
     summary:
       'Initiates the forgot password process with cognito sending a code to the users email',
   })
+  @ApiBadRequestResponse({
+    description: 'Username/email is invalid or request payload is malformed.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Caller is not authorized to trigger forgot-password flow.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Forgot-password action is forbidden for this user state.',
+  })
+  @ApiNotFoundResponse({
+    description:
+      'No account/challenge context found for the provided username.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many forgot-password attempts triggered throttling.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected server or Cognito failure during forgot-password.',
+  })
   @Post('forgot-password')
   @HttpCode(200)
   async forgotPassword(
@@ -396,6 +600,26 @@ export class AuthController {
   @ApiOperation({
     summary:
       'Confirms the forgot password process with cognito verifying the code from the email and setting the new password',
+  })
+  @ApiBadRequestResponse({
+    description: 'Reset code, username, or new password is invalid/expired.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Caller is not authorized to confirm password reset.',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'Password reset confirmation is forbidden for this account state.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Password reset challenge/session could not be found.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many password-reset confirmations triggered throttling.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server or Cognito failure confirming password reset.',
   })
   @Post('confirm-forgot-password')
   async confirmForgotPassword(

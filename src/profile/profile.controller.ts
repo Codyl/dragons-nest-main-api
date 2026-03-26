@@ -7,7 +7,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiCookieAuth } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiCookieAuth,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiTooManyRequestsResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import type {
   ApiResponseDto,
   EmptyDataDto,
@@ -23,7 +32,6 @@ import { LinkGoogleDto } from './dto/link-google.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
 import type { GetMeResponseDto } from './dto/out/get-me-response.dto';
 import type { KnownDeviceResponseDto } from './dto/out/known-device-response.dto';
-import { ApiOperation } from '@nestjs/swagger';
 
 @ApiCookieAuth('ACCESS_TOKEN')
 @Controller('profile')
@@ -33,6 +41,36 @@ export class ProfileController {
 
   @ApiOperation({
     summary: "Gets the logged in user's profile information",
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Authenticated user is not allowed to access this profile.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Profile data could not be found for the authenticated user.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server/Cognito/database failure while fetching profile.',
+  })
+  @ApiBadRequestResponse({
+    description: 'InvalidParameterException',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'NotAuthorizedException or UserNotConfirmedException or PasswordResetRequiredException',
+  })
+  @ApiNotFoundResponse({
+    description: 'UserNotFoundException or ResourceNotFoundException',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'TooManyRequestsException',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'InternalErrorException or CognitoIdentityProviderServiceException',
   })
   @Get()
   async getMe(
@@ -48,6 +86,44 @@ export class ProfileController {
 
   @ApiOperation({
     summary: "Updates the logged in user's cognito profile information",
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Update payload is invalid or contains unsupported attributes.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Authenticated user is not allowed to update this profile.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Target user/profile could not be found.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server/Cognito/database failure while updating profile.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'AliasExistsException, CodeDeliveryFailureException, CodeMismatchException, ExpiredCodeException, InvalidEmailRoleAccessPolicyException, InvalidLambdaResponseException, InvalidParameterException, InvalidSmsRoleAccessPolicyException, InvalidSmsRoleTrustRelationshipException, UnexpectedLambdaException, UserLambdaValidationException',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'NotAuthorizedException, PasswordResetRequiredException, UserNotConfirmedException',
+  })
+  @ApiForbiddenResponse({
+    description: 'ForbiddenException',
+  })
+  @ApiNotFoundResponse({
+    description: 'UserNotFoundException, ResourceNotFoundException',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'TooManyRequestsException',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'InternalErrorException, CognitoIdentityProviderServiceException',
   })
   @Put('account')
   async updateAccount(
@@ -65,6 +141,27 @@ export class ProfileController {
     summary:
       "Sets the logged in user's MFA preference to software token indicating that the user has setup and enabled TOTP MFA",
   })
+  @ApiBadRequestResponse({
+    description:
+      'MFA preference payload is invalid or missing required fields.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'NotAuthorizedException, PasswordResetRequiredException, UserNotConfirmedException',
+  })
+  @ApiForbiddenResponse({
+    description: 'Authenticated user is not allowed to modify MFA preferences.',
+  })
+  @ApiNotFoundResponse({
+    description: 'User or MFA configuration context was not found.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server/Cognito failure while updating MFA preference.',
+  })
   @Post('mfa-preference')
   async setMfaPreference(
     @AccessToken() accessToken: string,
@@ -79,6 +176,45 @@ export class ProfileController {
 
   @ApiOperation({
     summary: "Changes the logged in user's password",
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Current/new password payload is invalid or fails password policy.',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or user is unauthenticated.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Password change is forbidden by account policy/state.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Authenticated user account was not found.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server or Cognito failure while changing password.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'InvalidParameterException, InvalidPasswordException, PasswordHistoryPolicyViolationException, LimitExceededException',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'NotAuthorizedException, PasswordResetRequiredException, UserNotConfirmedException',
+  })
+  @ApiForbiddenResponse({
+    description: 'ForbiddenException',
+  })
+  @ApiNotFoundResponse({
+    description: 'UserNotFoundException, ResourceNotFoundException',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'TooManyRequestsException',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'InternalErrorException, CognitoIdentityProviderServiceException',
   })
   @Post('change-password')
   async changePassword(
@@ -101,6 +237,23 @@ export class ProfileController {
   @ApiOperation({
     summary:
       "Links a Google account to the logged in user's cognito profile and user document in the database",
+  })
+  @ApiBadRequestResponse({
+    description: 'Google credential payload is invalid or cannot be verified.',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or user is unauthenticated.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Google account linking is forbidden by account policy/state.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Authenticated user account was not found.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server/Google/Cognito failure while linking account.',
   })
   @Post('link-google')
   async linkGoogle(
@@ -128,6 +281,21 @@ export class ProfileController {
     summary:
       "Unlinks a Google account from the logged in user's cognito profile and user document in the database",
   })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or user is unauthenticated.',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'Google account unlinking is forbidden by account policy/state.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Linked Google provider or user account was not found.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server/Cognito/database failure while unlinking account.',
+  })
   @Post('unlink-google')
   async unlinkGoogle(
     @AccessToken() accessToken: string,
@@ -148,6 +316,24 @@ export class ProfileController {
   @ApiOperation({
     summary: "Deletes the logged in user's account and all associated data",
   })
+  @ApiBadRequestResponse({
+    description:
+      'Deletion payload is invalid or password confirmation is incorrect.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'Account deletion is forbidden by policy or account constraints.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Authenticated user account was not found.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server/Cognito/database failure while deleting account.',
+  })
   @Delete()
   async deleteMe(
     @AccessToken() accessToken: string,
@@ -163,6 +349,39 @@ export class ProfileController {
   @ApiOperation({
     summary:
       "Gets the logged in user's known devices from cognito. This is used to remember the user's device and not require MFA when the user is on a known device.",
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Authenticated user is not allowed to read known devices.',
+  })
+  @ApiNotFoundResponse({
+    description: 'No known-device context found for the authenticated user.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected server or Cognito failure while loading devices.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'InvalidParameterException, InvalidUserPoolConfigurationException',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'NotAuthorizedException, PasswordResetRequiredException, UserNotConfirmedException',
+  })
+  @ApiForbiddenResponse({
+    description: 'ForbiddenException',
+  })
+  @ApiNotFoundResponse({
+    description: 'UserNotFoundException, ResourceNotFoundException',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'TooManyRequestsException',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'InternalErrorException, CognitoIdentityProviderServiceException',
   })
   @Get('known-devices')
   async getKnownDevices(

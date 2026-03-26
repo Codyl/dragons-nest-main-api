@@ -4,7 +4,14 @@ import { PasskeyService } from './passkey.service';
 import { AccessToken } from 'src/auth/decorators/access-token.decorator';
 import { PasskeyVerifyRegistrationDto } from 'src/passkey/dto/passkey-verify-registration.dto';
 import { AuthGuard } from 'src/common/guards/auth.guard';
-import { ApiOperation } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
 interface MessageDataResponse<T = object> {
   message: string;
@@ -18,6 +25,21 @@ export class PasskeyController {
 
   @ApiOperation({
     summary: 'Gets the passkey registration options for the logged in user',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or user is unauthenticated.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Passkey registration is forbidden by account policy/state.',
+  })
+  @ApiNotFoundResponse({
+    description:
+      'Authenticated user/passkey registration context was not found.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server/WebAuthn failure while building registration options.',
   })
   @Post('register/options')
   async passkeyRegisterOptions(
@@ -47,6 +69,24 @@ export class PasskeyController {
     summary: 'Verifies the passkey registration for the logged in user',
     description:
       "Verifies the passkey registration for the logged in user by verifying the passkey and returning the result. This is used to register the passkey with the user's account.",
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Registration attestation payload is invalid, malformed, or fails verification checks.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User is not authenticated for passkey verification.',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'Passkey registration verification is forbidden by policy/state.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Pending passkey challenge or user context was not found.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server/WebAuthn failure during registration verification.',
   })
   @Post('register/verify')
   async passkeyRegisterVerify(

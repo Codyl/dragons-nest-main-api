@@ -4,7 +4,12 @@ import { UsersService } from './users.service';
 import type { UserResponseDto } from './dto/out/user-response.dto';
 import { Types } from 'mongoose';
 import { MongoIdPipe } from 'src/common/pipes/mongo-id.pipe';
-import { ApiOperation } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 
 @Controller('users')
 export class UsersController {
@@ -12,6 +17,9 @@ export class UsersController {
 
   @ApiOperation({
     summary: 'Gets all users in the database',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected database or server failure while listing users.',
   })
   @Get()
   async findAll(): Promise<ApiResponseDto<UserResponseDto[]>> {
@@ -32,6 +40,15 @@ export class UsersController {
 
   @ApiOperation({
     summary: 'Gets a user by their ID',
+  })
+  @ApiBadRequestResponse({
+    description: 'Provided id is not a valid Mongo ObjectId.',
+  })
+  @ApiNotFoundResponse({
+    description: 'No user exists for the provided id.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected database or server failure while loading user.',
   })
   @Get(':id')
   async findOne(
