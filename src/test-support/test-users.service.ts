@@ -108,6 +108,8 @@ export class TestUsersService {
           }),
         );
       }
+      // wait for 1 second to ensure the users are deleted
+      await new Promise((r) => setTimeout(r, 1000));
 
       paginationToken = page.PaginationToken;
     } while (paginationToken);
