@@ -211,6 +211,10 @@ export class GoogleService {
 
     const email = payload.email;
     const googleSub = payload.sub;
+    if (!email || !googleSub) {
+      throw new UnauthorizedException('Invalid Google ID token');
+    }
+
     const userPoolId = this.configService.getOrThrow(COGNITO_USER_POOL_ID, {
       infer: true,
     });
@@ -230,6 +234,16 @@ export class GoogleService {
     const existingUser = listResult.Users?.[0];
 
     if (existingUser) {
+      const user = await this.userModel.findOne({
+        email,
+        linkedProviders: { $in: ['GOOGLE'] },
+      });
+      if (!user) {
+        throw new ConflictException(
+          'An account with this email already exists. Please sign in.',
+        );
+      }
+
       cognitoUsername = existingUser.Username ?? email;
     } else {
       const temporaryPassword =
