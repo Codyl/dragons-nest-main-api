@@ -6,11 +6,14 @@ import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { COOKIE_SECRET, FRONTEND_URL, PORT } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
+import { LoggingInterceptor } from 'src/common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log', 'verbose', 'debug'],
   });
+
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   app.useGlobalPipes(
     new ValidationPipe({
