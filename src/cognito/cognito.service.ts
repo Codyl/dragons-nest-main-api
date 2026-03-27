@@ -536,7 +536,7 @@ export class CognitoService {
         }
 
         if (error.name === 'EnableSoftwareTokenMFAException') {
-          throw new BadRequestException('Software token MFA is not enabled.');
+          throw new BadRequestException(error.message);
         }
 
         throw new InternalServerErrorException(error.message);
@@ -648,6 +648,7 @@ export class CognitoService {
             'Password does not meet complexity requirements.',
           );
         }
+
         if (error.name === 'UserNotFoundException') {
           throw new NotFoundException('User not found.');
         }
