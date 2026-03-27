@@ -2,6 +2,7 @@ import {
   AdminDisableProviderForUserCommand,
   AdminGetUserCommand,
   AdminLinkProviderForUserCommand,
+  AdminSetUserPasswordCommand,
   AssociateSoftwareTokenCommand,
   AuthFlowType,
   ChallengeNameType,
@@ -620,6 +621,35 @@ export class CognitoService {
       if (error instanceof Error) {
         if (error.name === 'NotAuthorizedException') {
           throw new UnauthorizedException('Not authorized.');
+        }
+      }
+
+      throw new InternalServerErrorException('Authentication service failed');
+    }
+  }
+
+  /**
+   * Sets a permanent password without the old password (admin API).
+   * Used when the user signed in via OAuth and has no password yet.
+   */
+  async adminSetUserPassword(username: string, password: string) {
+    try {
+      const command = new AdminSetUserPasswordCommand({
+        UserPoolId: this.configService.get<string>(COGNITO_USER_POOL_ID)!,
+        Username: username,
+        Password: password,
+        Permanent: true,
+      });
+      await this.cognitoClient.send(command);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'InvalidPasswordException') {
+          throw new BadRequestException(
+            'Password does not meet complexity requirements.',
+          );
+        }
+        if (error.name === 'UserNotFoundException') {
+          throw new NotFoundException('User not found.');
         }
       }
 

@@ -12,6 +12,7 @@ import { GoogleService } from 'src/google/google.service';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { CreatePasswordDto } from './dto/create-password.dto';
 import { MaxmindService } from 'src/maxmind/maxmind.service';
 import { MAXMIND_KEY } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
@@ -143,6 +144,43 @@ export class ProfileService {
       cognitoResponse,
       userResponse,
     };
+  }
+
+  /**
+   * Sets an initial password for users who authenticated via OAuth and have no password.
+   */
+  async createPassword(
+    accessToken: string,
+    cognitoSub: string,
+    dto: CreatePasswordDto,
+  ) {
+    const user = await this.usersService.findOneByCognitoSub(cognitoSub);
+    if (!user || user.deleted) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.hasPassword) {
+      throw new BadRequestException(
+        'Account already has a password. Use change password instead.',
+      );
+    }
+
+    const cognitoUser = await this.cognitoService.getUser(accessToken);
+    const username = cognitoUser?.UserAttributes?.find(
+      (a) => a.Name === 'email' || a.Name === 'preferred_username',
+    )?.Value;
+    if (!username) {
+      throw new BadRequestException('Could not resolve account username.');
+    }
+
+    await this.cognitoService.adminSetUserPassword(username, dto.newPassword);
+
+    const userResponse = await this.usersService.updateByCognitoSub(
+      cognitoSub,
+      { hasPassword: true },
+    );
+
+    return { userResponse };
   }
 
   async linkGoogle(

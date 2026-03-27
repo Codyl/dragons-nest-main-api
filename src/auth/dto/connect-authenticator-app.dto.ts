@@ -1,6 +1,9 @@
+import { Transform } from 'class-transformer';
 import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class ConnectAuthenticatorAppDto {
+  @Transform(({ value }) => (value === '' ? undefined : (value as string)))
+  @IsOptional()
   @IsString()
   @MinLength(1, { message: 'Session is required' })
   session: string;
@@ -18,10 +21,12 @@ export class ConnectAuthenticatorAppDto {
   @IsString()
   accessToken?: string;
 
+  @IsOptional()
   @IsString()
-  @MinLength(1, { message: 'Username is required' })
   username: string;
 
+  @Transform(({ value }) => (value === '' ? undefined : (value as string)))
+  @IsOptional()
   @IsString()
   @MinLength(8, { message: 'Password must be at least 8 characters' })
   password: string;

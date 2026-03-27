@@ -28,6 +28,7 @@ import { AccessToken } from 'src/auth/decorators/access-token.decorator';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { CreatePasswordDto } from './dto/create-password.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
 import type { GetMeResponseDto } from './dto/out/get-me-response.dto';
@@ -230,6 +231,42 @@ export class ProfileController {
     await this.profileService.changePassword(accessToken, cognitoSub, dto);
     return {
       message: 'Password changed successfully',
+      data: {},
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Sets an initial password for OAuth-only accounts (no current password required)',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Payload invalid, user already has a password, or username could not be resolved.',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or user is unauthenticated.',
+  })
+  @ApiNotFoundResponse({
+    description: 'User record was not found.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected server or Cognito failure while setting password.',
+  })
+  @Post('create-password')
+  async createPassword(
+    @AccessToken() accessToken: string,
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
+    @Body() dto: CreatePasswordDto,
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
+    const cognitoSub = user?.sub;
+    if (!cognitoSub || typeof cognitoSub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    await this.profileService.createPassword(accessToken, cognitoSub, dto);
+    return {
+      message: 'Password created successfully',
       data: {},
     };
   }

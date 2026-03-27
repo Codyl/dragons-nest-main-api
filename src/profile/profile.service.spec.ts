@@ -15,6 +15,7 @@ import { Types } from 'mongoose';
 import { MAXMIND_KEY } from 'src/env.constants';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { CreatePasswordDto } from './dto/create-password.dto';
 
 /* eslint-disable @typescript-eslint/unbound-method */
 describe('ProfileService', () => {
@@ -52,6 +53,7 @@ describe('ProfileService', () => {
             updateUserAttributes: jest.fn(),
             setUserMFAPreferenceWithSettings: jest.fn(),
             changePassword: jest.fn(),
+            adminSetUserPassword: jest.fn(),
             authenticateWithSrp: jest.fn(),
             deleteUser: jest.fn(),
             adminLinkProviderForUser: jest.fn(),
@@ -268,6 +270,82 @@ describe('ProfileService', () => {
         cognitoResponse: mockCognitoResponse,
         userResponse: mockUserResponse,
       });
+    });
+  });
+
+  describe('createPassword', () => {
+    it('should set password via admin API when user has no password', async () => {
+      const dto: CreatePasswordDto = { newPassword: 'NewPassword123' };
+      usersService.findOneByCognitoSub.mockResolvedValue({
+        _id: new Types.ObjectId(),
+        cognitoSub: 'cognito-sub',
+        hasPassword: false,
+        deleted: false,
+      } as UserDoc);
+      cognitoService.getUser.mockResolvedValue({
+        UserAttributes: [
+          { Name: 'email', Value: 'user@example.com' },
+          { Name: 'sub', Value: 'cognito-sub' },
+        ],
+      });
+      cognitoService.adminSetUserPassword.mockResolvedValue(undefined as never);
+      usersService.updateByCognitoSub.mockResolvedValue({} as never);
+
+      await service.createPassword('access-token', 'cognito-sub', dto);
+
+      expect(cognitoService.adminSetUserPassword).toHaveBeenCalledWith(
+        'user@example.com',
+        'NewPassword123',
+      );
+      expect(usersService.updateByCognitoSub).toHaveBeenCalledWith(
+        'cognito-sub',
+        { hasPassword: true },
+      );
+    });
+
+    it('should use preferred_username when email is absent', async () => {
+      const dto: CreatePasswordDto = { newPassword: 'NewPassword123' };
+      usersService.findOneByCognitoSub.mockResolvedValue({
+        _id: new Types.ObjectId(),
+        cognitoSub: 'cognito-sub',
+        hasPassword: false,
+        deleted: false,
+      } as UserDoc);
+      cognitoService.getUser.mockResolvedValue({
+        UserAttributes: [{ Name: 'preferred_username', Value: 'user@example.com' }],
+      });
+      cognitoService.adminSetUserPassword.mockResolvedValue(undefined as never);
+      usersService.updateByCognitoSub.mockResolvedValue({} as never);
+
+      await service.createPassword('access-token', 'cognito-sub', dto);
+
+      expect(cognitoService.adminSetUserPassword).toHaveBeenCalledWith(
+        'user@example.com',
+        'NewPassword123',
+      );
+    });
+
+    it('should throw BadRequestException when user already has a password', async () => {
+      usersService.findOneByCognitoSub.mockResolvedValue({
+        _id: new Types.ObjectId(),
+        cognitoSub: 'cognito-sub',
+        hasPassword: true,
+      } as UserDoc);
+      await expect(
+        service.createPassword('token', 'cognito-sub', {
+          newPassword: 'NewPassword123',
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(cognitoService.adminSetUserPassword).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when user doc is missing', async () => {
+      usersService.findOneByCognitoSub.mockResolvedValue(null);
+      await expect(
+        service.createPassword('token', 'cognito-sub', {
+          newPassword: 'NewPassword123',
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

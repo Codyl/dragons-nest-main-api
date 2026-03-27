@@ -5,6 +5,7 @@ import { ProfileService } from './profile.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { CreatePasswordDto } from './dto/create-password.dto';
 import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
@@ -24,6 +25,7 @@ describe('ProfileController', () => {
             updateAccount: jest.fn(),
             setMfaPreference: jest.fn(),
             changePassword: jest.fn(),
+            createPassword: jest.fn(),
             linkGoogle: jest.fn(),
             unlinkGoogle: jest.fn(),
             deleteMe: jest.fn(),
@@ -120,6 +122,27 @@ describe('ProfileController', () => {
     );
   });
 
+  it('should create an initial password for OAuth-only users', async () => {
+    const createPasswordDto: CreatePasswordDto = {
+      newPassword: 'newPass123',
+    };
+    profileService.createPassword.mockResolvedValue(undefined as never);
+    const result = await controller.createPassword(
+      '123',
+      { sub: '123' },
+      createPasswordDto,
+    );
+    expect(result).toEqual({
+      message: 'Password created successfully',
+      data: {},
+    });
+    expect(profileService.createPassword).toHaveBeenCalledWith(
+      '123',
+      '123',
+      createPasswordDto,
+    );
+  });
+
   it('should link the Google account of the user', async () => {
     const linkGoogleDto: LinkGoogleDto = {
       credential: 'google-credential-jwt',
@@ -208,6 +231,13 @@ describe('ProfileController', () => {
         'Not authenticated',
       );
       expect(profileService.unlinkGoogle).not.toHaveBeenCalled();
+    });
+
+    it('createPassword throws', async () => {
+      await expect(
+        controller.createPassword('token', {}, { newPassword: 'newPass123' }),
+      ).rejects.toThrow('Not authenticated');
+      expect(profileService.createPassword).not.toHaveBeenCalled();
     });
   });
 });
