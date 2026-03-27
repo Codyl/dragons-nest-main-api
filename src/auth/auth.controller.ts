@@ -38,6 +38,7 @@ import { InitiateLoginDto } from './dto/initiate-login.dto';
 import { SetSessionDto } from './dto/set-session.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ConfirmForgotPasswordDto } from './dto/confirm-forgot-password.dto';
+import { VerifyAccountRecoveryCodeDto } from './dto/verify-account-recovery-code.dto';
 import { InitiateSignupResponseDto } from './dto/out/initiate-signup-response.dto';
 import { ConfirmSignupResponseDto } from './dto/out/confirm-signup-response.dto';
 import { MfaResponseDto } from './dto/out/mfa-response.dto';
@@ -644,6 +645,54 @@ export class AuthController {
     };
     return {
       message: 'Password reset confirmed successfully',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Verifies a temporary account recovery code and restores account access by setting a new password',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Temporary recovery code, username, or new password is invalid/expired.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Caller is not authorized to complete account recovery.',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'Account recovery confirmation is forbidden for this account state.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Account recovery challenge/session could not be found.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many account recovery attempts triggered throttling.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Unexpected server or Cognito failure while verifying recovery code.',
+  })
+  @Post('account-recovery/verify-code')
+  async verifyAccountRecoveryCode(
+    @Body() body: VerifyAccountRecoveryCodeDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponseDto<ConfirmForgotPasswordResponseDto>> {
+    const response = await this.authService.confirmForgotPassword(
+      body.username,
+      body.code,
+      body.password,
+    );
+    if (response.AuthenticationResult) {
+      setAuthCookies(res, response.AuthenticationResult, this.cookieOptions);
+    }
+
+    const data: ConfirmForgotPasswordResponseDto = {
+      AuthenticationResult: response.AuthenticationResult ? {} : undefined,
+    };
+    return {
+      message: 'Account recovered successfully',
       data,
     };
   }

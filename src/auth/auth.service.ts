@@ -27,6 +27,13 @@ import {
 } from './verification-code.resolver';
 
 export type SetSessionBody = SetSessionDto;
+export interface AuthRecoveryResult {
+  AuthenticationResult?: {
+    AccessToken?: string;
+    IdToken?: string;
+    RefreshToken?: string;
+  };
+}
 
 @Injectable()
 export class AuthService {
@@ -344,7 +351,28 @@ export class AuthService {
     await this.cognitoService.forgotPassword(email);
   }
 
-  async confirmForgotPassword(email: string, code: string, password: string) {
+  async issueAccountRecoveryCode(email: string): Promise<void> {
+    await this.emptyMailslurpInboxBeforeOutgoingVerificationEmail();
+    await this.cognitoService.forgotPassword(email);
+  }
+
+  async verifyAccountRecoveryCode(
+    email: string,
+    code: string,
+    password: string,
+  ): Promise<AuthRecoveryResult> {
+    const resolvedCode = await this.verificationCodeResolver.resolve(
+      code,
+      'account_recovery',
+    );
+    return this.confirmForgotPassword(email, resolvedCode, password);
+  }
+
+  async confirmForgotPassword(
+    email: string,
+    code: string,
+    password: string,
+  ): Promise<AuthRecoveryResult> {
     const resolvedCode = await this.verificationCodeResolver.resolve(
       code,
       'forgot_password',
@@ -376,6 +404,14 @@ export class AuthService {
       email,
       password,
     );
-    return authResponse;
+    return {
+      AuthenticationResult: authResponse.AuthenticationResult
+        ? {
+            AccessToken: authResponse.AuthenticationResult.AccessToken,
+            IdToken: authResponse.AuthenticationResult.IdToken,
+            RefreshToken: authResponse.AuthenticationResult.RefreshToken,
+          }
+        : undefined,
+    };
   }
 }
