@@ -43,6 +43,20 @@ describe('mailslurp.client', () => {
         getVerificationCodeFromEmail(client, 'inbox', 1000),
       ).resolves.toBeNull();
     });
+
+    it('throws clear message when MailSlurp quota is exceeded', async () => {
+      const client = {
+        waitForLatestEmail: jest
+          .fn()
+          .mockRejectedValue(new Error('429 too many requests quota exceeded')),
+      } as unknown as InstanceType<typeof MailSlurp>;
+
+      await expect(
+        getVerificationCodeFromEmail(client, 'inbox', 1000),
+      ).rejects.toThrow(
+        'MailSlurp inbox read limit reached (free-tier/quota). Code is likely fine; upgrade MailSlurp or wait for quota reset.',
+      );
+    });
   });
 
   describe('emptyMailslurpInbox', () => {

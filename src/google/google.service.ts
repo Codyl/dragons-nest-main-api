@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
@@ -10,15 +12,18 @@ import { ConfigService } from '@nestjs/config';
 import {
   AdminCreateUserCommand,
   AdminInitiateAuthCommand,
+  type AdminInitiateAuthCommandOutput,
   AdminLinkProviderForUserCommand,
   AdminRespondToAuthChallengeCommand,
+  type AdminRespondToAuthChallengeCommandOutput,
+  type ListUsersCommandOutput,
   ListUsersCommand,
   AuthFlowType,
   type AdminCreateUserCommandOutput,
   type CognitoIdentityProviderClient,
   type AuthenticationResultType,
 } from '@aws-sdk/client-cognito-identity-provider';
-import { OAuth2Client } from 'google-auth-library';
+import { OAuth2Client, type LoginTicket } from 'google-auth-library';
 import * as crypto from 'crypto';
 import { GoogleCredentialDto } from './dto/google-credential.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -30,6 +35,26 @@ import { EnvironmentVariables } from 'src/env.config';
 
 @Injectable()
 export class GoogleService {
+  private throwIfQuotaOrRateLimited(error: unknown): void {
+    if (!(error instanceof Error)) return;
+
+    const errorText = `${error.name} ${error.message}`.toLowerCase();
+    const isRateLimited =
+      errorText.includes('limitexceededexception') ||
+      errorText.includes('toomanyrequestsexception') ||
+      errorText.includes('too many requests') ||
+      errorText.includes('rate limit') ||
+      errorText.includes('quota') ||
+      errorText.includes('429');
+
+    if (isRateLimited) {
+      throw new HttpException(
+        'Google or Cognito request limit reached. This is likely a provider quota/rate-limit issue, not broken application code.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+  }
+
   constructor(
     @Inject('GOOGLE_OAUTH2_CLIENT')
     private readonly googleOAuthClient: OAuth2Client,
@@ -48,12 +73,18 @@ export class GoogleService {
       throw new BadRequestException('Google credential (ID token) is required');
     }
 
-    const ticket = await this.googleOAuthClient.verifyIdToken({
-      idToken: credential,
-      audience: this.configService.getOrThrow(GOOGLE_CLIENT_ID, {
-        infer: true,
-      }),
-    });
+    let ticket: LoginTicket;
+    try {
+      ticket = await this.googleOAuthClient.verifyIdToken({
+        idToken: credential,
+        audience: this.configService.getOrThrow(GOOGLE_CLIENT_ID, {
+          infer: true,
+        }),
+      });
+    } catch (error) {
+      this.throwIfQuotaOrRateLimited(error);
+      throw new UnauthorizedException('Invalid Google ID token');
+    }
     const payload = ticket.getPayload();
     if (!payload?.email || payload.sub == null) {
       throw new UnauthorizedException('Invalid Google ID token');
@@ -71,12 +102,18 @@ export class GoogleService {
       throw new BadRequestException('Google credential (ID token) is required');
     }
 
-    const ticket = await this.googleOAuthClient.verifyIdToken({
-      idToken: credential,
-      audience: this.configService.getOrThrow(GOOGLE_CLIENT_ID, {
-        infer: true,
-      }),
-    });
+    let ticket: LoginTicket;
+    try {
+      ticket = await this.googleOAuthClient.verifyIdToken({
+        idToken: credential,
+        audience: this.configService.getOrThrow(GOOGLE_CLIENT_ID, {
+          infer: true,
+        }),
+      });
+    } catch (error) {
+      this.throwIfQuotaOrRateLimited(error);
+      throw new UnauthorizedException('Invalid Google ID token');
+    }
     const payload = ticket.getPayload();
 
     if (!payload) {
@@ -158,6 +195,8 @@ export class GoogleService {
         { upsert: true },
       );
     } catch (error) {
+      this.throwIfQuotaOrRateLimited(error);
+
       if (error instanceof Error && error.name === 'UsernameExistsException') {
         throw new ConflictException(
           'An account with this email already exists. Please sign in.',
@@ -181,7 +220,13 @@ export class GoogleService {
       },
     });
 
-    const authResponse = await this.cognitoClient.send(authCommand);
+    let authResponse: AdminInitiateAuthCommandOutput;
+    try {
+      authResponse = await this.cognitoClient.send(authCommand);
+    } catch (error) {
+      this.throwIfQuotaOrRateLimited(error);
+      throw new InternalServerErrorException('Failed to authenticate user');
+    }
 
     return {
       AuthenticationResult: authResponse.AuthenticationResult,
@@ -197,12 +242,18 @@ export class GoogleService {
       throw new BadRequestException('Google credential (ID token) is required');
     }
 
-    const ticket = await this.googleOAuthClient.verifyIdToken({
-      idToken: credential,
-      audience: this.configService.getOrThrow(GOOGLE_CLIENT_ID, {
-        infer: true,
-      }),
-    });
+    let ticket: LoginTicket;
+    try {
+      ticket = await this.googleOAuthClient.verifyIdToken({
+        idToken: credential,
+        audience: this.configService.getOrThrow(GOOGLE_CLIENT_ID, {
+          infer: true,
+        }),
+      });
+    } catch (error) {
+      this.throwIfQuotaOrRateLimited(error);
+      throw new UnauthorizedException('Invalid Google ID token');
+    }
     const payload = ticket.getPayload();
 
     if (!payload?.email) {
@@ -223,13 +274,19 @@ export class GoogleService {
     });
 
     let cognitoUsername = email;
-    const listResult = await this.cognitoClient.send(
-      new ListUsersCommand({
-        UserPoolId: userPoolId,
-        Filter: `email = "${email.replace(/"/g, '\\"')}"`,
-        Limit: 1,
-      }),
-    );
+    let listResult: ListUsersCommandOutput;
+    try {
+      listResult = await this.cognitoClient.send(
+        new ListUsersCommand({
+          UserPoolId: userPoolId,
+          Filter: `email = "${email.replace(/"/g, '\\"')}"`,
+          Limit: 1,
+        }),
+      );
+    } catch (error) {
+      this.throwIfQuotaOrRateLimited(error);
+      throw new InternalServerErrorException('Failed to query user');
+    }
 
     const existingUser = listResult.Users?.[0];
 
@@ -256,8 +313,9 @@ export class GoogleService {
           .replace(/=/g, '');
       const name = payload.name ?? payload.given_name ?? email;
 
-      const createResponse: AdminCreateUserCommandOutput =
-        await this.cognitoClient.send(
+      let createResponse: AdminCreateUserCommandOutput;
+      try {
+        createResponse = await this.cognitoClient.send(
           new AdminCreateUserCommand({
             UserPoolId: userPoolId,
             Username: email,
@@ -272,6 +330,10 @@ export class GoogleService {
             ],
           }),
         );
+      } catch (error) {
+        this.throwIfQuotaOrRateLimited(error);
+        throw new InternalServerErrorException('Failed to create user');
+      }
 
       const cognitoSub = createResponse.User?.Attributes?.find(
         (a) => a.Name === 'sub',
@@ -281,21 +343,26 @@ export class GoogleService {
         throw new InternalServerErrorException('Failed to create user');
       }
 
-      await this.cognitoClient.send(
-        new AdminLinkProviderForUserCommand({
-          UserPoolId: userPoolId,
-          DestinationUser: {
-            ProviderName: 'Cognito',
-            ProviderAttributeName: 'Cognito_Subject',
-            ProviderAttributeValue: cognitoSub,
-          },
-          SourceUser: {
-            ProviderName: 'Google',
-            ProviderAttributeName: 'Cognito_Subject',
-            ProviderAttributeValue: googleSub ?? '',
-          },
-        }),
-      );
+      try {
+        await this.cognitoClient.send(
+          new AdminLinkProviderForUserCommand({
+            UserPoolId: userPoolId,
+            DestinationUser: {
+              ProviderName: 'Cognito',
+              ProviderAttributeName: 'Cognito_Subject',
+              ProviderAttributeValue: cognitoSub,
+            },
+            SourceUser: {
+              ProviderName: 'Google',
+              ProviderAttributeName: 'Cognito_Subject',
+              ProviderAttributeValue: googleSub ?? '',
+            },
+          }),
+        );
+      } catch (error) {
+        this.throwIfQuotaOrRateLimited(error);
+        throw new InternalServerErrorException('Failed to link Google account');
+      }
 
       await this.userModel.create({
         cognitoSub,
@@ -306,17 +373,23 @@ export class GoogleService {
       });
     }
 
-    const initiateResponse = await this.cognitoClient.send(
-      new AdminInitiateAuthCommand({
-        UserPoolId: userPoolId,
-        ClientId: clientId,
-        AuthFlow: AuthFlowType.CUSTOM_AUTH,
-        AuthParameters: {
-          USERNAME: cognitoUsername,
-          CHALLENGE_NAME: 'CUSTOM_CHALLENGE',
-        },
-      }),
-    );
+    let initiateResponse: AdminInitiateAuthCommandOutput;
+    try {
+      initiateResponse = await this.cognitoClient.send(
+        new AdminInitiateAuthCommand({
+          UserPoolId: userPoolId,
+          ClientId: clientId,
+          AuthFlow: AuthFlowType.CUSTOM_AUTH,
+          AuthParameters: {
+            USERNAME: cognitoUsername,
+            CHALLENGE_NAME: 'CUSTOM_CHALLENGE',
+          },
+        }),
+      );
+    } catch (error) {
+      this.throwIfQuotaOrRateLimited(error);
+      throw new InternalServerErrorException('Failed to initiate auth');
+    }
 
     let authenticationResult: AuthenticationResultType | undefined;
 
@@ -332,19 +405,27 @@ export class GoogleService {
         );
       }
 
-      const respondResponse = await this.cognitoClient.send(
-        new AdminRespondToAuthChallengeCommand({
-          UserPoolId: userPoolId,
-          ClientId: clientId,
-          ChallengeName: challengeName,
-          Session: session,
-          ChallengeResponses: {
-            USERNAME: cognitoUsername,
-            ANSWER: credential,
-          },
-          ClientMetadata: { GOOGLE_ID_TOKEN: credential },
-        }),
-      );
+      let respondResponse: AdminRespondToAuthChallengeCommandOutput;
+      try {
+        respondResponse = await this.cognitoClient.send(
+          new AdminRespondToAuthChallengeCommand({
+            UserPoolId: userPoolId,
+            ClientId: clientId,
+            ChallengeName: challengeName,
+            Session: session,
+            ChallengeResponses: {
+              USERNAME: cognitoUsername,
+              ANSWER: credential,
+            },
+            ClientMetadata: { GOOGLE_ID_TOKEN: credential },
+          }),
+        );
+      } catch (error) {
+        this.throwIfQuotaOrRateLimited(error);
+        throw new InternalServerErrorException(
+          'Failed to respond to auth challenge',
+        );
+      }
 
       if (!respondResponse.AuthenticationResult) {
         throw new InternalServerErrorException(

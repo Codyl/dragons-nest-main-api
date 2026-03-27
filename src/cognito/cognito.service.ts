@@ -36,6 +36,8 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  HttpException,
+  HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -190,7 +192,10 @@ export class CognitoService {
         }
 
         if (error.name === 'LimitExceededException') {
-          throw new BadRequestException(error.message);
+          throw new HttpException(
+            'AWS Cognito request limit reached. This is likely a service quota/rate-limit issue, not broken application code.',
+            HttpStatus.TOO_MANY_REQUESTS,
+          );
         }
 
         if (error.name === 'TooManyFailedAttemptsException') {
@@ -467,7 +472,10 @@ export class CognitoService {
         }
 
         if (error.name === 'LimitExceededException') {
-          throw new BadRequestException(error.message);
+          throw new HttpException(
+            'AWS Cognito request limit reached. This is likely a service quota/rate-limit issue, not broken application code.',
+            HttpStatus.TOO_MANY_REQUESTS,
+          );
         }
       }
 
