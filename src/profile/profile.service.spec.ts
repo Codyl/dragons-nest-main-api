@@ -13,6 +13,7 @@ import { UsersService, UserDoc } from 'src/users/users.service';
 import { ConfigService } from '@nestjs/config';
 import { Types } from 'mongoose';
 import { MAXMIND_KEY } from 'src/env.constants';
+import { PasskeyStoreService } from 'src/passkey/passkey-store.service';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreatePasswordDto } from './dto/create-password.dto';
@@ -25,6 +26,7 @@ describe('ProfileService', () => {
   let maxmindService: jest.Mocked<MaxmindService>;
   let googleService: jest.Mocked<GoogleService>;
   let configService: jest.Mocked<ConfigService>;
+  let passkeyStore: jest.Mocked<Pick<PasskeyStoreService, 'countPasskeys'>>;
   let configGet: jest.Mock;
 
   beforeEach(async () => {
@@ -93,6 +95,12 @@ describe('ProfileService', () => {
           provide: ConfigService,
           useValue: configServiceImpl,
         },
+        {
+          provide: PasskeyStoreService,
+          useValue: {
+            countPasskeys: jest.fn().mockResolvedValue(0),
+          },
+        },
       ],
     }).compile();
 
@@ -102,6 +110,7 @@ describe('ProfileService', () => {
     maxmindService = module.get<jest.Mocked<MaxmindService>>(MaxmindService);
     googleService = module.get<jest.Mocked<GoogleService>>(GoogleService);
     configService = module.get<jest.Mocked<ConfigService>>(ConfigService);
+    passkeyStore = module.get(PasskeyStoreService);
   });
 
   it('should be defined', () => {
@@ -129,7 +138,9 @@ describe('ProfileService', () => {
     };
     usersService.findOneByCognitoSub.mockResolvedValue(userDoc);
 
-    const profile = await service.getMe('accessToken');
+    const profile = await service.getMe('accessToken', 'cognito', {
+      sub: cognitoSub,
+    });
     expect(profile).toMatchObject({
       email: 'test@example.com',
       sub: '123',
@@ -137,16 +148,25 @@ describe('ProfileService', () => {
       family_name: 'Doe',
       loginMethods: ['GOOGLE'],
       hasPassword: false,
+      hasPasskey: false,
+      passkeyCount: 0,
       softwareTokenMfaEnabled: true,
       preferredMfa: 'SOFTWARE_TOKEN_MFA',
     });
+    expect(passkeyStore.countPasskeys).toHaveBeenCalledWith(cognitoSub);
+  });
+
+  it('should throw when getMe has no sub on current user', async () => {
+    await expect(service.getMe('token', 'cognito', {})).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('should throw when getMe gets no UserAttributes from Cognito', async () => {
     cognitoService.getUser.mockResolvedValue(undefined);
-    await expect(service.getMe('bad-token')).rejects.toThrow(
-      UnauthorizedException,
-    );
+    await expect(
+      service.getMe('bad-token', 'cognito', { sub: '123' }),
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('should throw NotFoundException when getMe user is not in DB', async () => {
@@ -157,9 +177,33 @@ describe('ProfileService', () => {
       ],
     });
     usersService.findOneByCognitoSub.mockResolvedValue(null);
-    await expect(service.getMe('accessToken')).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      service.getMe('accessToken', 'cognito', { sub: 'missing-sub' }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('should return profile from DB when authType is passkey', async () => {
+    const sub = 'passkey-user-sub';
+    usersService.findOneByCognitoSub.mockResolvedValue({
+      _id: new Types.ObjectId(),
+      cognitoSub: sub,
+      email: 'passkey@example.com',
+      hasPassword: true,
+      linkedProviders: [],
+    } as UserDoc);
+    passkeyStore.countPasskeys.mockResolvedValue(2);
+
+    const profile = await service.getMe('passkey-jwt', 'passkey', { sub });
+
+    expect(cognitoService.getUser).not.toHaveBeenCalled();
+    expect(profile).toMatchObject({
+      sub,
+      email: 'passkey@example.com',
+      loginMethods: [],
+      hasPassword: true,
+      hasPasskey: true,
+      passkeyCount: 2,
+    });
   });
 
   it('should not call Cognito when updateAccount receives no attributes', async () => {

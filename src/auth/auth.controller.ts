@@ -20,7 +20,10 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { setAuthCookies } from 'src/common/utils/cookies';
+import {
+  clearPasskeySessionCookie,
+  setAuthCookies,
+} from 'src/common/utils/cookies';
 import { Cookies } from 'src/common/decorators/cookies.decorator';
 import { NODE_ENV } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
@@ -555,6 +558,7 @@ export class AuthController {
     res.clearCookie('ACCESS_TOKEN');
     res.clearCookie('ID_TOKEN');
     res.clearCookie('REFRESH_TOKEN');
+    clearPasskeySessionCookie(res);
 
     return {
       message: 'Logged out successfully',

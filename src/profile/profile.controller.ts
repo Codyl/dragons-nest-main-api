@@ -25,6 +25,8 @@ import { ProfileService } from './profile.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AccessToken } from 'src/auth/decorators/access-token.decorator';
+import { AuthType } from 'src/auth/decorators/auth-type.decorator';
+import type { AuthType as AuthTypeValue } from 'src/common/guards/auth.guard';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -76,8 +78,10 @@ export class ProfileController {
   @Get()
   async getMe(
     @AccessToken() accessToken: string,
+    @AuthType() authType: AuthTypeValue,
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
   ): Promise<ApiResponseDto<GetMeResponseDto>> {
-    const data = await this.profileService.getMe(accessToken);
+    const data = await this.profileService.getMe(accessToken, authType, user);
 
     return {
       message: 'User retrieved successfully',

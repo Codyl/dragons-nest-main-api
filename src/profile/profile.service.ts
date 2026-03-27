@@ -14,13 +14,17 @@ import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreatePasswordDto } from './dto/create-password.dto';
 import { MaxmindService } from 'src/maxmind/maxmind.service';
+import { PasskeyStoreService } from 'src/passkey/passkey-store.service';
+import type { AuthType } from 'src/common/guards/auth.guard';
 import { MAXMIND_KEY } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
 
 export interface GetMeData {
-  [key: string]: string | string[] | boolean | undefined;
+  [key: string]: string | string[] | boolean | number | undefined;
   loginMethods: string[];
   hasPassword: boolean;
+  hasPasskey: boolean;
+  passkeyCount: number;
   softwareTokenMfaEnabled?: boolean;
   preferredMfa?: string;
 }
@@ -32,10 +36,40 @@ export class ProfileService {
     private readonly usersService: UsersService,
     private readonly googleService: GoogleService,
     private readonly maxmindService: MaxmindService,
+    private readonly passkeyStore: PasskeyStoreService,
     private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
-  async getMe(accessToken: string): Promise<GetMeData> {
+  async getMe(
+    accessToken: string,
+    authType: AuthType,
+    currentUser: Record<string, unknown> & { sub?: string },
+  ): Promise<GetMeData> {
+    const sub = currentUser?.sub;
+    if (!sub || typeof sub !== 'string') {
+      throw new UnauthorizedException('Not authenticated');
+    }
+
+    if (authType === 'passkey') {
+      const user = await this.usersService.findOneByCognitoSub(sub);
+      if (!user || user.deleted) {
+        throw new NotFoundException('User not found');
+      }
+
+      const loginMethods = user.linkedProviders ?? [];
+      const hasPassword = user.hasPassword ?? true;
+      const passkeyCount = await this.passkeyStore.countPasskeys(sub);
+
+      return {
+        sub,
+        email: user.email,
+        loginMethods,
+        hasPassword,
+        hasPasskey: passkeyCount > 0,
+        passkeyCount,
+      };
+    }
+
     const response = await this.cognitoService.getUser(accessToken);
     if (!response?.UserAttributes) {
       throw new UnauthorizedException('Not authenticated');
@@ -49,18 +83,19 @@ export class ProfileService {
       },
       {} as Record<string, string>,
     );
-    const sub = attributes.sub as string | undefined;
-    if (!sub || typeof sub !== 'string') {
+    const attrsSub = attributes.sub as string | undefined;
+    if (!attrsSub || typeof attrsSub !== 'string') {
       throw new UnauthorizedException('Not authenticated');
     }
 
-    const user = await this.usersService.findOneByCognitoSub(sub);
+    const user = await this.usersService.findOneByCognitoSub(attrsSub);
     if (!user || user.deleted) {
       throw new NotFoundException('User not found');
     }
 
     const loginMethods = user.linkedProviders ?? [];
     const hasPassword = user.hasPassword ?? true;
+    const passkeyCount = await this.passkeyStore.countPasskeys(attrsSub);
     const softwareTokenMfaEnabled =
       response.UserMFASettingList?.includes('SOFTWARE_TOKEN_MFA') ?? false;
     const preferredMfa = response.PreferredMfaSetting ?? undefined;
@@ -69,6 +104,8 @@ export class ProfileService {
       ...attributes,
       loginMethods,
       hasPassword,
+      hasPasskey: passkeyCount > 0,
+      passkeyCount,
       softwareTokenMfaEnabled,
       preferredMfa,
     };

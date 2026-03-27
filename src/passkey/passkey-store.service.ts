@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { PasskeyRepository } from './passkey.repository';
 
 export interface StoredPasskey {
   id: string;
@@ -16,25 +17,28 @@ export interface RegistrationChallengeOptions {
 }
 
 /**
- * In-memory store for WebAuthn passkey credentials and registration challenges.
- * Keyed by Cognito sub. For production, replace with a database.
+ * WebAuthn passkey credentials (persisted via PasskeyRepository) and
+ * registration challenges (in-memory, short-lived).
  */
 @Injectable()
 export class PasskeyStoreService {
-  private readonly passkeysBySub = new Map<string, StoredPasskey[]>();
   private readonly registrationChallengesBySub = new Map<
     string,
     RegistrationChallengeOptions
   >();
 
-  getPasskeys(sub: string): StoredPasskey[] {
-    return this.passkeysBySub.get(sub) ?? [];
+  constructor(private readonly passkeyRepository: PasskeyRepository) {}
+
+  async getPasskeys(sub: string): Promise<StoredPasskey[]> {
+    return this.passkeyRepository.getPasskeys(sub);
   }
 
-  addPasskey(sub: string, passkey: StoredPasskey): void {
-    const list = this.passkeysBySub.get(sub) ?? [];
-    list.push(passkey);
-    this.passkeysBySub.set(sub, list);
+  async addPasskey(sub: string, passkey: StoredPasskey): Promise<void> {
+    await this.passkeyRepository.addPasskey(sub, passkey);
+  }
+
+  async countPasskeys(sub: string): Promise<number> {
+    return this.passkeyRepository.countBySub(sub);
   }
 
   setRegistrationChallenge(
@@ -52,5 +56,15 @@ export class PasskeyStoreService {
 
   clearRegistrationChallenge(sub: string): void {
     this.registrationChallengesBySub.delete(sub);
+  }
+
+  async findByCredentialId(
+    credentialId: string,
+  ): Promise<{ sub: string; passkey: StoredPasskey } | null> {
+    return this.passkeyRepository.findByCredentialId(credentialId);
+  }
+
+  async updateCounter(credentialId: string, counter: number): Promise<void> {
+    await this.passkeyRepository.updateCounter(credentialId, counter);
   }
 }

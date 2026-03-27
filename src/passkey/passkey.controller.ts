@@ -1,11 +1,18 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { PasskeyService } from './passkey.service';
 import { AccessToken } from 'src/auth/decorators/access-token.decorator';
 import { PasskeyVerifyRegistrationDto } from 'src/passkey/dto/passkey-verify-registration.dto';
 import { AuthGuard } from 'src/common/guards/auth.guard';
+import { PasskeyVerifyAuthDto } from 'src/auth/dto/passkey-verify-auth.dto';
+import { setPasskeySessionCookie } from 'src/common/utils/cookies';
+import { EnvironmentVariables } from 'src/env.config';
+import { JWT_SECRET, NODE_ENV } from 'src/env.constants';
 import {
   ApiBadRequestResponse,
+  ApiCookieAuth,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
@@ -18,10 +25,76 @@ interface MessageDataResponse<T = object> {
   data: T;
 }
 
-@Controller('profile/passkey')
-@UseGuards(AuthGuard)
+@ApiCookieAuth('ACCESS_TOKEN')
+@Controller()
 export class PasskeyController {
-  constructor(private readonly passkeyService: PasskeyService) {}
+  constructor(
+    private readonly passkeyService: PasskeyService,
+    private readonly configService: ConfigService<EnvironmentVariables>,
+  ) {}
+
+  private get cookieOptions() {
+    return {
+      secure:
+        this.configService.getOrThrow(NODE_ENV, { infer: true }) ===
+        'production',
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Returns WebAuthn authentication options for passkey (passwordless) sign-in',
+  })
+  @ApiBadRequestResponse({
+    description: 'Passkey options could not be generated.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected failure while generating authentication options.',
+  })
+  @Post('auth/passkey/options')
+  async passkeyAuthOptions(): Promise<
+    MessageDataResponse<Record<string, unknown>>
+  > {
+    const options = await this.passkeyService.getAuthenticationOptions();
+    return {
+      message: 'Passkey authentication options',
+      data: options,
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Verifies passkey assertion and sets passkey session cookie on success',
+  })
+  @ApiBadRequestResponse({
+    description: 'Assertion payload is invalid or verification failed.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected failure during passkey verification.',
+  })
+  @Post('auth/passkey/verify')
+  async passkeyVerify(
+    @Body() body: PasskeyVerifyAuthDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<MessageDataResponse<{ verified: boolean }>> {
+    const result = await this.passkeyService.verifyAuthentication(body);
+    if (result.verified && result.sub) {
+      const jwtSecret = this.configService.getOrThrow(JWT_SECRET, {
+        infer: true,
+      });
+      setPasskeySessionCookie(res, result.sub, {
+        secure: this.cookieOptions.secure,
+        jwtSecret,
+      });
+    }
+
+    return {
+      message: result.verified
+        ? 'Passkey authentication successful'
+        : 'Passkey authentication failed',
+      data: { verified: result.verified },
+    };
+  }
 
   @ApiOperation({
     summary: 'Gets the passkey registration options for the logged in user',
@@ -41,7 +114,8 @@ export class PasskeyController {
     description:
       'Unexpected server/WebAuthn failure while building registration options.',
   })
-  @Post('register/options')
+  @UseGuards(AuthGuard)
+  @Post('profile/passkey/register/options')
   async passkeyRegisterOptions(
     @AccessToken() accessToken: string,
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
@@ -88,7 +162,8 @@ export class PasskeyController {
     description:
       'Unexpected server/WebAuthn failure during registration verification.',
   })
-  @Post('register/verify')
+  @UseGuards(AuthGuard)
+  @Post('profile/passkey/register/verify')
   async passkeyRegisterVerify(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Body() dto: PasskeyVerifyRegistrationDto,

@@ -54,14 +54,22 @@ describe('ProfileController', () => {
       family_name: 'Doe',
       loginMethods: [],
       hasPassword: true,
+      hasPasskey: false,
+      passkeyCount: 0,
     };
     profileService.getMe.mockResolvedValue(mockProfile);
-    const result = await controller.getMe('access-token');
+    const result = await controller.getMe('access-token', 'cognito', {
+      sub: '123',
+    });
     expect(result).toEqual({
       message: 'User retrieved successfully',
       data: mockProfile,
     });
-    expect(profileService.getMe).toHaveBeenCalledWith('access-token');
+    expect(profileService.getMe).toHaveBeenCalledWith(
+      'access-token',
+      'cognito',
+      { sub: '123' },
+    );
   });
 
   it('should update the account of the user', async () => {
