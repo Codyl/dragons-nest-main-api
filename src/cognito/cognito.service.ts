@@ -7,6 +7,10 @@ import {
   AuthFlowType,
   ChallengeNameType,
   CognitoIdentityProviderClient,
+  CompleteWebAuthnRegistrationCommand,
+  DeleteWebAuthnCredentialCommand,
+  ListWebAuthnCredentialsCommand,
+  StartWebAuthnRegistrationCommand,
   ChangePasswordCommand,
   ConfirmDeviceCommand,
   ConfirmForgotPasswordCommand,
@@ -32,6 +36,7 @@ import {
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -845,5 +850,211 @@ export class CognitoService {
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }
+  }
+
+  /**
+   * Continues USER_AUTH after verify-username: prefer WEB_AUTHN, then resolve SELECT_CHALLENGE until WEB_AUTHN or tokens.
+   */
+  async beginWebAuthnSignIn(username: string, session: string) {
+    const clientId = this.configService.get<string>(COGNITO_CLIENT_ID)!;
+    let response;
+    try {
+      response = await this.cognitoClient.send(
+        new InitiateAuthCommand({
+          AuthFlow: AuthFlowType.USER_AUTH,
+          ClientId: clientId,
+          AuthParameters: {
+            USERNAME: username,
+            PREFERRED_CHALLENGE: ChallengeNameType.WEB_AUTHN,
+          },
+          Session: session,
+        }),
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.name === 'InvalidParameterException'
+      ) {
+        response = await this.cognitoClient.send(
+          new RespondToAuthChallengeCommand({
+            ClientId: clientId,
+            ChallengeName: ChallengeNameType.SELECT_CHALLENGE,
+            Session: session,
+            ChallengeResponses: {
+              USERNAME: username,
+              ANSWER: ChallengeNameType.WEB_AUTHN,
+            },
+          }),
+        );
+      } else {
+        this.throwCognitoUserAuthWebAuthnError(error);
+      }
+    }
+
+    let guard = 0;
+    while (
+      response.ChallengeName === ChallengeNameType.SELECT_CHALLENGE &&
+      response.Session &&
+      guard++ < 5
+    ) {
+      try {
+        response = await this.cognitoClient.send(
+          new RespondToAuthChallengeCommand({
+            ClientId: clientId,
+            ChallengeName: ChallengeNameType.SELECT_CHALLENGE,
+            Session: response.Session,
+            ChallengeResponses: {
+              USERNAME: username,
+              ANSWER: ChallengeNameType.WEB_AUTHN,
+            },
+          }),
+        );
+      } catch (error) {
+        this.throwCognitoUserAuthWebAuthnError(error);
+      }
+    }
+
+    return response;
+  }
+
+  async respondToWebAuthnChallenge(
+    username: string,
+    session: string,
+    credentialJson: string,
+  ) {
+    try {
+      const command = new RespondToAuthChallengeCommand({
+        ClientId: this.configService.get<string>(COGNITO_CLIENT_ID)!,
+        ChallengeName: ChallengeNameType.WEB_AUTHN,
+        Session: session,
+        ChallengeResponses: {
+          USERNAME: username,
+          CREDENTIAL: credentialJson,
+        },
+      });
+      return await this.cognitoClient.send(command);
+    } catch (error) {
+      this.throwCognitoUserAuthWebAuthnError(error);
+    }
+  }
+
+  async startWebAuthnRegistration(accessToken: string) {
+    try {
+      return await this.cognitoClient.send(
+        new StartWebAuthnRegistrationCommand({
+          AccessToken: accessToken,
+        }),
+      );
+    } catch (error) {
+      this.throwCognitoWebAuthnManagementError(error);
+    }
+  }
+
+  async completeWebAuthnRegistration(
+    accessToken: string,
+    credential: Record<string, unknown>,
+  ) {
+    try {
+      return await this.cognitoClient.send(
+        new CompleteWebAuthnRegistrationCommand({
+          AccessToken: accessToken,
+          Credential: credential as never,
+        }),
+      );
+    } catch (error) {
+      this.throwCognitoWebAuthnManagementError(error);
+    }
+  }
+
+  async listWebAuthnCredentials(accessToken: string) {
+    try {
+      return await this.cognitoClient.send(
+        new ListWebAuthnCredentialsCommand({
+          AccessToken: accessToken,
+        }),
+      );
+    } catch (error) {
+      this.throwCognitoWebAuthnManagementError(error);
+    }
+  }
+
+  async deleteWebAuthnCredential(accessToken: string, credentialId: string) {
+    try {
+      return await this.cognitoClient.send(
+        new DeleteWebAuthnCredentialCommand({
+          AccessToken: accessToken,
+          CredentialId: credentialId,
+        }),
+      );
+    } catch (error) {
+      this.throwCognitoWebAuthnManagementError(error);
+    }
+  }
+
+  private throwCognitoUserAuthWebAuthnError(error: unknown): never {
+    if (error instanceof Error) {
+      if (error.name === 'NotAuthorizedException') {
+        throw new UnauthorizedException('Not authorized.');
+      }
+      if (error.name === 'InvalidParameterException') {
+        throw new BadRequestException(error.message);
+      }
+      if (error.name === 'LimitExceededException') {
+        throw new HttpException(
+          'AWS Cognito request limit reached. This is likely a service quota/rate-limit issue, not broken application code.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+    }
+    throw new InternalServerErrorException('Authentication service failed');
+  }
+
+  private throwCognitoWebAuthnManagementError(error: unknown): never {
+    if (error instanceof Error) {
+      const { name, message } = error;
+      if (name === 'NotAuthorizedException') {
+        throw new UnauthorizedException(
+          'Not authorized to manage passkeys. Ensure the app client adds the aws.cognito.signin.user.admin scope to access tokens.',
+        );
+      }
+      if (name === 'InvalidParameterException') {
+        throw new BadRequestException(message);
+      }
+      if (name === 'ResourceNotFoundException') {
+        throw new NotFoundException('Passkey not found.');
+      }
+      if (name === 'ForbiddenException') {
+        throw new ForbiddenException(message);
+      }
+      if (name === 'LimitExceededException' || name === 'TooManyRequestsException') {
+        throw new HttpException(
+          'AWS Cognito request limit reached. This is likely a service quota/rate-limit issue, not broken application code.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+      if (
+        name === 'WebAuthnNotEnabledException' ||
+        name === 'WebAuthnConfigurationMissingException' ||
+        name === 'WebAuthnCredentialNotSupportedException'
+      ) {
+        throw new BadRequestException(
+          'Passkeys are not available for this user pool. Enable WebAuthn (passkeys) in Cognito sign-in experience and ALLOW_USER_AUTH on the app client.',
+        );
+      }
+      if (name === 'UnsupportedOperationException') {
+        throw new BadRequestException(
+          'This passkey operation is not supported for this user pool or AWS Region.',
+        );
+      }
+      if (name === 'FeatureUnavailableInTierException') {
+        throw new BadRequestException(message);
+      }
+      if (name === 'InternalErrorException') {
+        throw new InternalServerErrorException(
+          'Cognito returned an internal error while managing passkeys.',
+        );
+      }
+    }
+    throw new InternalServerErrorException('Authentication service failed');
   }
 }

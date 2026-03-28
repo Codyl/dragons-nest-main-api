@@ -22,7 +22,6 @@ const AAGUID_MAP: Record<
   string,
   { displayName: string; provider: PasskeyProviderKind }
 > = {
-  // Apple — multiple AAGUIDs map to the same product surface in Settings UIs
   'f8a011f3-8c0a-4d15-9446-2793692e0e7b': {
     displayName: 'iCloud Keychain',
     provider: 'apple_icloud',
@@ -35,17 +34,14 @@ const AAGUID_MAP: Record<
     displayName: 'iCloud Keychain',
     provider: 'apple_icloud',
   },
-  // Microsoft / Windows Hello
   '08987058-cadc-4b81-b6e1-e9ae5f9b8b68': {
     displayName: 'Windows Hello',
     provider: 'windows_hello',
   },
-  // Google Password Manager (Chrome / Android)
   '769f6f4b-7abf-4c01-9aa9-61f73fc4fcd3': {
     displayName: 'Google Password Manager',
     provider: 'google_password_manager',
   },
-  // YubiKey 5 NFC (example security key)
   'ee888942-32a1-4e13-9393-e356b1b49eef': {
     displayName: 'Security key',
     provider: 'security_key',
@@ -83,4 +79,24 @@ export function resolvePasskeyDisplay(row: PasskeyDisplayRowInput): {
   }
 
   return { displayName: 'Passkey', provider: 'unknown' };
+}
+
+/** Cognito `WebAuthnCredentialDescription` → settings UI row hints. */
+export function resolveCognitoWebAuthnCredentialDisplay(c: {
+  FriendlyCredentialName?: string;
+  AuthenticatorAttachment?: string;
+  AuthenticatorTransports?: string[];
+}): { displayName: string; provider: PasskeyProviderKind } {
+  const platform =
+    c.AuthenticatorAttachment?.toLowerCase() === 'platform' ||
+    c.AuthenticatorAttachment === 'PLATFORM';
+  const hint = resolvePasskeyDisplay({
+    deviceType: platform ? 'singleDevice' : 'multiDevice',
+    backedUp: false,
+    transports: c.AuthenticatorTransports ?? [],
+  });
+  return {
+    displayName: c.FriendlyCredentialName?.trim() || hint.displayName,
+    provider: hint.provider,
+  };
 }

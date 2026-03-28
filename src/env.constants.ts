@@ -22,11 +22,5 @@ export const MONGODB_URI = 'MONGODB_URI';
 
 export const FRONTEND_URL = 'FRONTEND_URL';
 
-export const WEBAUTHN_RP_ID = 'WEBAUTHN_RP_ID';
-export const WEBAUTHN_RP_NAME = 'WEBAUTHN_RP_NAME';
-export const WEBAUTHN_ORIGIN = 'WEBAUTHN_ORIGIN';
-export const WEBAUTHN_AUTHENTICATOR_ATTACHMENT =
-  'WEBAUTHN_AUTHENTICATOR_ATTACHMENT';
-
 /** Email for the seeded Cognito + Mongo user when NODE_ENV=test (E2E reset). */
 export const PREEXISTING_USER_EMAIL = 'PREEXISTING_USER_EMAIL';

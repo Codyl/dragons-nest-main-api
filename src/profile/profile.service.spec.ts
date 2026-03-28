@@ -13,7 +13,6 @@ import { UsersService, UserDoc } from 'src/users/users.service';
 import { ConfigService } from '@nestjs/config';
 import { Types } from 'mongoose';
 import { MAXMIND_KEY } from 'src/env.constants';
-import { PasskeyStoreService } from 'src/passkey/passkey-store.service';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreatePasswordDto } from './dto/create-password.dto';
@@ -26,7 +25,6 @@ describe('ProfileService', () => {
   let maxmindService: jest.Mocked<MaxmindService>;
   let googleService: jest.Mocked<GoogleService>;
   let configService: jest.Mocked<ConfigService>;
-  let passkeyStore: jest.Mocked<Pick<PasskeyStoreService, 'countPasskeys'>>;
   let configGet: jest.Mock;
 
   beforeEach(async () => {
@@ -64,6 +62,9 @@ describe('ProfileService', () => {
             listDevices: jest.fn(),
             updateDeviceStatus: jest.fn(),
             forgetDevice: jest.fn(),
+            listWebAuthnCredentials: jest
+              .fn()
+              .mockResolvedValue({ Credentials: [] }),
           },
         },
         {
@@ -96,12 +97,6 @@ describe('ProfileService', () => {
           provide: ConfigService,
           useValue: configServiceImpl,
         },
-        {
-          provide: PasskeyStoreService,
-          useValue: {
-            countPasskeys: jest.fn().mockResolvedValue(0),
-          },
-        },
       ],
     }).compile();
 
@@ -111,7 +106,6 @@ describe('ProfileService', () => {
     maxmindService = module.get<jest.Mocked<MaxmindService>>(MaxmindService);
     googleService = module.get<jest.Mocked<GoogleService>>(GoogleService);
     configService = module.get<jest.Mocked<ConfigService>>(ConfigService);
-    passkeyStore = module.get(PasskeyStoreService);
   });
 
   it('should be defined', () => {
@@ -139,7 +133,7 @@ describe('ProfileService', () => {
     };
     usersService.findOneByCognitoSub.mockResolvedValue(userDoc);
 
-    const profile = await service.getMe('accessToken', 'cognito', {
+    const profile = await service.getMe('accessToken', {
       sub: cognitoSub,
     });
     expect(profile).toMatchObject({
@@ -155,11 +149,13 @@ describe('ProfileService', () => {
       preferredMfa: 'SOFTWARE_TOKEN_MFA',
       first_logged_in_at: null,
     });
-    expect(passkeyStore.countPasskeys).toHaveBeenCalledWith(cognitoSub);
+    expect(cognitoService.listWebAuthnCredentials).toHaveBeenCalledWith(
+      'accessToken',
+    );
   });
 
   it('should throw when getMe has no sub on current user', async () => {
-    await expect(service.getMe('token', 'cognito', {})).rejects.toThrow(
+    await expect(service.getMe('token', {})).rejects.toThrow(
       UnauthorizedException,
     );
   });
@@ -167,7 +163,7 @@ describe('ProfileService', () => {
   it('should throw when getMe gets no UserAttributes from Cognito', async () => {
     cognitoService.getUser.mockResolvedValue(undefined);
     await expect(
-      service.getMe('bad-token', 'cognito', { sub: '123' }),
+      service.getMe('bad-token', { sub: '123' }),
     ).rejects.toThrow(UnauthorizedException);
   });
 
@@ -180,33 +176,59 @@ describe('ProfileService', () => {
     });
     usersService.findOneByCognitoSub.mockResolvedValue(null);
     await expect(
-      service.getMe('accessToken', 'cognito', { sub: 'missing-sub' }),
+      service.getMe('accessToken', { sub: 'missing-sub' }),
     ).rejects.toThrow(NotFoundException);
   });
 
-  it('should return profile from DB when authType is passkey', async () => {
-    const sub = 'passkey-user-sub';
+  it('should set hasPasskey from Cognito ListWebAuthnCredentials', async () => {
+    const cognitoSub = '123';
+    cognitoService.getUser.mockResolvedValue({
+      UserAttributes: [
+        { Name: 'email', Value: 'u@example.com' },
+        { Name: 'sub', Value: cognitoSub },
+      ],
+    });
+    cognitoService.listWebAuthnCredentials.mockResolvedValue({
+      Credentials: [{ CredentialId: 'a' }, { CredentialId: 'b' }],
+    } as never);
     usersService.findOneByCognitoSub.mockResolvedValue({
       _id: new Types.ObjectId(),
-      cognitoSub: sub,
-      email: 'passkey@example.com',
-      hasPassword: true,
-      linkedProviders: [],
+      cognitoSub,
+      email: 'u@example.com',
     } as UserDoc);
-    passkeyStore.countPasskeys.mockResolvedValue(2);
 
-    const profile = await service.getMe('passkey-jwt', 'passkey', { sub });
+    const profile = await service.getMe('accessToken', { sub: cognitoSub });
+    expect(profile.hasPasskey).toBe(true);
+    expect(profile.passkeyCount).toBe(2);
+  });
 
-    expect(cognitoService.getUser).not.toHaveBeenCalled();
-    expect(profile).toMatchObject({
-      sub,
-      email: 'passkey@example.com',
-      loginMethods: [],
-      hasPassword: true,
-      hasPasskey: true,
-      passkeyCount: 2,
-      first_logged_in_at: null,
+  it('should treat passkey count as zero when listWebAuthnCredentials is unauthorized', async () => {
+    const cognitoSub = '123';
+    cognitoService.getUser.mockResolvedValue({
+      UserAttributes: [
+        { Name: 'email', Value: 'u@example.com' },
+        { Name: 'sub', Value: cognitoSub },
+      ],
     });
+    cognitoService.listWebAuthnCredentials.mockRejectedValue(
+      new UnauthorizedException(),
+    );
+    usersService.findOneByCognitoSub.mockResolvedValue({
+      _id: new Types.ObjectId(),
+      cognitoSub,
+    } as UserDoc);
+
+    const profile = await service.getMe('accessToken', { sub: cognitoSub });
+    expect(profile.hasPasskey).toBe(false);
+    expect(profile.passkeyCount).toBe(0);
+  });
+
+  it('listWebAuthnCredentialsForSettings returns empty when Cognito rejects as unauthorized', async () => {
+    cognitoService.listWebAuthnCredentials.mockRejectedValue(
+      new UnauthorizedException(),
+    );
+    const rows = await service.listWebAuthnCredentialsForSettings('token');
+    expect(rows).toEqual([]);
   });
 
   describe('recordFirstLoginAt', () => {

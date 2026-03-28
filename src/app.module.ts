@@ -6,7 +6,6 @@ import { UsersModule } from './users/users.module';
 import { CognitoModule } from './cognito/cognito.module';
 import Joi from 'joi';
 import { ProfileModule } from './profile/profile.module';
-import { PasskeyModule } from './passkey/passkey.module';
 import { GoogleModule } from './google/google.module';
 import { MaxmindModule } from './maxmind/maxmind.module';
 import { MONGODB_URI } from 'src/env.constants';
@@ -61,14 +60,6 @@ const testOnlyImports =
 
         FRONTEND_URL: Joi.string().uri().required(),
 
-        // WebAuthn
-        WEBAUTHN_RP_ID: Joi.string().hostname().required(),
-        WEBAUTHN_RP_NAME: Joi.string().required(),
-        WEBAUTHN_ORIGIN: Joi.string().uri().required(),
-        WEBAUTHN_AUTHENTICATOR_ATTACHMENT: Joi.string()
-          .valid('platform', 'cross-platform', 'any')
-          .default('platform'),
-
         PREEXISTING_USER_EMAIL: Joi.string().email().when('NODE_ENV', {
           is: 'test',
           then: Joi.required(),
@@ -90,7 +81,6 @@ const testOnlyImports =
     UsersModule,
     CognitoModule,
     ProfileModule,
-    PasskeyModule,
     GoogleModule,
     MaxmindModule,
     HealthModule,

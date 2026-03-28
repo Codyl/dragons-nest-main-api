@@ -38,7 +38,6 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.6",
     "@nestjs/terminus": "^11.1.1",
-    "@simplewebauthn/server": "^11.0.0",
     "aws-jwt-verify": "^5.1.1",
     "axios": "^1.13.6",
     "class-transformer": "^0.5.1",

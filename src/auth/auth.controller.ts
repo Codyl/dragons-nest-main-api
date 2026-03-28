@@ -20,10 +20,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import {
-  clearPasskeySessionCookie,
-  setAuthCookies,
-} from 'src/common/utils/cookies';
+import { setAuthCookies } from 'src/common/utils/cookies';
 import { Cookies } from 'src/common/decorators/cookies.decorator';
 import { NODE_ENV } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
@@ -47,6 +44,9 @@ import { VerifyUsernameResponseDto } from './dto/out/verify-username-response.dt
 import { InitiateLoginResponseDto } from './dto/out/initiate-login-response.dto';
 import { ConfirmForgotPasswordResponseDto } from './dto/out/confirm-forgot-password-response.dto';
 import { ApiResponseDto, EmptyDataDto } from 'src/common/dto/api-response.dto';
+import { WebAuthnSignInBeginDto } from './dto/webauthn-sign-in-begin.dto';
+import { WebAuthnSignInCompleteDto } from './dto/webauthn-sign-in-complete.dto';
+import { WebAuthnSignInChallengeResponseDto } from './dto/out/webauthn-sign-in-challenge-response.dto';
 
 @ApiCookieAuth('ACCESS_TOKEN')
 @Controller('auth')
@@ -390,6 +390,103 @@ export class AuthController {
 
   @ApiOperation({
     summary:
+      'Starts Cognito USER_AUTH passkey sign-in after verify-username (returns WEB_AUTHN challenge parameters).',
+  })
+  @ApiBadRequestResponse({
+    description: 'Username or session is invalid for this challenge.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Caller is not authorized to continue passkey sign-in.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many attempts triggered temporary throttling.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected server or Cognito failure.',
+  })
+  @HttpCode(200)
+  @Post('webauthn/sign-in/begin')
+  async webAuthnSignInBegin(
+    @Body() body: WebAuthnSignInBeginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponseDto<WebAuthnSignInChallengeResponseDto>> {
+    const result = await this.authService.beginWebAuthnSignIn(
+      body.username,
+      body.session,
+    );
+
+    if (result.AuthenticationResult) {
+      setAuthCookies(res, result.AuthenticationResult, this.cookieOptions);
+    }
+
+    return {
+      message: 'WebAuthn sign-in challenge ready',
+      data: {
+        session: result.Session,
+        challengeName: result.ChallengeName,
+        challengeParameters: result.ChallengeParameters as
+          | Record<string, string>
+          | undefined,
+        availableChallenges: result.AvailableChallenges,
+        authenticationResult: result.AuthenticationResult ? {} : undefined,
+      },
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Completes Cognito WEB_AUTHN challenge with the browser assertion; sets Cognito cookies when tokens are issued.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Credential or session is invalid or malformed.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Passkey verification failed or session is not authorized.',
+  })
+  @ApiNotFoundResponse({
+    description: 'Expected auth challenge or session was not found.',
+  })
+  @ApiTooManyRequestsResponse({
+    description: 'Too many attempts triggered temporary throttling.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected server or Cognito failure.',
+  })
+  @HttpCode(200)
+  @Post('webauthn/sign-in/complete')
+  async webAuthnSignInComplete(
+    @Body() body: WebAuthnSignInCompleteDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponseDto<InitiateLoginResponseDto>> {
+    const deviceName = body.deviceName?.trim() || 'Trusted device';
+    const { response, device } = await this.authService.completeWebAuthnSignIn(
+      body.username,
+      body.session,
+      body.credential,
+      deviceName,
+    );
+
+    if (response.AuthenticationResult) {
+      setAuthCookies(
+        res,
+        response.AuthenticationResult,
+        this.cookieOptions,
+      );
+    }
+
+    const data: InitiateLoginResponseDto = {
+      session: response.Session,
+      challengeName: response.ChallengeName,
+      device,
+    };
+    return {
+      message: 'WebAuthn sign-in step completed',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary:
       'Initiates the login process with cognito verifying the username and password.',
   })
   @ApiBadRequestResponse({
@@ -559,7 +656,6 @@ export class AuthController {
     res.clearCookie('ACCESS_TOKEN');
     res.clearCookie('ID_TOKEN');
     res.clearCookie('REFRESH_TOKEN');
-    clearPasskeySessionCookie(res);
 
     return {
       message: 'Logged out successfully',

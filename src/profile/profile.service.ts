@@ -14,8 +14,8 @@ import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreatePasswordDto } from './dto/create-password.dto';
 import { MaxmindService } from 'src/maxmind/maxmind.service';
-import { PasskeyStoreService } from 'src/passkey/passkey-store.service';
-import type { AuthType } from 'src/common/guards/auth.guard';
+import { resolveCognitoWebAuthnCredentialDisplay } from 'src/profile/webauthn-credential-display';
+import type { WebAuthnCredentialListItemDto } from 'src/profile/dto/out/webauthn-credential-list-item.dto';
 import { MAXMIND_KEY } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
 import { DeleteMeDto } from './dto/delete-me.dto';
@@ -65,43 +65,16 @@ export class ProfileService {
     private readonly usersService: UsersService,
     private readonly googleService: GoogleService,
     private readonly maxmindService: MaxmindService,
-    private readonly passkeyStore: PasskeyStoreService,
     private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
   async getMe(
     accessToken: string,
-    authType: AuthType,
     currentUser: Record<string, unknown> & { sub?: string },
   ): Promise<GetMeData> {
     const sub = currentUser?.sub;
     if (!sub || typeof sub !== 'string') {
       throw new UnauthorizedException('Not authenticated');
-    }
-
-    if (authType === 'passkey') {
-      const row = await this.usersService.findOneByCognitoSub(sub);
-      if (!row || row.deleted) {
-        throw new NotFoundException('User not found');
-      }
-
-      const user: UserDoc = row;
-
-      const loginMethods = user.linkedProviders ?? [];
-      const hasPassword = user.hasPassword ?? true;
-      const passkeyCount = await this.passkeyStore.countPasskeys(sub);
-
-      return {
-        sub,
-        email: user.email,
-        loginMethods,
-        hasPassword,
-        hasPasskey: passkeyCount > 0,
-        passkeyCount,
-        first_logged_in_at: firstLoggedInAtToIso(
-          mongoDateOrNull(Reflect.get(user, 'first_logged_in_at')),
-        ),
-      };
     }
 
     const response = await this.cognitoService.getUser(accessToken);
@@ -131,7 +104,18 @@ export class ProfileService {
 
     const loginMethods = user.linkedProviders ?? [];
     const hasPassword = user.hasPassword ?? true;
-    const passkeyCount = await this.passkeyStore.countPasskeys(attrsSub);
+    let passkeyCount = 0;
+    try {
+      const listRes =
+        await this.cognitoService.listWebAuthnCredentials(accessToken);
+      passkeyCount = listRes?.Credentials?.length ?? 0;
+    } catch (e) {
+      if (e instanceof UnauthorizedException) {
+        passkeyCount = 0;
+      } else {
+        throw e;
+      }
+    }
     const softwareTokenMfaEnabled =
       response.UserMFASettingList?.includes('SOFTWARE_TOKEN_MFA') ?? false;
     const preferredMfa = response.PreferredMfaSetting ?? undefined;
@@ -148,6 +132,77 @@ export class ProfileService {
         mongoDateOrNull(Reflect.get(user, 'first_logged_in_at')),
       ),
     };
+  }
+
+  async startWebAuthnRegistration(accessToken: string) {
+    const res =
+      await this.cognitoService.startWebAuthnRegistration(accessToken);
+    if (!res?.CredentialCreationOptions) {
+      throw new InternalServerErrorException(
+        'Could not start passkey registration',
+      );
+    }
+
+    return res.CredentialCreationOptions as Record<string, unknown>;
+  }
+
+  async completeWebAuthnRegistration(
+    accessToken: string,
+    credential: Record<string, unknown>,
+  ) {
+    await this.cognitoService.completeWebAuthnRegistration(
+      accessToken,
+      credential,
+    );
+  }
+
+  async listWebAuthnCredentialsForSettings(
+    accessToken: string,
+  ): Promise<WebAuthnCredentialListItemDto[]> {
+    try {
+      return await this.listWebAuthnCredentialsForSettingsInner(accessToken);
+    } catch (e) {
+      if (e instanceof UnauthorizedException) {
+        return [];
+      }
+
+      throw e;
+    }
+  }
+
+  private async listWebAuthnCredentialsForSettingsInner(
+    accessToken: string,
+  ): Promise<WebAuthnCredentialListItemDto[]> {
+    const res = await this.cognitoService.listWebAuthnCredentials(accessToken);
+    const rows = res?.Credentials ?? [];
+    return rows.map((c) => {
+      const { displayName, provider } = resolveCognitoWebAuthnCredentialDisplay(
+        {
+          FriendlyCredentialName: c.FriendlyCredentialName,
+          AuthenticatorAttachment: c.AuthenticatorAttachment,
+          AuthenticatorTransports: c.AuthenticatorTransports,
+        },
+      );
+      return {
+        credentialId: c.CredentialId ?? '',
+        displayName,
+        provider,
+        createdAt: c.CreatedAt
+          ? new Date(c.CreatedAt).toISOString()
+          : new Date(0).toISOString(),
+        lastUsedAt: null,
+      };
+    });
+  }
+
+  async deleteWebAuthnCredential(
+    accessToken: string,
+    credentialId: string,
+  ): Promise<void> {
+    await this.cognitoService.deleteWebAuthnCredential(
+      accessToken,
+      credentialId,
+    );
   }
 
   /**
@@ -394,11 +449,13 @@ export class ProfileService {
           'Sign in with Google to confirm deleting your account.',
         );
       }
+
       if (!row.linkedProviders?.includes('GOOGLE')) {
         throw new BadRequestException(
           'Your account cannot be verified for deletion. Contact support.',
         );
       }
+
       const { email: googleEmail, sub: googleSub } =
         await this.googleService.verifyCredential(cred);
       const linkedGoogleSub = row.linkedProviderSubjects?.GOOGLE;
@@ -407,6 +464,7 @@ export class ProfileService {
           'That Google account is not linked to this profile.',
         );
       }
+
       if (username !== googleEmail) {
         throw new BadRequestException(
           'Google account email must match your account email.',

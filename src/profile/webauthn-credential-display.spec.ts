@@ -1,7 +1,7 @@
 import {
   resolvePasskeyDisplay,
   type PasskeyDisplayRowInput,
-} from './passkey-display';
+} from './webauthn-credential-display';
 
 describe('resolvePasskeyDisplay', () => {
   const base = (

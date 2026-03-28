@@ -1,9 +1,4 @@
 import { Response } from 'express';
-import {
-  PASSKEY_SESSION_COOKIE_NAME,
-  PASSKEY_SESSION_MAX_AGE_SECONDS,
-  signPasskeySession,
-} from './passkey-jwt';
 
 export interface AuthResult {
   AccessToken?: string;
@@ -49,33 +44,4 @@ export function setAuthCookies(
       maxAge: REFRESH_COOKIE_MAX_AGE,
     });
   }
-}
-
-export interface SetPasskeySessionOptions {
-  secure?: boolean;
-  jwtSecret: string;
-}
-
-export function setPasskeySessionCookie(
-  res: Response,
-  sub: string,
-  options: SetPasskeySessionOptions,
-): void {
-  const secure = options?.secure ?? false;
-  const token = signPasskeySession(
-    sub,
-    options.jwtSecret,
-    PASSKEY_SESSION_MAX_AGE_SECONDS,
-  );
-  res.cookie(PASSKEY_SESSION_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure,
-    sameSite: 'strict',
-    signed: true,
-    maxAge: PASSKEY_SESSION_MAX_AGE_SECONDS * 1000,
-  });
-}
-
-export function clearPasskeySessionCookie(res: Response): void {
-  res.clearCookie(PASSKEY_SESSION_COOKIE_NAME);
 }

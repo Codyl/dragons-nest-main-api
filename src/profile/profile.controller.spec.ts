@@ -59,18 +59,16 @@ describe('ProfileController', () => {
       passkeyCount: 0,
     };
     profileService.getMe.mockResolvedValue(mockProfile);
-    const result = await controller.getMe('access-token', 'cognito', {
+    const result = await controller.getMe('access-token', {
       sub: '123',
     });
     expect(result).toEqual({
       message: 'User retrieved successfully',
       data: mockProfile,
     });
-    expect(profileService.getMe).toHaveBeenCalledWith(
-      'access-token',
-      'cognito',
-      { sub: '123' },
-    );
+    expect(profileService.getMe).toHaveBeenCalledWith('access-token', {
+      sub: '123',
+    });
   });
 
   it('should update the account of the user', async () => {

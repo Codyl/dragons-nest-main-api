@@ -388,38 +388,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/passkey/passkey/register/options': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post: operations['PasskeyController_passkeyRegisterOptions'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/passkey/passkey/register/verify': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post: operations['PasskeyController_passkeyRegisterVerify'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/health': {
     parameters: {
       query?: never;
@@ -542,17 +510,6 @@ export interface components {
     };
     DeleteMeDto: {
       password: string;
-    };
-    PasskeyRegistrationResponseDto: {
-      clientDataJSON: string;
-      attestationObject: string;
-    };
-    PasskeyVerifyRegistrationDto: {
-      id: string;
-      rawId: string;
-      /** @enum {string} */
-      type: 'public-key';
-      response: components['schemas']['PasskeyRegistrationResponseDto'];
     };
   };
   responses: never;
@@ -1097,44 +1054,6 @@ export interface operations {
     requestBody?: never;
     responses: {
       200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  PasskeyController_passkeyRegisterOptions: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  PasskeyController_passkeyRegisterVerify: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['PasskeyVerifyRegistrationDto'];
-      };
-    };
-    responses: {
-      201: {
         headers: {
           [name: string]: unknown;
         };

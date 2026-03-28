@@ -25,8 +25,6 @@ import { ProfileService } from './profile.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AccessToken } from 'src/auth/decorators/access-token.decorator';
-import { AuthType } from 'src/auth/decorators/auth-type.decorator';
-import type { AuthType as AuthTypeValue } from 'src/common/guards/auth.guard';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -36,6 +34,9 @@ import { DeleteMeDto } from './dto/delete-me.dto';
 import type { GetMeResponseDto } from './dto/out/get-me-response.dto';
 import type { FirstLoginResponseDto } from './dto/out/first-login-response.dto';
 import type { KnownDeviceResponseDto } from './dto/out/known-device-response.dto';
+import { WebAuthnRegisterCompleteDto } from './dto/webauthn-register-complete.dto';
+import { WebAuthnDeleteCredentialDto } from './dto/webauthn-delete-credential.dto';
+import type { WebAuthnCredentialListItemDto } from './dto/out/webauthn-credential-list-item.dto';
 
 @ApiCookieAuth('ACCESS_TOKEN')
 @Controller('profile')
@@ -79,10 +80,9 @@ export class ProfileController {
   @Get()
   async getMe(
     @AccessToken() accessToken: string,
-    @AuthType() authType: AuthTypeValue,
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
   ): Promise<ApiResponseDto<GetMeResponseDto>> {
-    const data = await this.profileService.getMe(accessToken, authType, user);
+    const data = await this.profileService.getMe(accessToken, user);
 
     return {
       message: 'User retrieved successfully',
@@ -117,6 +117,95 @@ export class ProfileController {
     return {
       message: 'First login recorded',
       data,
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Starts Cognito passkey registration (returns public-key creation options for the browser)',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or lacks admin scope.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Cognito did not return registration options.',
+  })
+  @Post('webauthn/register/begin')
+  async webAuthnRegisterBegin(
+    @AccessToken() accessToken: string,
+  ): Promise<
+    ApiResponseDto<{ credentialCreationOptions: Record<string, unknown> }>
+  > {
+    const credentialCreationOptions =
+      await this.profileService.startWebAuthnRegistration(accessToken);
+    return {
+      message: 'Passkey registration started',
+      data: { credentialCreationOptions },
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Completes Cognito passkey registration with the browser credential',
+  })
+  @ApiBadRequestResponse({ description: 'Credential payload is invalid.' })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or lacks admin scope.',
+  })
+  @Post('webauthn/register/complete')
+  async webAuthnRegisterComplete(
+    @AccessToken() accessToken: string,
+    @Body() body: WebAuthnRegisterCompleteDto,
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
+    await this.profileService.completeWebAuthnRegistration(
+      accessToken,
+      body.credential,
+    );
+    return {
+      message: 'Passkey registered successfully',
+      data: {},
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Lists passkeys registered in Cognito (settings UI)',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or lacks admin scope.',
+  })
+  @Get('webauthn/credentials')
+  async listWebAuthnCredentials(
+    @AccessToken() accessToken: string,
+  ): Promise<ApiResponseDto<{ passkeys: WebAuthnCredentialListItemDto[] }>> {
+    const passkeys =
+      await this.profileService.listWebAuthnCredentialsForSettings(accessToken);
+    return {
+      message: 'Passkeys',
+      data: { passkeys },
+    };
+  }
+
+  @ApiOperation({ summary: 'Deletes a Cognito-registered passkey' })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or lacks admin scope.',
+  })
+  @ApiNotFoundResponse({ description: 'Credential id was not found.' })
+  @Delete('webauthn/credentials')
+  async deleteWebAuthnCredential(
+    @AccessToken() accessToken: string,
+    @Body() body: WebAuthnDeleteCredentialDto,
+  ): Promise<ApiResponseDto<EmptyDataDto>> {
+    await this.profileService.deleteWebAuthnCredential(
+      accessToken,
+      body.credentialId,
+    );
+    return {
+      message: 'Passkey removed',
+      data: {},
     };
   }
 

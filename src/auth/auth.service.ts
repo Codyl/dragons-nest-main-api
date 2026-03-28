@@ -232,6 +232,92 @@ export class AuthService {
     return response;
   }
 
+  async beginWebAuthnSignIn(email: string, session: string) {
+    return this.cognitoService.beginWebAuthnSignIn(email, session);
+  }
+
+  /**
+   * Submits WebAuthn assertion to Cognito and completes optional device tracking (mirrors password login).
+   */
+  async completeWebAuthnSignIn(
+    email: string,
+    session: string,
+    credential: Record<string, unknown>,
+    deviceName: string,
+  ) {
+    const credentialStr = JSON.stringify(credential);
+
+    let response = await this.cognitoService.respondToWebAuthnChallenge(
+      email,
+      session,
+      credentialStr,
+    );
+    if (!response) {
+      throw new NotFoundException('User not found.');
+    }
+
+    const newDeviceMetadata = response.AuthenticationResult?.NewDeviceMetadata;
+
+    let device: DeviceType | undefined;
+    let deviceRandomPassword: string | undefined;
+    if (!response.ChallengeName && response.AuthenticationResult) {
+      if (newDeviceMetadata?.DeviceKey && newDeviceMetadata?.DeviceGroupKey) {
+        const deviceVerifier = createDeviceVerifier(
+          newDeviceMetadata.DeviceKey,
+          newDeviceMetadata.DeviceGroupKey,
+        );
+        deviceRandomPassword = deviceVerifier.DeviceRandomPassword;
+
+        await this.cognitoService.confirmDevice(
+          response.AuthenticationResult.AccessToken!,
+          newDeviceMetadata.DeviceKey,
+          deviceName,
+          deviceVerifier.DeviceSecretVerifierConfig,
+        );
+
+        try {
+          const deviceResponse = await this.cognitoService.getDevice(
+            response.AuthenticationResult.AccessToken!,
+            newDeviceMetadata.DeviceKey,
+          );
+          if (!deviceResponse?.Device) {
+            throw new NotFoundException('Device not found.');
+          }
+
+          device = deviceResponse.Device;
+        } catch {
+          device = undefined;
+        }
+      }
+    }
+
+    if (
+      response.ChallengeName === ChallengeNameType.DEVICE_SRP_AUTH &&
+      deviceRandomPassword
+    ) {
+      if (!response.Session) {
+        throw new NotFoundException('Session not found.');
+      }
+
+      const deviceSrpResponse =
+        await this.cognitoService.respondToDeviceSRPAuthChallenge(
+          email,
+          deviceRandomPassword,
+          response.Session,
+        );
+      if (!deviceSrpResponse) {
+        throw new NotFoundException('Device not found.');
+      }
+
+      response = deviceSrpResponse;
+    }
+
+    return {
+      response,
+      device,
+    };
+  }
+
   async initiateLogin(
     email: string,
     password: string,
