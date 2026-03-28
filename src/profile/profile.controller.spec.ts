@@ -193,11 +193,7 @@ describe('ProfileController', () => {
       message: 'User deleted successfully',
       data: {},
     });
-    expect(profileService.deleteMe).toHaveBeenCalledWith(
-      '123',
-      'password123',
-      undefined,
-    );
+    expect(profileService.deleteMe).toHaveBeenCalledWith('123', deleteMeDto);
   });
 
   it('should get the known devices of the user', async () => {

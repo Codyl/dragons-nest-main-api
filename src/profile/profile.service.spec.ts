@@ -574,6 +574,14 @@ describe('ProfileService', () => {
   });
 
   describe('deleteMe', () => {
+    beforeEach(() => {
+      usersService.findOneByCognitoSub.mockResolvedValue({
+        cognitoSub: 'cognito-sub-123',
+        hasPassword: true,
+        deleted: false,
+      } as UserDoc);
+    });
+
     it('should authenticate with SRP, delete in Cognito, then mark user deleted in DB', async () => {
       cognitoService.getUser.mockResolvedValue({
         UserAttributes: [
@@ -586,7 +594,7 @@ describe('ProfileService', () => {
       } as never);
       cognitoService.deleteUser.mockResolvedValue({} as never);
       usersService.updateByCognitoSub.mockResolvedValue({} as never);
-      await service.deleteMe('accessToken', 'password123');
+      await service.deleteMe('accessToken', { password: 'password123' });
       expect(cognitoService.authenticateWithSrp).toHaveBeenCalledWith(
         'user@example.com',
         'password123',
@@ -603,9 +611,19 @@ describe('ProfileService', () => {
         UserAttributes: [{ Name: 'sub', Value: 'cognito-sub' }],
       });
       await expect(
-        service.deleteMe('accessToken', 'password123'),
+        service.deleteMe('accessToken', { password: 'password123' }),
       ).rejects.toThrow(UnauthorizedException);
       expect(cognitoService.authenticateWithSrp).not.toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException when sub missing', async () => {
+      cognitoService.getUser.mockResolvedValue({
+        UserAttributes: [{ Name: 'email', Value: 'user@example.com' }],
+      });
+      await expect(
+        service.deleteMe('accessToken', { password: 'password123' }),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(usersService.findOneByCognitoSub).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException when password is wrong', async () => {
@@ -621,7 +639,7 @@ describe('ProfileService', () => {
         Session: undefined,
       } as never);
       await expect(
-        service.deleteMe('accessToken', 'wrongpassword'),
+        service.deleteMe('accessToken', { password: 'wrongpassword' }),
       ).rejects.toThrow(UnauthorizedException);
       expect(cognitoService.deleteUser).not.toHaveBeenCalled();
     });
@@ -639,7 +657,7 @@ describe('ProfileService', () => {
         Session: 'mfa-session',
       } as never);
       await expect(
-        service.deleteMe('accessToken', 'password123'),
+        service.deleteMe('accessToken', { password: 'password123' }),
       ).rejects.toThrow(BadRequestException);
       expect(
         cognitoService.respondToSoftwareTokenMFAChallenge,
@@ -664,7 +682,10 @@ describe('ProfileService', () => {
       } as never);
       cognitoService.deleteUser.mockResolvedValue({} as never);
       usersService.updateByCognitoSub.mockResolvedValue({} as never);
-      await service.deleteMe('accessToken', 'password123', '123456');
+      await service.deleteMe('accessToken', {
+        password: 'password123',
+        mfaCode: '123456',
+      });
       expect(cognitoService.respondToSoftwareTokenMFAChallenge).toHaveBeenCalledWith(
         'user@example.com',
         '123456',
@@ -686,7 +707,10 @@ describe('ProfileService', () => {
         Session: 'sms-session',
       } as never);
       await expect(
-        service.deleteMe('accessToken', 'password123', '123456'),
+        service.deleteMe('accessToken', {
+          password: 'password123',
+          mfaCode: '123456',
+        }),
       ).rejects.toThrow(BadRequestException);
       expect(cognitoService.deleteUser).not.toHaveBeenCalled();
     });
@@ -703,7 +727,7 @@ describe('ProfileService', () => {
       } as never);
       cognitoService.deleteUser.mockResolvedValue(undefined as never);
       await expect(
-        service.deleteMe('accessToken', 'password123'),
+        service.deleteMe('accessToken', { password: 'password123' }),
       ).rejects.toThrow(InternalServerErrorException);
     });
 
@@ -720,8 +744,54 @@ describe('ProfileService', () => {
       cognitoService.deleteUser.mockResolvedValue({} as never);
       usersService.updateByCognitoSub.mockResolvedValue(null as never);
       await expect(
-        service.deleteMe('accessToken', 'password123'),
+        service.deleteMe('accessToken', { password: 'password123' }),
       ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should delete Google-only account after Google credential verification', async () => {
+      usersService.findOneByCognitoSub.mockResolvedValue({
+        cognitoSub: 'cognito-sub-123',
+        hasPassword: false,
+        linkedProviders: ['GOOGLE'],
+        linkedProviderSubjects: { GOOGLE: 'google-sub-1' },
+        deleted: false,
+      } as UserDoc);
+      cognitoService.getUser.mockResolvedValue({
+        UserAttributes: [
+          { Name: 'email', Value: 'user@example.com' },
+          { Name: 'sub', Value: 'cognito-sub-123' },
+        ],
+      });
+      googleService.verifyCredential.mockResolvedValue({
+        email: 'user@example.com',
+        sub: 'google-sub-1',
+      } as never);
+      cognitoService.deleteUser.mockResolvedValue({} as never);
+      usersService.updateByCognitoSub.mockResolvedValue({} as never);
+      const googleJwt = 'x'.repeat(40);
+      await service.deleteMe('accessToken', { googleCredential: googleJwt });
+      expect(googleService.verifyCredential).toHaveBeenCalledWith(googleJwt);
+      expect(cognitoService.authenticateWithSrp).not.toHaveBeenCalled();
+      expect(cognitoService.deleteUser).toHaveBeenCalledWith('accessToken');
+    });
+
+    it('should throw BadRequestException when Google-only user omits credential', async () => {
+      usersService.findOneByCognitoSub.mockResolvedValue({
+        cognitoSub: 'cognito-sub-123',
+        hasPassword: false,
+        linkedProviders: ['GOOGLE'],
+        deleted: false,
+      } as UserDoc);
+      cognitoService.getUser.mockResolvedValue({
+        UserAttributes: [
+          { Name: 'email', Value: 'user@example.com' },
+          { Name: 'sub', Value: 'cognito-sub-123' },
+        ],
+      });
+      await expect(service.deleteMe('accessToken', {})).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(cognitoService.deleteUser).not.toHaveBeenCalled();
     });
   });
 

@@ -18,6 +18,7 @@ import { PasskeyStoreService } from 'src/passkey/passkey-store.service';
 import type { AuthType } from 'src/common/guards/auth.guard';
 import { MAXMIND_KEY } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
+import { DeleteMeDto } from './dto/delete-me.dto';
 
 export interface GetMeData {
   [key: string]: string | string[] | boolean | number | null | undefined;
@@ -366,56 +367,101 @@ export class ProfileService {
     };
   }
 
-  async deleteMe(accessToken: string, password: string, mfaCode?: string) {
+  async deleteMe(accessToken: string, dto: DeleteMeDto) {
     const payload = await this.cognitoService.getUser(accessToken);
     const username = payload?.UserAttributes?.find(
       (a) => a.Name === 'email' || a.Name === 'preferred_username',
     )?.Value;
-    if (!username) {
-      throw new UnauthorizedException('Invalid password');
+    const cognitoSub = payload?.UserAttributes?.find(
+      (a) => a.Name === 'sub',
+    )?.Value;
+
+    if (!username || !cognitoSub) {
+      throw new UnauthorizedException('Invalid session');
     }
 
-    // verify user has authorization to delete their account
-    const authResponse = await this.cognitoService.authenticateWithSrp(
-      username,
-      password,
-    );
-    const srpAuthenticated = Boolean(authResponse?.AuthenticationResult);
-    if (
-      !srpAuthenticated &&
-      authResponse?.ChallengeName === 'SOFTWARE_TOKEN_MFA'
-    ) {
-      const session = authResponse.Session;
-      if (!session) {
-        throw new InternalServerErrorException(
-          'Could not complete account verification.',
-        );
-      }
+    const row = await this.usersService.findOneByCognitoSub(cognitoSub);
+    if (!row || row.deleted) {
+      throw new NotFoundException('User not found');
+    }
 
-      const code = mfaCode?.trim();
-      if (!code) {
+    const hasPassword = row.hasPassword ?? true;
+
+    if (!hasPassword) {
+      const cred = dto.googleCredential?.trim();
+      if (!cred) {
         throw new BadRequestException(
-          'Enter the code from your authenticator app to delete your account.',
+          'Sign in with Google to confirm deleting your account.',
         );
+      }
+      if (!row.linkedProviders?.includes('GOOGLE')) {
+        throw new BadRequestException(
+          'Your account cannot be verified for deletion. Contact support.',
+        );
+      }
+      const { email: googleEmail, sub: googleSub } =
+        await this.googleService.verifyCredential(cred);
+      const linkedGoogleSub = row.linkedProviderSubjects?.GOOGLE;
+      if (linkedGoogleSub && linkedGoogleSub !== googleSub) {
+        throw new BadRequestException(
+          'That Google account is not linked to this profile.',
+        );
+      }
+      if (username !== googleEmail) {
+        throw new BadRequestException(
+          'Google account email must match your account email.',
+        );
+      }
+    } else {
+      const password = dto.password?.trim();
+      if (!password || password.length < 8) {
+        throw new BadRequestException('Password must be at least 8 characters');
       }
 
-      const mfaResponse =
-        await this.cognitoService.respondToSoftwareTokenMFAChallenge(
-          username,
-          code,
-          session,
-        );
-      if (!mfaResponse?.AuthenticationResult) {
-        throw new UnauthorizedException(
-          'Invalid authenticator code or password.',
-        );
-      }
-    } else if (!srpAuthenticated && authResponse?.ChallengeName === 'SMS_MFA') {
-      throw new BadRequestException(
-        'Account deletion is not supported with SMS two-factor authentication. Use an authenticator app or contact support.',
+      const authResponse = await this.cognitoService.authenticateWithSrp(
+        username,
+        password,
       );
-    } else if (!srpAuthenticated) {
-      throw new UnauthorizedException('Invalid password');
+      const srpAuthenticated = Boolean(authResponse?.AuthenticationResult);
+      if (
+        !srpAuthenticated &&
+        authResponse?.ChallengeName === 'SOFTWARE_TOKEN_MFA'
+      ) {
+        const session = authResponse.Session;
+        if (!session) {
+          throw new InternalServerErrorException(
+            'Could not complete account verification.',
+          );
+        }
+
+        const code = dto.mfaCode?.trim();
+        if (!code) {
+          throw new BadRequestException(
+            'Enter the code from your authenticator app to delete your account.',
+          );
+        }
+
+        const mfaResponse =
+          await this.cognitoService.respondToSoftwareTokenMFAChallenge(
+            username,
+            code,
+            session,
+          );
+        if (!mfaResponse?.AuthenticationResult) {
+          throw new UnauthorizedException(
+            'Invalid authenticator code or password.',
+          );
+        }
+      } else if (
+        !srpAuthenticated &&
+        authResponse?.ChallengeName === 'SMS_MFA'
+      ) {
+        throw new BadRequestException(
+          'Account deletion is not supported with SMS two-factor authentication. Use an authenticator app or contact support.',
+        );
+      } else if (!srpAuthenticated) {
+        throw new UnauthorizedException('Invalid password');
+      }
     }
 
     const cognitoResponse = await this.cognitoService.deleteUser(accessToken);
