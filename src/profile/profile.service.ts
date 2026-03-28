@@ -292,7 +292,7 @@ export class ProfileService {
     };
   }
 
-  async deleteMe(accessToken: string, password: string) {
+  async deleteMe(accessToken: string, password: string, mfaCode?: string) {
     const payload = await this.cognitoService.getUser(accessToken);
     const username = payload?.UserAttributes?.find(
       (a) => a.Name === 'email' || a.Name === 'preferred_username',
@@ -306,7 +306,41 @@ export class ProfileService {
       username,
       password,
     );
-    if (!authResponse?.AuthenticationResult) {
+    const srpAuthenticated = Boolean(authResponse?.AuthenticationResult);
+    if (
+      !srpAuthenticated &&
+      authResponse?.ChallengeName === 'SOFTWARE_TOKEN_MFA'
+    ) {
+      const session = authResponse.Session;
+      if (!session) {
+        throw new InternalServerErrorException(
+          'Could not complete account verification.',
+        );
+      }
+
+      const code = mfaCode?.trim();
+      if (!code) {
+        throw new BadRequestException(
+          'Enter the code from your authenticator app to delete your account.',
+        );
+      }
+
+      const mfaResponse =
+        await this.cognitoService.respondToSoftwareTokenMFAChallenge(
+          username,
+          code,
+          session,
+        );
+      if (!mfaResponse?.AuthenticationResult) {
+        throw new UnauthorizedException(
+          'Invalid authenticator code or password.',
+        );
+      }
+    } else if (!srpAuthenticated && authResponse?.ChallengeName === 'SMS_MFA') {
+      throw new BadRequestException(
+        'Account deletion is not supported with SMS two-factor authentication. Use an authenticator app or contact support.',
+      );
+    } else if (!srpAuthenticated) {
       throw new UnauthorizedException('Invalid password');
     }
 

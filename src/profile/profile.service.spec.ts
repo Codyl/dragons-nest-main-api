@@ -57,6 +57,7 @@ describe('ProfileService', () => {
             changePassword: jest.fn(),
             adminSetUserPassword: jest.fn(),
             authenticateWithSrp: jest.fn(),
+            respondToSoftwareTokenMFAChallenge: jest.fn(),
             deleteUser: jest.fn(),
             adminLinkProviderForUser: jest.fn(),
             adminDisableProviderForUser: jest.fn(),
@@ -575,10 +576,77 @@ describe('ProfileService', () => {
       });
       cognitoService.authenticateWithSrp.mockResolvedValue({
         AuthenticationResult: undefined,
+        ChallengeName: undefined,
+        Session: undefined,
       } as never);
       await expect(
         service.deleteMe('accessToken', 'wrongpassword'),
       ).rejects.toThrow(UnauthorizedException);
+      expect(cognitoService.deleteUser).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when SOFTWARE_TOKEN_MFA challenge but no MFA code', async () => {
+      cognitoService.getUser.mockResolvedValue({
+        UserAttributes: [
+          { Name: 'email', Value: 'user@example.com' },
+          { Name: 'sub', Value: 'cognito-sub-123' },
+        ],
+      });
+      cognitoService.authenticateWithSrp.mockResolvedValue({
+        AuthenticationResult: undefined,
+        ChallengeName: 'SOFTWARE_TOKEN_MFA',
+        Session: 'mfa-session',
+      } as never);
+      await expect(
+        service.deleteMe('accessToken', 'password123'),
+      ).rejects.toThrow(BadRequestException);
+      expect(
+        cognitoService.respondToSoftwareTokenMFAChallenge,
+      ).not.toHaveBeenCalled();
+      expect(cognitoService.deleteUser).not.toHaveBeenCalled();
+    });
+
+    it('should complete SOFTWARE_TOKEN_MFA then delete when MFA code is valid', async () => {
+      cognitoService.getUser.mockResolvedValue({
+        UserAttributes: [
+          { Name: 'email', Value: 'user@example.com' },
+          { Name: 'sub', Value: 'cognito-sub-123' },
+        ],
+      });
+      cognitoService.authenticateWithSrp.mockResolvedValue({
+        AuthenticationResult: undefined,
+        ChallengeName: 'SOFTWARE_TOKEN_MFA',
+        Session: 'mfa-session',
+      } as never);
+      cognitoService.respondToSoftwareTokenMFAChallenge.mockResolvedValue({
+        AuthenticationResult: {},
+      } as never);
+      cognitoService.deleteUser.mockResolvedValue({} as never);
+      usersService.updateByCognitoSub.mockResolvedValue({} as never);
+      await service.deleteMe('accessToken', 'password123', '123456');
+      expect(cognitoService.respondToSoftwareTokenMFAChallenge).toHaveBeenCalledWith(
+        'user@example.com',
+        '123456',
+        'mfa-session',
+      );
+      expect(cognitoService.deleteUser).toHaveBeenCalledWith('accessToken');
+    });
+
+    it('should throw BadRequestException for SMS_MFA challenge', async () => {
+      cognitoService.getUser.mockResolvedValue({
+        UserAttributes: [
+          { Name: 'email', Value: 'user@example.com' },
+          { Name: 'sub', Value: 'cognito-sub-123' },
+        ],
+      });
+      cognitoService.authenticateWithSrp.mockResolvedValue({
+        AuthenticationResult: undefined,
+        ChallengeName: 'SMS_MFA',
+        Session: 'sms-session',
+      } as never);
+      await expect(
+        service.deleteMe('accessToken', 'password123', '123456'),
+      ).rejects.toThrow(BadRequestException);
       expect(cognitoService.deleteUser).not.toHaveBeenCalled();
     });
 

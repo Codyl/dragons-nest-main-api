@@ -225,7 +225,9 @@ export class GoogleService {
       authResponse = await this.cognitoClient.send(authCommand);
     } catch (error) {
       this.throwIfQuotaOrRateLimited(error);
-      throw new InternalServerErrorException('Failed to authenticate user');
+      throw new InternalServerErrorException(
+        (error as Error)?.message || 'Failed to authenticate user',
+      );
     }
 
     return {
@@ -252,7 +254,9 @@ export class GoogleService {
       });
     } catch (error) {
       this.throwIfQuotaOrRateLimited(error);
-      throw new UnauthorizedException('Invalid Google ID token');
+      throw new UnauthorizedException(
+        (error as Error)?.message || 'Invalid Google ID token',
+      );
     }
     const payload = ticket.getPayload();
 
@@ -285,7 +289,9 @@ export class GoogleService {
       );
     } catch (error) {
       this.throwIfQuotaOrRateLimited(error);
-      throw new InternalServerErrorException('Failed to query user');
+      throw new InternalServerErrorException(
+        (error as Error)?.message || 'Failed to query user',
+      );
     }
 
     const existingUser = listResult.Users?.[0];
@@ -293,7 +299,7 @@ export class GoogleService {
     if (existingUser) {
       const user = await this.userModel.findOne({
         email,
-        linkedProviders: { $in: ['GOOGLE'] },
+        linkedProviders: { $elemMatch: { $eq: 'GOOGLE' } },
       });
       if (!user) {
         throw new ConflictException(

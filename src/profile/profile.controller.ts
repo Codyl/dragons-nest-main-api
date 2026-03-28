@@ -380,7 +380,11 @@ export class ProfileController {
     @AccessToken() accessToken: string,
     @Body() dto: DeleteMeDto,
   ): Promise<ApiResponseDto<EmptyDataDto>> {
-    await this.profileService.deleteMe(accessToken, dto.password);
+    await this.profileService.deleteMe(
+      accessToken,
+      dto.password,
+      dto.mfaCode,
+    );
     return {
       message: 'User deleted successfully',
       data: {},
