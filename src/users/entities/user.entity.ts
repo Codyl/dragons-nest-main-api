@@ -29,6 +29,14 @@ export class User extends Document {
   @ApiProperty({ description: 'Whether the user is deleted' })
   @Prop({ type: Boolean, default: false })
   deleted?: boolean;
+
+  @ApiProperty({
+    description:
+      'When the user first completed in-app login (welcome flow). Null until they finish welcome.',
+    nullable: true,
+  })
+  @Prop({ type: Date, default: null })
+  first_logged_in_at?: Date | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

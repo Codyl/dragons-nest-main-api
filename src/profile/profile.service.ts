@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CognitoService } from 'src/cognito/cognito.service';
-import { UsersService } from 'src/users/users.service';
+import { UsersService, type UserDoc } from 'src/users/users.service';
 import { GoogleService } from 'src/google/google.service';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { MfaPreferenceDto } from './dto/mfa-preference.dto';
@@ -20,13 +20,41 @@ import { MAXMIND_KEY } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
 
 export interface GetMeData {
-  [key: string]: string | string[] | boolean | number | undefined;
+  [key: string]: string | string[] | boolean | number | null | undefined;
   loginMethods: string[];
   hasPassword: boolean;
   hasPasskey: boolean;
   passkeyCount: number;
   softwareTokenMfaEnabled?: boolean;
   preferredMfa?: string;
+  first_logged_in_at?: string | null;
+}
+
+function firstLoggedInAtToIso(value: Date | null | undefined): string | null {
+  if (value == null) {
+    return null;
+  }
+
+  return value instanceof Date
+    ? value.toISOString()
+    : new Date(value as string | number).toISOString();
+}
+
+/** Normalize optional Mongoose date paths for ESLint-safe handling. */
+function mongoDateOrNull(value: unknown): Date | null {
+  if (value == null) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === 'string' || typeof value === 'number') {
+    return new Date(value);
+  }
+
+  return null;
 }
 
 @Injectable()
@@ -51,10 +79,12 @@ export class ProfileService {
     }
 
     if (authType === 'passkey') {
-      const user = await this.usersService.findOneByCognitoSub(sub);
-      if (!user || user.deleted) {
+      const row = await this.usersService.findOneByCognitoSub(sub);
+      if (!row || row.deleted) {
         throw new NotFoundException('User not found');
       }
+
+      const user: UserDoc = row;
 
       const loginMethods = user.linkedProviders ?? [];
       const hasPassword = user.hasPassword ?? true;
@@ -67,6 +97,9 @@ export class ProfileService {
         hasPassword,
         hasPasskey: passkeyCount > 0,
         passkeyCount,
+        first_logged_in_at: firstLoggedInAtToIso(
+          mongoDateOrNull(Reflect.get(user, 'first_logged_in_at')),
+        ),
       };
     }
 
@@ -88,10 +121,12 @@ export class ProfileService {
       throw new UnauthorizedException('Not authenticated');
     }
 
-    const user = await this.usersService.findOneByCognitoSub(attrsSub);
-    if (!user || user.deleted) {
+    const row = await this.usersService.findOneByCognitoSub(attrsSub);
+    if (!row || row.deleted) {
       throw new NotFoundException('User not found');
     }
+
+    const user: UserDoc = row;
 
     const loginMethods = user.linkedProviders ?? [];
     const hasPassword = user.hasPassword ?? true;
@@ -108,7 +143,46 @@ export class ProfileService {
       passkeyCount,
       softwareTokenMfaEnabled,
       preferredMfa,
+      first_logged_in_at: firstLoggedInAtToIso(
+        mongoDateOrNull(Reflect.get(user, 'first_logged_in_at')),
+      ),
     };
+  }
+
+  /**
+   * Records first in-app login (welcome completion). Idempotent if already set.
+   */
+  async recordFirstLoginAt(
+    cognitoSub: string,
+  ): Promise<{ first_logged_in_at: string }> {
+    const row = await this.usersService.findOneByCognitoSub(cognitoSub);
+    if (!row || row.deleted) {
+      throw new NotFoundException('User not found');
+    }
+
+    const user: UserDoc = row;
+
+    const existing = mongoDateOrNull(Reflect.get(user, 'first_logged_in_at'));
+    if (existing) {
+      return {
+        first_logged_in_at: firstLoggedInAtToIso(existing)!,
+      };
+    }
+
+    const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
+      first_logged_in_at: new Date(),
+    });
+
+    if (!updated) {
+      throw new InternalServerErrorException('Failed to record first login');
+    }
+
+    const ts = mongoDateOrNull(Reflect.get(updated, 'first_logged_in_at'));
+    if (!ts) {
+      throw new InternalServerErrorException('Failed to record first login');
+    }
+
+    return { first_logged_in_at: firstLoggedInAtToIso(ts)! };
   }
 
   async updateAccount(accessToken: string, dto: UpdateAccountDto) {

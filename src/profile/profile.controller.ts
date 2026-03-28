@@ -34,6 +34,7 @@ import { CreatePasswordDto } from './dto/create-password.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
 import type { GetMeResponseDto } from './dto/out/get-me-response.dto';
+import type { FirstLoginResponseDto } from './dto/out/first-login-response.dto';
 import type { KnownDeviceResponseDto } from './dto/out/known-device-response.dto';
 
 @ApiCookieAuth('ACCESS_TOKEN')
@@ -86,6 +87,36 @@ export class ProfileController {
     return {
       message: 'User retrieved successfully',
       data: data as GetMeResponseDto,
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Records first in-app login after the welcome screen (idempotent if already set)',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or user is unauthenticated.',
+  })
+  @ApiNotFoundResponse({
+    description: 'User record was not found.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Failed to persist first login timestamp.',
+  })
+  @Post('first-login')
+  async recordFirstLogin(
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
+  ): Promise<ApiResponseDto<FirstLoginResponseDto>> {
+    const cognitoSub = user?.sub;
+    if (!cognitoSub || typeof cognitoSub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    const data = await this.profileService.recordFirstLoginAt(cognitoSub);
+    return {
+      message: 'First login recorded',
+      data,
     };
   }
 

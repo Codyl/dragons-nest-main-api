@@ -14,6 +14,7 @@ export interface UserDoc {
   hasPassword?: boolean;
   email?: string;
   deleted?: boolean;
+  first_logged_in_at?: Date | null;
 }
 
 @Injectable()
@@ -32,8 +33,9 @@ export class UsersService {
     return this.userModel.findById(_id);
   }
 
-  findOneByCognitoSub(sub: string): Promise<UserDoc | null> {
-    return this.userModel.findOne({ cognitoSub: sub }).lean();
+  async findOneByCognitoSub(sub: string): Promise<UserDoc | null> {
+    const doc = await this.userModel.findOne({ cognitoSub: sub }).lean();
+    return doc as UserDoc | null;
   }
 
   updateByCognitoSub(cognitoSub: string, update: Partial<User>) {
@@ -83,6 +85,7 @@ export class UsersService {
       cognitoSub,
       email,
       hasPassword: true,
+      first_logged_in_at: new Date(),
     });
   }
 }

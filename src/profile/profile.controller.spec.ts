@@ -30,6 +30,7 @@ describe('ProfileController', () => {
             unlinkGoogle: jest.fn(),
             deleteMe: jest.fn(),
             getKnownDevices: jest.fn(),
+            recordFirstLoginAt: jest.fn(),
           },
         },
       ],
@@ -216,6 +217,18 @@ describe('ProfileController', () => {
     expect(profileService.getKnownDevices).toHaveBeenCalledWith('123');
   });
 
+  it('should record first login', async () => {
+    profileService.recordFirstLoginAt.mockResolvedValue({
+      first_logged_in_at: '2025-01-01T00:00:00.000Z',
+    });
+    const result = await controller.recordFirstLogin({ sub: 'sub-1' });
+    expect(result).toEqual({
+      message: 'First login recorded',
+      data: { first_logged_in_at: '2025-01-01T00:00:00.000Z' },
+    });
+    expect(profileService.recordFirstLoginAt).toHaveBeenCalledWith('sub-1');
+  });
+
   describe('when user is not authenticated (missing sub)', () => {
     it('changePassword throws', async () => {
       await expect(
@@ -250,6 +263,13 @@ describe('ProfileController', () => {
         controller.createPassword('token', {}, { newPassword: 'newPass123' }),
       ).rejects.toThrow('Not authenticated');
       expect(profileService.createPassword).not.toHaveBeenCalled();
+    });
+
+    it('recordFirstLogin throws', async () => {
+      await expect(controller.recordFirstLogin({})).rejects.toThrow(
+        'Not authenticated',
+      );
+      expect(profileService.recordFirstLoginAt).not.toHaveBeenCalled();
     });
   });
 });

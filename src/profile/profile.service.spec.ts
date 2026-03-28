@@ -153,6 +153,7 @@ describe('ProfileService', () => {
       passkeyCount: 0,
       softwareTokenMfaEnabled: true,
       preferredMfa: 'SOFTWARE_TOKEN_MFA',
+      first_logged_in_at: null,
     });
     expect(passkeyStore.countPasskeys).toHaveBeenCalledWith(cognitoSub);
   });
@@ -204,6 +205,46 @@ describe('ProfileService', () => {
       hasPassword: true,
       hasPasskey: true,
       passkeyCount: 2,
+      first_logged_in_at: null,
+    });
+  });
+
+  describe('recordFirstLoginAt', () => {
+    it('should throw NotFoundException when user is missing', async () => {
+      usersService.findOneByCognitoSub.mockResolvedValue(null);
+      await expect(service.recordFirstLoginAt('sub')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should return existing timestamp without updating when already set', async () => {
+      const at = new Date('2020-01-01T00:00:00.000Z');
+      usersService.findOneByCognitoSub.mockResolvedValue({
+        _id: new Types.ObjectId(),
+        cognitoSub: 'sub',
+        first_logged_in_at: at,
+      } as UserDoc);
+      const r = await service.recordFirstLoginAt('sub');
+      expect(r.first_logged_in_at).toBe(at.toISOString());
+      expect(usersService.updateByCognitoSub).not.toHaveBeenCalled();
+    });
+
+    it('should persist first_logged_in_at when unset', async () => {
+      usersService.findOneByCognitoSub.mockResolvedValue({
+        _id: new Types.ObjectId(),
+        cognitoSub: 'sub',
+        email: 'a@b.com',
+      } as UserDoc);
+      const now = new Date('2024-06-01T12:00:00.000Z');
+      usersService.updateByCognitoSub.mockResolvedValue({
+        cognitoSub: 'sub',
+        first_logged_in_at: now,
+      } as never);
+      const r = await service.recordFirstLoginAt('sub');
+      expect(r.first_logged_in_at).toBe(now.toISOString());
+      expect(usersService.updateByCognitoSub).toHaveBeenCalledWith('sub', {
+        first_logged_in_at: expect.any(Date),
+      });
     });
   });
 
