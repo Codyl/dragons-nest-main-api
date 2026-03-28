@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
@@ -16,9 +24,12 @@ import {
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { PasskeyDeleteBodyDto } from 'src/passkey/dto/passkey-delete-body.dto';
+import { PasskeyListItemDto } from 'src/passkey/dto/out/passkey-list-item.dto';
 
 interface MessageDataResponse<T = object> {
   message: string;
@@ -162,6 +173,58 @@ export class PasskeyController {
     description:
       'Unexpected server/WebAuthn failure during registration verification.',
   })
+  @ApiOperation({
+    summary: 'Lists passkeys for the signed-in user (metadata for settings UI)',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or user is unauthenticated.',
+  })
+  @ApiOkResponse({ description: 'Passkey rows with display hints and dates' })
+  @UseGuards(AuthGuard)
+  @Get('profile/passkeys')
+  async listPasskeys(
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
+  ): Promise<MessageDataResponse<{ passkeys: PasskeyListItemDto[] }>> {
+    const sub = user?.sub;
+    if (!sub || typeof sub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    const passkeys = await this.passkeyService.listPasskeysForSettings(sub);
+    return {
+      message: 'Passkeys',
+      data: { passkeys },
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Removes a passkey credential from the user account',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or user is unauthenticated.',
+  })
+  @ApiNotFoundResponse({ description: 'Credential id not found for this user' })
+  @ApiBadRequestResponse({ description: 'Invalid body' })
+  @UseGuards(AuthGuard)
+  @Delete('profile/passkeys')
+  async deletePasskey(
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
+    @Body() body: PasskeyDeleteBodyDto,
+  ): Promise<MessageDataResponse<Record<string, never>>> {
+    const sub = user?.sub;
+    if (!sub || typeof sub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    await this.passkeyService.deletePasskey(sub, body.credentialId);
+    return {
+      message: 'Passkey removed',
+      data: {},
+    };
+  }
+
   @UseGuards(AuthGuard)
   @Post('profile/passkey/register/verify')
   async passkeyRegisterVerify(

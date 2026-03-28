@@ -26,6 +26,18 @@ export class Passkey extends Document {
 
   @Prop({ required: true, default: false })
   backedUp: boolean;
+
+  /** Authenticator Attestation GUID from WebAuthn registration (for display labels). */
+  @Prop({ type: String })
+  aaguid?: string;
+
+  /** Updated on successful passkey sign-in. */
+  @Prop({ type: Date })
+  lastUsedAt?: Date;
+
+  /** Added by `{ timestamps: true }` on the schema. */
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 export const PasskeySchema = SchemaFactory.createForClass(Passkey);

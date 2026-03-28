@@ -21,7 +21,10 @@ describe('PasskeyController', () => {
           useValue: {
             getOrThrow: jest.fn((key: string) => {
               if (key === COGNITO_USER_POOL_ID) return 'us-east-1_TestPool1';
-              if (key === COGNITO_CLIENT_ID) return 'testclientid0123456789abcd';
+
+              if (key === COGNITO_CLIENT_ID)
+                return 'testclientid0123456789abcd';
+
               return 'test';
             }),
           },
@@ -31,6 +34,8 @@ describe('PasskeyController', () => {
           useValue: {
             getRegistrationOptions: jest.fn(),
             verifyRegistration: jest.fn(),
+            listPasskeysForSettings: jest.fn(),
+            deletePasskey: jest.fn(),
           },
         },
       ],

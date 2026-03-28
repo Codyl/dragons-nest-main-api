@@ -19,6 +19,7 @@ export class PasskeyRepository {
   }
 
   async addPasskey(sub: string, passkey: StoredPasskey): Promise<void> {
+    const now = new Date();
     await this.passkeyModel.create({
       cognitoSub: sub,
       credentialId: passkey.id,
@@ -28,6 +29,8 @@ export class PasskeyRepository {
       webauthnUserID: passkey.webauthnUserID,
       deviceType: passkey.deviceType,
       backedUp: passkey.backedUp,
+      aaguid: passkey.aaguid,
+      lastUsedAt: now,
     });
   }
 
@@ -45,8 +48,62 @@ export class PasskeyRepository {
 
   async updateCounter(credentialId: string, counter: number): Promise<void> {
     await this.passkeyModel
-      .updateOne({ credentialId }, { $set: { counter } })
+      .updateOne(
+        { credentialId },
+        { $set: { counter, lastUsedAt: new Date() } },
+      )
       .exec();
+  }
+
+  async listForDisplay(sub: string): Promise<
+    {
+      credentialId: string;
+      aaguid?: string;
+      deviceType: 'singleDevice' | 'multiDevice';
+      backedUp: boolean;
+      transports?: string[];
+      createdAt: Date;
+      lastUsedAt?: Date;
+    }[]
+  > {
+    const docs = await this.passkeyModel
+      .find({ cognitoSub: sub })
+      .select(
+        'credentialId aaguid deviceType backedUp transports createdAt lastUsedAt',
+      )
+      .sort({ createdAt: 1 })
+      .lean()
+      .exec();
+
+    type PasskeyListLean = {
+      credentialId: string;
+      aaguid?: string;
+      deviceType: 'singleDevice' | 'multiDevice';
+      backedUp: boolean;
+      transports?: string[];
+      createdAt: Date;
+      lastUsedAt?: Date;
+    };
+
+    return (docs as PasskeyListLean[]).map((d) => ({
+      credentialId: d.credentialId,
+      aaguid: d.aaguid,
+      deviceType: d.deviceType,
+      backedUp: d.backedUp,
+      transports: d.transports,
+      createdAt: d.createdAt,
+      lastUsedAt: d.lastUsedAt,
+    }));
+  }
+
+  async deleteBySubAndCredentialId(
+    sub: string,
+    credentialId: string,
+  ): Promise<boolean> {
+    const res = await this.passkeyModel
+      .deleteOne({ cognitoSub: sub, credentialId })
+      .exec();
+    return res.deletedCount > 0;
   }
 
   async countBySub(sub: string): Promise<number> {
@@ -61,6 +118,7 @@ export class PasskeyRepository {
     webauthnUserID: string;
     deviceType: 'singleDevice' | 'multiDevice';
     backedUp: boolean;
+    aaguid?: string;
   }): StoredPasskey {
     return {
       id: doc.credentialId,
@@ -70,6 +128,7 @@ export class PasskeyRepository {
       deviceType: doc.deviceType,
       backedUp: doc.backedUp,
       transports: doc.transports,
+      aaguid: doc.aaguid,
     };
   }
 }

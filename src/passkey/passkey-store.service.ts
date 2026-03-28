@@ -9,6 +9,7 @@ export interface StoredPasskey {
   deviceType: 'singleDevice' | 'multiDevice';
   backedUp: boolean;
   transports?: string[];
+  aaguid?: string;
 }
 
 export interface RegistrationChallengeOptions {
@@ -31,6 +32,12 @@ export class PasskeyStoreService {
 
   async getPasskeys(sub: string): Promise<StoredPasskey[]> {
     return this.passkeyRepository.getPasskeys(sub);
+  }
+
+  async listPasskeysForDisplay(
+    sub: string,
+  ): ReturnType<PasskeyRepository['listForDisplay']> {
+    return this.passkeyRepository.listForDisplay(sub);
   }
 
   async addPasskey(sub: string, passkey: StoredPasskey): Promise<void> {
@@ -66,5 +73,9 @@ export class PasskeyStoreService {
 
   async updateCounter(credentialId: string, counter: number): Promise<void> {
     await this.passkeyRepository.updateCounter(credentialId, counter);
+  }
+
+  async removePasskey(sub: string, credentialId: string): Promise<boolean> {
+    return this.passkeyRepository.deleteBySubAndCredentialId(sub, credentialId);
   }
 }

@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   generateAuthenticationOptions,
@@ -16,6 +20,8 @@ import {
   // WEBAUTHN_AUTHENTICATOR_ATTACHMENT,
 } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
+import { resolvePasskeyDisplay } from 'src/passkey/passkey-display';
+import type { PasskeyListItemDto } from 'src/passkey/dto/out/passkey-list-item.dto';
 
 const AUTH_CHALLENGE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -128,6 +134,7 @@ export class PasskeyService {
         deviceType: credentialDeviceType,
         backedUp: credentialBackedUp,
         transports: credential.transports,
+        aaguid: verification.registrationInfo?.aaguid,
       });
     }
 
@@ -223,5 +230,28 @@ export class PasskeyService {
     );
 
     return { verified: true, sub: found.sub };
+  }
+
+  async listPasskeysForSettings(sub: string): Promise<PasskeyListItemDto[]> {
+    const rows = await this.passkeyStore.listPasskeysForDisplay(sub);
+    return rows.map((row) => {
+      const { displayName, provider } = resolvePasskeyDisplay(row);
+      const createdAt = row.createdAt.toISOString();
+      const lastUsedAt = (row.lastUsedAt ?? row.createdAt).toISOString();
+      return {
+        credentialId: row.credentialId,
+        displayName,
+        provider,
+        createdAt,
+        lastUsedAt,
+      };
+    });
+  }
+
+  async deletePasskey(sub: string, credentialId: string): Promise<void> {
+    const removed = await this.passkeyStore.removePasskey(sub, credentialId);
+    if (!removed) {
+      throw new NotFoundException('Passkey not found');
+    }
   }
 }
