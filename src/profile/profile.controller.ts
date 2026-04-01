@@ -31,8 +31,10 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreatePasswordDto } from './dto/create-password.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
+import { AccountSetupDto } from './dto/account-setup.dto';
 import type { GetMeResponseDto } from './dto/out/get-me-response.dto';
 import type { FirstLoginResponseDto } from './dto/out/first-login-response.dto';
+import type { AccountSetupResponseDto } from './dto/out/account-setup-response.dto';
 import type { KnownDeviceResponseDto } from './dto/out/known-device-response.dto';
 import { WebAuthnRegisterCompleteDto } from './dto/webauthn-register-complete.dto';
 import { WebAuthnDeleteCredentialDto } from './dto/webauthn-delete-credential.dto';
@@ -116,6 +118,45 @@ export class ProfileController {
     const data = await this.profileService.recordFirstLoginAt(cognitoSub);
     return {
       message: 'First login recorded',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Saves onboarding wizard data (Mongo user + Cognito given_name). Call before welcome; does not set firstLoggedInAt.',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Access token is missing, invalid, expired, or user is unauthenticated.',
+  })
+  @ApiNotFoundResponse({
+    description: 'User record was not found.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Request body failed validation.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Failed to persist account setup or update Cognito.',
+  })
+  @Post('account-setup')
+  async saveAccountSetup(
+    @AccessToken() accessToken: string,
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
+    @Body() dto: AccountSetupDto,
+  ): Promise<ApiResponseDto<AccountSetupResponseDto>> {
+    const cognitoSub = user?.sub;
+    if (!cognitoSub || typeof cognitoSub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    const data = await this.profileService.saveAccountSetup(
+      accessToken,
+      cognitoSub,
+      dto,
+    );
+    return {
+      message: 'Account setup saved',
       data,
     };
   }

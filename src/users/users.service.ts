@@ -14,7 +14,14 @@ export interface UserDoc {
   hasPassword?: boolean;
   email?: string;
   deleted?: boolean;
-  first_logged_in_at?: Date | null;
+  firstLoggedInAt?: Date | null;
+  age?: number | null;
+  avatar_id?: string | null;
+  interests?: string[];
+  shortTermGoal?: string | null;
+  longTermGoal?: string | null;
+  learningStyles?: string[];
+  completedAt?: Date | null;
 }
 
 @Injectable()
@@ -85,7 +92,7 @@ export class UsersService {
       cognitoSub,
       email,
       hasPassword: true,
-      first_logged_in_at: new Date(),
+      firstLoggedInAt: new Date(),
     });
   }
 }

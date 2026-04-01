@@ -7,7 +7,10 @@ export class GetMeResponseDto {
   softwareTokenMfaEnabled?: boolean;
   preferredMfa?: string;
   /** Set after the user completes the welcome flow; null until then. */
-  first_logged_in_at?: string | null;
+  firstLoggedInAt?: string | null;
+
+  /** Set after the user completes the account-setup wizard; null until then. */
+  completedAt?: string | null;
 
   // Allow arbitrary string keys for additional Cognito attributes.
   [key: string]: string | string[] | boolean | number | null | undefined;

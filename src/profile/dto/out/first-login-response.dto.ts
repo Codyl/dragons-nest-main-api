@@ -4,5 +4,5 @@ export class FirstLoginResponseDto {
   @ApiProperty({
     description: 'ISO 8601 timestamp when first in-app login was recorded',
   })
-  first_logged_in_at!: string;
+  firstLoggedInAt!: string;
 }

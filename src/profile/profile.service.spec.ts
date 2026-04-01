@@ -147,7 +147,7 @@ describe('ProfileService', () => {
       passkeyCount: 0,
       softwareTokenMfaEnabled: true,
       preferredMfa: 'SOFTWARE_TOKEN_MFA',
-      first_logged_in_at: null,
+      firstLoggedInAt: null,
     });
     expect(cognitoService.listWebAuthnCredentials).toHaveBeenCalledWith(
       'accessToken',
@@ -162,9 +162,9 @@ describe('ProfileService', () => {
 
   it('should throw when getMe gets no UserAttributes from Cognito', async () => {
     cognitoService.getUser.mockResolvedValue(undefined);
-    await expect(
-      service.getMe('bad-token', { sub: '123' }),
-    ).rejects.toThrow(UnauthorizedException);
+    await expect(service.getMe('bad-token', { sub: '123' })).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('should throw NotFoundException when getMe user is not in DB', async () => {
@@ -231,6 +231,65 @@ describe('ProfileService', () => {
     expect(rows).toEqual([]);
   });
 
+  describe('saveAccountSetup', () => {
+    const dto = {
+      name: 'Alex',
+      age: 12,
+      avatar: 'dragon',
+      interests: ['reading'],
+      shortTermGoal: 'Learn',
+      longTermGoal: 'Grow',
+      learningStyles: ['hands-on'],
+    };
+
+    it('should throw NotFoundException when user is missing', async () => {
+      usersService.findOneByCognitoSub.mockResolvedValue(null);
+      await expect(service.saveAccountSetup('tok', 'sub', dto)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw when Cognito update returns falsy', async () => {
+      usersService.findOneByCognitoSub.mockResolvedValue({
+        _id: new Types.ObjectId(),
+        cognitoSub: 'sub',
+      } as UserDoc);
+      cognitoService.updateUserAttributes.mockResolvedValue(undefined as never);
+      await expect(service.saveAccountSetup('tok', 'sub', dto)).rejects.toThrow(
+        InternalServerErrorException,
+      );
+    });
+
+    it('should update Cognito given_name and persist Mongo fields', async () => {
+      usersService.findOneByCognitoSub.mockResolvedValue({
+        _id: new Types.ObjectId(),
+        cognitoSub: 'sub',
+      } as UserDoc);
+      cognitoService.updateUserAttributes.mockResolvedValue({} as never);
+      const completed = new Date('2024-06-01T12:00:00.000Z');
+      usersService.updateByCognitoSub.mockResolvedValue({
+        cognitoSub: 'sub',
+        completedAt: completed,
+      } as never);
+      const r = await service.saveAccountSetup('tok', 'sub', dto);
+      expect(r.completedAt).toBe(completed.toISOString());
+      expect(cognitoService.updateUserAttributes).toHaveBeenCalledWith('tok', [
+        { Name: 'given_name', Value: 'Alex' },
+      ]);
+      expect(usersService.updateByCognitoSub).toHaveBeenCalledWith(
+        'sub',
+        expect.objectContaining({
+          age: 12,
+          avatar_id: 'dragon',
+          interests: ['reading'],
+          shortTermGoal: 'Learn',
+          longTermGoal: 'Grow',
+          learningStyles: ['hands-on'],
+        }),
+      );
+    });
+  });
+
   describe('recordFirstLoginAt', () => {
     it('should throw NotFoundException when user is missing', async () => {
       usersService.findOneByCognitoSub.mockResolvedValue(null);
@@ -244,14 +303,14 @@ describe('ProfileService', () => {
       usersService.findOneByCognitoSub.mockResolvedValue({
         _id: new Types.ObjectId(),
         cognitoSub: 'sub',
-        first_logged_in_at: at,
+        firstLoggedInAt: at,
       } as UserDoc);
       const r = await service.recordFirstLoginAt('sub');
-      expect(r.first_logged_in_at).toBe(at.toISOString());
+      expect(r.firstLoggedInAt).toBe(at.toISOString());
       expect(usersService.updateByCognitoSub).not.toHaveBeenCalled();
     });
 
-    it('should persist first_logged_in_at when unset', async () => {
+    it('should persist firstLoggedInAt when unset', async () => {
       usersService.findOneByCognitoSub.mockResolvedValue({
         _id: new Types.ObjectId(),
         cognitoSub: 'sub',
@@ -260,12 +319,12 @@ describe('ProfileService', () => {
       const now = new Date('2024-06-01T12:00:00.000Z');
       usersService.updateByCognitoSub.mockResolvedValue({
         cognitoSub: 'sub',
-        first_logged_in_at: now,
+        firstLoggedInAt: now,
       } as never);
       const r = await service.recordFirstLoginAt('sub');
-      expect(r.first_logged_in_at).toBe(now.toISOString());
+      expect(r.firstLoggedInAt).toBe(now.toISOString());
       expect(usersService.updateByCognitoSub).toHaveBeenCalledWith('sub', {
-        first_logged_in_at: expect.any(Date),
+        firstLoggedInAt: expect.any(Date),
       });
     });
   });
@@ -420,7 +479,9 @@ describe('ProfileService', () => {
         deleted: false,
       } as UserDoc);
       cognitoService.getUser.mockResolvedValue({
-        UserAttributes: [{ Name: 'preferred_username', Value: 'user@example.com' }],
+        UserAttributes: [
+          { Name: 'preferred_username', Value: 'user@example.com' },
+        ],
       });
       cognitoService.adminSetUserPassword.mockResolvedValue(undefined as never);
       usersService.updateByCognitoSub.mockResolvedValue({} as never);
@@ -708,11 +769,9 @@ describe('ProfileService', () => {
         password: 'password123',
         mfaCode: '123456',
       });
-      expect(cognitoService.respondToSoftwareTokenMFAChallenge).toHaveBeenCalledWith(
-        'user@example.com',
-        '123456',
-        'mfa-session',
-      );
+      expect(
+        cognitoService.respondToSoftwareTokenMFAChallenge,
+      ).toHaveBeenCalledWith('user@example.com', '123456', 'mfa-session');
       expect(cognitoService.deleteUser).toHaveBeenCalledWith('accessToken');
     });
 

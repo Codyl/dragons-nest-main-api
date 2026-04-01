@@ -19,6 +19,7 @@ import type { WebAuthnCredentialListItemDto } from 'src/profile/dto/out/webauthn
 import { MAXMIND_KEY } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
 import { DeleteMeDto } from './dto/delete-me.dto';
+import { AccountSetupDto } from './dto/account-setup.dto';
 
 export interface GetMeData {
   [key: string]: string | string[] | boolean | number | null | undefined;
@@ -28,7 +29,8 @@ export interface GetMeData {
   passkeyCount: number;
   softwareTokenMfaEnabled?: boolean;
   preferredMfa?: string;
-  first_logged_in_at?: string | null;
+  firstLoggedInAt?: string | null;
+  completedAt?: string | null;
 }
 
 function firstLoggedInAtToIso(value: Date | null | undefined): string | null {
@@ -128,8 +130,11 @@ export class ProfileService {
       passkeyCount,
       softwareTokenMfaEnabled,
       preferredMfa,
-      first_logged_in_at: firstLoggedInAtToIso(
-        mongoDateOrNull(Reflect.get(user, 'first_logged_in_at')),
+      firstLoggedInAt: firstLoggedInAtToIso(
+        mongoDateOrNull(Reflect.get(user, 'firstLoggedInAt')),
+      ),
+      completedAt: firstLoggedInAtToIso(
+        mongoDateOrNull(Reflect.get(user, 'completedAt')),
       ),
     };
   }
@@ -206,11 +211,58 @@ export class ProfileService {
   }
 
   /**
+   * Persists onboarding wizard data and sets Cognito given_name. Does not set
+   * firstLoggedInAt (that remains POST /profile/first-login after welcome).
+   */
+  async saveAccountSetup(
+    accessToken: string,
+    cognitoSub: string,
+    dto: AccountSetupDto,
+  ): Promise<{ completedAt: string }> {
+    const row = await this.usersService.findOneByCognitoSub(cognitoSub);
+    if (!row || row.deleted) {
+      throw new NotFoundException('User not found');
+    }
+
+    const name = dto.name.trim();
+    const cognitoResponse = await this.cognitoService.updateUserAttributes(
+      accessToken,
+      [{ Name: 'given_name', Value: name }],
+    );
+    if (!cognitoResponse) {
+      throw new InternalServerErrorException(
+        'Failed to update profile name in Cognito',
+      );
+    }
+
+    const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
+      age: dto.age,
+      avatar_id: dto.avatar,
+      interests: dto.interests,
+      shortTermGoal: dto.shortTermGoal,
+      longTermGoal: dto.longTermGoal,
+      learningStyles: dto.learningStyles,
+      completedAt: new Date(),
+    });
+
+    if (!updated) {
+      throw new InternalServerErrorException('Failed to save account setup');
+    }
+
+    const ts = mongoDateOrNull(Reflect.get(updated, 'completedAt'));
+    if (!ts) {
+      throw new InternalServerErrorException('Failed to save account setup');
+    }
+
+    return { completedAt: firstLoggedInAtToIso(ts)! };
+  }
+
+  /**
    * Records first in-app login (welcome completion). Idempotent if already set.
    */
   async recordFirstLoginAt(
     cognitoSub: string,
-  ): Promise<{ first_logged_in_at: string }> {
+  ): Promise<{ firstLoggedInAt: string }> {
     const row = await this.usersService.findOneByCognitoSub(cognitoSub);
     if (!row || row.deleted) {
       throw new NotFoundException('User not found');
@@ -218,27 +270,27 @@ export class ProfileService {
 
     const user: UserDoc = row;
 
-    const existing = mongoDateOrNull(Reflect.get(user, 'first_logged_in_at'));
+    const existing = mongoDateOrNull(Reflect.get(user, 'firstLoggedInAt'));
     if (existing) {
       return {
-        first_logged_in_at: firstLoggedInAtToIso(existing)!,
+        firstLoggedInAt: firstLoggedInAtToIso(existing)!,
       };
     }
 
     const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
-      first_logged_in_at: new Date(),
+      firstLoggedInAt: new Date(),
     });
 
     if (!updated) {
       throw new InternalServerErrorException('Failed to record first login');
     }
 
-    const ts = mongoDateOrNull(Reflect.get(updated, 'first_logged_in_at'));
+    const ts = mongoDateOrNull(Reflect.get(updated, 'firstLoggedInAt'));
     if (!ts) {
       throw new InternalServerErrorException('Failed to record first login');
     }
 
-    return { first_logged_in_at: firstLoggedInAtToIso(ts)! };
+    return { firstLoggedInAt: firstLoggedInAtToIso(ts)! };
   }
 
   async updateAccount(accessToken: string, dto: UpdateAccountDto) {

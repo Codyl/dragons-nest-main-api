@@ -31,6 +31,7 @@ describe('ProfileController', () => {
             deleteMe: jest.fn(),
             getKnownDevices: jest.fn(),
             recordFirstLoginAt: jest.fn(),
+            saveAccountSetup: jest.fn(),
           },
         },
       ],
@@ -213,14 +214,43 @@ describe('ProfileController', () => {
 
   it('should record first login', async () => {
     profileService.recordFirstLoginAt.mockResolvedValue({
-      first_logged_in_at: '2025-01-01T00:00:00.000Z',
+      firstLoggedInAt: '2025-01-01T00:00:00.000Z',
     });
     const result = await controller.recordFirstLogin({ sub: 'sub-1' });
     expect(result).toEqual({
       message: 'First login recorded',
-      data: { first_logged_in_at: '2025-01-01T00:00:00.000Z' },
+      data: { firstLoggedInAt: '2025-01-01T00:00:00.000Z' },
     });
     expect(profileService.recordFirstLoginAt).toHaveBeenCalledWith('sub-1');
+  });
+
+  it('should save account setup', async () => {
+    const dto = {
+      name: 'Alex',
+      age: 12,
+      avatar: 'dragon',
+      interests: ['reading'],
+      shortTermGoal: '',
+      longTermGoal: '',
+      learningStyles: [] as string[],
+    };
+    profileService.saveAccountSetup.mockResolvedValue({
+      completedAt: '2025-06-01T12:00:00.000Z',
+    });
+    const result = await controller.saveAccountSetup(
+      'token',
+      { sub: 'sub-1' },
+      dto,
+    );
+    expect(result).toEqual({
+      message: 'Account setup saved',
+      data: { completedAt: '2025-06-01T12:00:00.000Z' },
+    });
+    expect(profileService.saveAccountSetup).toHaveBeenCalledWith(
+      'token',
+      'sub-1',
+      dto,
+    );
   });
 
   describe('when user is not authenticated (missing sub)', () => {
@@ -264,6 +294,25 @@ describe('ProfileController', () => {
         'Not authenticated',
       );
       expect(profileService.recordFirstLoginAt).not.toHaveBeenCalled();
+    });
+
+    it('saveAccountSetup throws', async () => {
+      await expect(
+        controller.saveAccountSetup(
+          'token',
+          {},
+          {
+            name: 'A',
+            age: 10,
+            avatar: 'dragon',
+            interests: ['reading'],
+            shortTermGoal: '',
+            longTermGoal: '',
+            learningStyles: [],
+          },
+        ),
+      ).rejects.toThrow('Not authenticated');
+      expect(profileService.saveAccountSetup).not.toHaveBeenCalled();
     });
   });
 });
