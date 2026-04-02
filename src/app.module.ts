@@ -12,6 +12,7 @@ import { MONGODB_URI } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
 import { HealthModule } from './health/health.module';
 import { TestSupportModule } from './test-support/test-support.module';
+import { TopicsModule } from './topics/topics.module';
 
 const testOnlyImports =
   process.env.NODE_ENV === 'test' ? [TestSupportModule] : [];
@@ -85,6 +86,7 @@ const testOnlyImports =
     MaxmindModule,
     HealthModule,
     ...testOnlyImports,
+    TopicsModule,
   ],
   controllers: [],
   providers: [],
