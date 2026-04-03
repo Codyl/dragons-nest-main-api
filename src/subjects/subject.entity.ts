@@ -1,8 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-@Schema()
-export class Topic extends Document {
+/** Catalog of teachable subject lines; stored in Mongo as `topics` for backward compatibility. */
+@Schema({ collection: 'topics' })
+export class Subject extends Document {
   @Prop({ required: true })
   name: string;
 
@@ -19,4 +20,4 @@ export class Topic extends Document {
   isEnrichment: boolean;
 }
 
-export const TopicSchema = SchemaFactory.createForClass(Topic);
+export const SubjectSchema = SchemaFactory.createForClass(Subject);
