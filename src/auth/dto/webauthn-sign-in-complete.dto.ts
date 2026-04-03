@@ -1,4 +1,10 @@
-import { IsEmail, IsObject, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsObject,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class WebAuthnSignInCompleteDto {
   @IsEmail()

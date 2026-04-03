@@ -996,9 +996,11 @@ export class CognitoService {
       if (error.name === 'NotAuthorizedException') {
         throw new UnauthorizedException('Not authorized.');
       }
+
       if (error.name === 'InvalidParameterException') {
         throw new BadRequestException(error.message);
       }
+
       if (error.name === 'LimitExceededException') {
         throw new HttpException(
           'AWS Cognito request limit reached. This is likely a service quota/rate-limit issue, not broken application code.',
@@ -1006,6 +1008,7 @@ export class CognitoService {
         );
       }
     }
+
     throw new InternalServerErrorException('Authentication service failed');
   }
 
@@ -1017,21 +1020,29 @@ export class CognitoService {
           'Not authorized to manage passkeys. Ensure the app client adds the aws.cognito.signin.user.admin scope to access tokens.',
         );
       }
+
       if (name === 'InvalidParameterException') {
         throw new BadRequestException(message);
       }
+
       if (name === 'ResourceNotFoundException') {
         throw new NotFoundException('Passkey not found.');
       }
+
       if (name === 'ForbiddenException') {
         throw new ForbiddenException(message);
       }
-      if (name === 'LimitExceededException' || name === 'TooManyRequestsException') {
+
+      if (
+        name === 'LimitExceededException' ||
+        name === 'TooManyRequestsException'
+      ) {
         throw new HttpException(
           'AWS Cognito request limit reached. This is likely a service quota/rate-limit issue, not broken application code.',
           HttpStatus.TOO_MANY_REQUESTS,
         );
       }
+
       if (
         name === 'WebAuthnNotEnabledException' ||
         name === 'WebAuthnConfigurationMissingException' ||
@@ -1041,20 +1052,24 @@ export class CognitoService {
           'Passkeys are not available for this user pool. Enable WebAuthn (passkeys) in Cognito sign-in experience and ALLOW_USER_AUTH on the app client.',
         );
       }
+
       if (name === 'UnsupportedOperationException') {
         throw new BadRequestException(
           'This passkey operation is not supported for this user pool or AWS Region.',
         );
       }
+
       if (name === 'FeatureUnavailableInTierException') {
         throw new BadRequestException(message);
       }
+
       if (name === 'InternalErrorException') {
         throw new InternalServerErrorException(
           'Cognito returned an internal error while managing passkeys.',
         );
       }
     }
+
     throw new InternalServerErrorException('Authentication service failed');
   }
 }
