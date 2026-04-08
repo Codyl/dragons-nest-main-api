@@ -5,5 +5,5 @@ export class AccountSetupResponseDto {
   @ApiProperty({
     description: 'ISO timestamp when onboarding data was persisted.',
   })
-  completedAt!: string;
+  onboardingCompletedAt!: string;
 }

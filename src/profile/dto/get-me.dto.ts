@@ -1,4 +1,4 @@
-import { User } from 'src/users/entities/user.entity';
+import { User } from 'src/users/entities/user.schema';
 import {
   IsString,
   IsObject,
@@ -17,7 +17,8 @@ export class LinkedProviderSubjects {
 
 export class GetMeDto implements Partial<User> {
   @IsString()
-  cognitoSub: string;
+  @IsOptional()
+  cognitoSub?: string;
   @IsString({ each: true })
   @IsOptional()
   linkedProviders?: string[];

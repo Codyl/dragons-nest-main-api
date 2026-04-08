@@ -7,7 +7,12 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CognitoService } from 'src/cognito/cognito.service';
-import { UsersService, type UserDoc } from 'src/users/users.service';
+import {
+  UsersService,
+  type UserDoc,
+  type AccountStatus,
+  accountStatusFromBirthDate,
+} from 'src/users/users.service';
 import { GoogleService } from 'src/google/google.service';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { MfaPreferenceDto } from './dto/mfa-preference.dto';
@@ -20,9 +25,19 @@ import { MAXMIND_KEY } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
 import { DeleteMeDto } from './dto/delete-me.dto';
 import { AccountSetupDto } from './dto/account-setup.dto';
+import { AccountType } from 'src/users/enums/account-type.enum';
+import { birthDateFromStatedAge } from 'src/users/entities/user.schema';
+import { Types } from 'mongoose';
 
 export interface GetMeData {
-  [key: string]: string | string[] | boolean | number | null | undefined;
+  [key: string]:
+    | string
+    | string[]
+    | boolean
+    | number
+    | null
+    | undefined
+    | AccountStatus;
   loginMethods: string[];
   hasPassword: boolean;
   hasPasskey: boolean;
@@ -30,7 +45,12 @@ export interface GetMeData {
   softwareTokenMfaEnabled?: boolean;
   preferredMfa?: string;
   firstLoggedInAt?: string | null;
-  completedAt?: string | null;
+  onboardingCompletedAt?: string | null;
+  accountType?: string | null;
+  canManageOthers?: boolean;
+  parentId?: string | null;
+  linkedStudentIds?: string[];
+  accountStatus?: AccountStatus | null;
 }
 
 function firstLoggedInAtToIso(value: Date | null | undefined): string | null {
@@ -122,6 +142,9 @@ export class ProfileService {
       response.UserMFASettingList?.includes('SOFTWARE_TOKEN_MFA') ?? false;
     const preferredMfa = response.PreferredMfaSetting ?? undefined;
 
+    const birthDate = mongoDateOrNull(user.birthDate);
+    const accountStatus = accountStatusFromBirthDate(birthDate);
+
     return {
       ...attributes,
       loginMethods,
@@ -133,9 +156,14 @@ export class ProfileService {
       firstLoggedInAt: firstLoggedInAtToIso(
         mongoDateOrNull(Reflect.get(user, 'firstLoggedInAt')),
       ),
-      completedAt: firstLoggedInAtToIso(
-        mongoDateOrNull(Reflect.get(user, 'completedAt')),
+      onboardingCompletedAt: firstLoggedInAtToIso(
+        mongoDateOrNull(Reflect.get(user, 'onboardingCompletedAt')),
       ),
+      accountType: user.accountType ?? null,
+      canManageOthers: user.canManageOthers ?? false,
+      parentId: user.parentId ? user.parentId.toString() : null,
+      linkedStudentIds: (user.linkedStudents ?? []).map((id) => id.toString()),
+      accountStatus,
     };
   }
 
@@ -218,43 +246,90 @@ export class ProfileService {
     accessToken: string,
     cognitoSub: string,
     dto: AccountSetupDto,
-  ): Promise<{ completedAt: string }> {
+  ): Promise<{ onboardingCompletedAt: string }> {
     const row = await this.usersService.findOneByCognitoSub(cognitoSub);
     if (!row || row.deleted) {
       throw new NotFoundException('User not found');
     }
 
+    const accountType = dto.accountType;
+    if (
+      accountType === AccountType.Student &&
+      (!dto.interests || dto.interests.length < 1)
+    ) {
+      throw new BadRequestException('Select at least one interest');
+    }
+
+    if (accountType === AccountType.Adult) {
+      if (!dto.pendingStudents?.length) {
+        throw new BadRequestException('Add at least one student');
+      }
+
+      if (!dto.teachableCourses?.length) {
+        throw new BadRequestException('Add at least one course');
+      }
+    }
+
     const name = dto.name.trim();
     const cognitoResponse = await this.cognitoService.updateUserAttributes(
       accessToken,
-      [{ Name: 'given_name', Value: name }],
+      [
+        { Name: 'given_name', Value: name },
+        { Name: 'phone_number', Value: dto.phoneNumber.trim() },
+      ],
     );
     if (!cognitoResponse) {
       throw new InternalServerErrorException(
-        'Failed to update profile name in Cognito',
+        'Failed to update profile in Cognito',
       );
     }
 
-    const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
-      age: dto.age,
-      avatar_id: dto.avatar,
+    const teachableCourses =
+      dto.teachableCourses?.map((c) => ({
+        subjectId: new Types.ObjectId(c.subjectId),
+        grade: c.grade,
+        curriculum: c.curriculum,
+      })) ?? [];
+
+    const householdStudentDrafts =
+      dto.pendingStudents?.map((s) => ({
+        displayName: s.displayName.trim(),
+        age: s.age,
+      })) ?? [];
+
+    const baseUpdate: Record<string, unknown> = {
+      accountType,
+      birthDate: birthDateFromStatedAge(dto.age),
+      avatar: dto.avatar,
       interests: dto.interests,
       shortTermGoal: dto.shortTermGoal,
       longTermGoal: dto.longTermGoal,
       learningStyles: dto.learningStyles,
-      completedAt: new Date(),
+      state: dto.state,
+      zipCode: dto.zipCode,
+      onboardingCompletedAt: new Date(),
+    };
+
+    if (accountType === AccountType.Adult) {
+      baseUpdate.teachableCourses = teachableCourses;
+      baseUpdate.householdStudentDrafts = householdStudentDrafts;
+    }
+
+    const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
+      $set: baseUpdate,
+      $unset: { age: '' },
     });
 
     if (!updated) {
       throw new InternalServerErrorException('Failed to save account setup');
     }
 
-    const ts = mongoDateOrNull(Reflect.get(updated, 'completedAt'));
+    const ts = mongoDateOrNull(Reflect.get(updated, 'onboardingCompletedAt'));
     if (!ts) {
       throw new InternalServerErrorException('Failed to save account setup');
     }
 
-    return { completedAt: firstLoggedInAtToIso(ts)! };
+    return { onboardingCompletedAt: firstLoggedInAtToIso(ts)! };
   }
 
   /**

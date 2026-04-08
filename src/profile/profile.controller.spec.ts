@@ -9,6 +9,8 @@ import { CreatePasswordDto } from './dto/create-password.dto';
 import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
+import { AccountType } from 'src/users/enums/account-type.enum';
+import { State } from 'src/users/enums/state.enum';
 
 describe('ProfileController', () => {
   let controller: ProfileController;
@@ -226,16 +228,20 @@ describe('ProfileController', () => {
 
   it('should save account setup', async () => {
     const dto = {
+      accountType: AccountType.Student,
       name: 'Alex',
       age: 12,
-      avatar: 'dragon',
+      avatar: '🐉',
+      state: State.California,
+      zipCode: '90210',
+      phoneNumber: '+15555550100',
       interests: ['reading'],
       shortTermGoal: '',
       longTermGoal: '',
       learningStyles: [] as string[],
     };
     profileService.saveAccountSetup.mockResolvedValue({
-      completedAt: '2025-06-01T12:00:00.000Z',
+      onboardingCompletedAt: '2025-06-01T12:00:00.000Z',
     });
     const result = await controller.saveAccountSetup(
       'token',
@@ -244,7 +250,7 @@ describe('ProfileController', () => {
     );
     expect(result).toEqual({
       message: 'Account setup saved',
-      data: { completedAt: '2025-06-01T12:00:00.000Z' },
+      data: { onboardingCompletedAt: '2025-06-01T12:00:00.000Z' },
     });
     expect(profileService.saveAccountSetup).toHaveBeenCalledWith(
       'token',
@@ -302,9 +308,13 @@ describe('ProfileController', () => {
           'token',
           {},
           {
+            accountType: AccountType.Student,
             name: 'A',
             age: 10,
-            avatar: 'dragon',
+            avatar: '🐉',
+            state: State.California,
+            zipCode: '90210',
+            phoneNumber: '+15555550100',
             interests: ['reading'],
             shortTermGoal: '',
             longTermGoal: '',

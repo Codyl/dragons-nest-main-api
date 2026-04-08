@@ -16,6 +16,8 @@ import { MAXMIND_KEY } from 'src/env.constants';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreatePasswordDto } from './dto/create-password.dto';
+import { AccountType } from 'src/users/enums/account-type.enum';
+import { State } from 'src/users/enums/state.enum';
 
 /* eslint-disable @typescript-eslint/unbound-method */
 describe('ProfileService', () => {
@@ -36,9 +38,11 @@ describe('ProfileService', () => {
         if (v !== undefined && v !== null) {
           return v;
         }
+
         if (key === MAXMIND_KEY) {
           return '';
         }
+
         throw new Error(`Missing configuration key: ${key}`);
       }),
     };
@@ -148,6 +152,11 @@ describe('ProfileService', () => {
       softwareTokenMfaEnabled: true,
       preferredMfa: 'SOFTWARE_TOKEN_MFA',
       firstLoggedInAt: null,
+      accountType: null,
+      canManageOthers: false,
+      parentId: null,
+      linkedStudentIds: [],
+      accountStatus: null,
     });
     expect(cognitoService.listWebAuthnCredentials).toHaveBeenCalledWith(
       'accessToken',
@@ -233,9 +242,13 @@ describe('ProfileService', () => {
 
   describe('saveAccountSetup', () => {
     const dto = {
+      accountType: AccountType.Student,
       name: 'Alex',
       age: 12,
-      avatar: 'dragon',
+      avatar: '🐉',
+      state: State.California,
+      zipCode: '90210',
+      phoneNumber: '+15555550100',
       interests: ['reading'],
       shortTermGoal: 'Learn',
       longTermGoal: 'Grow',
@@ -269,22 +282,28 @@ describe('ProfileService', () => {
       const completed = new Date('2024-06-01T12:00:00.000Z');
       usersService.updateByCognitoSub.mockResolvedValue({
         cognitoSub: 'sub',
-        completedAt: completed,
+        onboardingCompletedAt: completed,
       } as never);
       const r = await service.saveAccountSetup('tok', 'sub', dto);
-      expect(r.completedAt).toBe(completed.toISOString());
+      expect(r.onboardingCompletedAt).toBe(completed.toISOString());
       expect(cognitoService.updateUserAttributes).toHaveBeenCalledWith('tok', [
         { Name: 'given_name', Value: 'Alex' },
+        { Name: 'phone_number', Value: '+15555550100' },
       ]);
       expect(usersService.updateByCognitoSub).toHaveBeenCalledWith(
         'sub',
         expect.objectContaining({
-          age: 12,
-          avatar_id: 'dragon',
-          interests: ['reading'],
-          shortTermGoal: 'Learn',
-          longTermGoal: 'Grow',
-          learningStyles: ['hands-on'],
+          $set: expect.objectContaining({
+            birthDate: expect.any(Date),
+            avatar: '🐉',
+            interests: ['reading'],
+            shortTermGoal: 'Learn',
+            longTermGoal: 'Grow',
+            learningStyles: ['hands-on'],
+            state: State.California,
+            zipCode: '90210',
+          }),
+          $unset: { age: '' },
         }),
       );
     });
