@@ -1,0 +1,321 @@
+import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
+import mongoose, { Document, Types } from 'mongoose';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { AccountType } from '../enums/account-type.enum';
+import { State } from '../enums/state.enum';
+import {
+  TeachableCourse,
+  TeachableCourseSchema,
+} from '../schemas/teachable-course.schema';
+
+/** UTC Jan 1 of the birth year implied by a stated age (onboarding). */
+export function birthDateFromStatedAge(
+  age: number,
+  refDate = new Date(),
+): Date {
+  const y = refDate.getUTCFullYear() - age;
+  return new Date(Date.UTC(y, 0, 1));
+}
+
+/** Whole-year age in local calendar (matches User `age` virtual). */
+export function ageFromBirthDate(
+  birthDate: Date,
+  refDate = new Date(),
+): number {
+  const bd = new Date(birthDate);
+  let years = refDate.getFullYear() - bd.getFullYear();
+  const monthDiff = refDate.getMonth() - bd.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && refDate.getDate() < bd.getDate())) {
+    years -= 1;
+  }
+
+  return years;
+}
+
+@Schema({ _id: false })
+export class TimeSlot {
+  @Prop({ required: true })
+  start: string;
+
+  @Prop({ required: true })
+  end: string;
+}
+
+export const TimeSlotSchema = SchemaFactory.createForClass(TimeSlot);
+
+@Schema({ _id: false })
+export class DayAvailability {
+  @Prop({
+    required: true,
+    enum: [
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ],
+  })
+  day: string;
+
+  @Prop({ type: [TimeSlotSchema], default: [] })
+  slots: TimeSlot[];
+}
+
+export const DayAvailabilitySchema =
+  SchemaFactory.createForClass(DayAvailability);
+
+@Schema()
+export class EnrolledClass {
+  @ApiProperty({ description: 'The user (adult) who is teaching the class' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+  adult: Types.ObjectId;
+
+  @ApiProperty({ description: 'The course being taught' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'TeachableCourse' })
+  course: TeachableCourse;
+
+  @ApiProperty({ description: 'The number of hours completed' })
+  @Prop({ type: Number, default: 0 })
+  hoursCompleted: number;
+
+  @ApiPropertyOptional({
+    description: 'When the enrollment was recorded; used for parent-view privacy cutoffs.',
+  })
+  @Prop({ type: Date, default: Date.now })
+  createdAt?: Date;
+}
+
+export const EnrolledClassSchema = SchemaFactory.createForClass(EnrolledClass);
+
+@Schema()
+export class User extends Document {
+  @ApiProperty({
+    enum: AccountType,
+    description: 'Account kind: adult or student.',
+    required: true,
+  })
+  @Prop({
+    type: String,
+    enum: Object.values(AccountType),
+    required: true,
+  })
+  accountType: AccountType;
+
+  @ApiProperty({
+    description: 'Given (first) name from signup or onboarding.',
+    nullable: true,
+  })
+  @Prop({ type: String, default: null })
+  givenName?: string | null;
+
+  @ApiProperty({
+    description: 'Family (last) name from signup or onboarding.',
+    nullable: true,
+  })
+  @Prop({ type: String, default: null })
+  familyName?: string | null;
+
+  @ApiProperty({
+    description:
+      'When an adult household account recorded COPPA / guardian consent.',
+    nullable: true,
+  })
+  @Prop({ type: Date, default: null })
+  coppaConsentAt?: Date | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Cognito subject; omitted for dependent accounts without their own login.',
+  })
+  @Prop({
+    type: String,
+    required: false,
+    default: null,
+    unique: true,
+    sparse: true,
+  })
+  cognitoSub?: string | null;
+
+  @ApiProperty({ description: "The user's linked providers" })
+  @Prop({ type: [String], default: [] })
+  linkedProviders?: string[];
+
+  @ApiProperty({ description: "The user's linked provider subjects" })
+  @Prop({ type: mongoose.Schema.Types.Mixed, default: {} })
+  linkedProviderSubjects?: { GOOGLE?: string };
+
+  @ApiProperty({ description: 'Whether the user has a password' })
+  @Prop({ type: Boolean, default: false })
+  hasPassword?: boolean;
+
+  @ApiPropertyOptional({
+    description: "The user's email; omitted when the user has no login.",
+    nullable: true,
+  })
+  @Prop({
+    type: String,
+    required: false,
+    default: null,
+    unique: true,
+    sparse: true,
+  })
+  email?: string | null;
+
+  @ApiProperty({ description: 'Whether the user is deleted' })
+  @Prop({ type: Boolean, default: false })
+  deleted?: boolean;
+
+  @ApiProperty({
+    description:
+      'When the user first completed in-app login (welcome flow). Null until they finish welcome.',
+    nullable: true,
+  })
+  @Prop({ type: Date, default: null })
+  firstLoggedInAt?: Date | null;
+
+  @ApiProperty({
+    description:
+      'Date of birth; age is exposed as a virtual derived from this.',
+    nullable: true,
+  })
+  @Prop({ type: Date, default: null })
+  birthDate?: Date | null;
+
+  @ApiPropertyOptional({
+    description: 'Computed from birthDate (virtual; not stored).',
+  })
+  age?: number;
+
+  @ApiProperty({
+    description:
+      'When the user completed the account-setup wizard (before welcome). Null until saved.',
+    nullable: true,
+  })
+  @Prop({ type: Date, default: null })
+  onboardingCompletedAt?: Date | null;
+
+  @ApiProperty({
+    description:
+      "The user's current state (set during account setup; null until then).",
+    enum: State,
+    nullable: true,
+  })
+  @Prop({ type: String, enum: State, required: false, default: null })
+  state?: State | null;
+
+  @ApiProperty({
+    description:
+      "The user's zip code (set during account setup; null until then).",
+    nullable: true,
+  })
+  @Prop({
+    type: String,
+    match: /^[0-9]{5}$/,
+    required: false,
+    default: null,
+  })
+  zipCode?: string | null;
+
+  @ApiProperty({ description: "The user's availability" })
+  @Prop({ type: [DayAvailabilitySchema], default: [] })
+  availablity: DayAvailability[];
+
+  @ApiPropertyOptional({
+    description: 'Household adult managing this user, if any.',
+  })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null })
+  parentId?: Types.ObjectId | null;
+
+  @ApiProperty({
+    description:
+      'Whether this user may manage other profiles (e.g. household).',
+    default: false,
+  })
+  @Prop({ type: Boolean, default: false })
+  canManageOthers?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Student user ids linked to this adult.',
+  })
+  @Prop({
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: 'User',
+    default: [],
+  })
+  linkedStudents?: Types.ObjectId[];
+
+  @ApiProperty({
+    description:
+      'Grade, catalog subject id, and curriculum combinations this adult can teach.',
+    type: [TeachableCourse],
+  })
+  @Prop({ type: [TeachableCourseSchema], default: [] })
+  teachableCourses?: TeachableCourse[];
+
+  @ApiProperty({
+    description:
+      'Student profiles collected at onboarding before full child accounts exist.',
+  })
+  @Prop({
+    type: [
+      {
+        displayName: { type: String, required: true },
+        age: { type: Number, required: true },
+      },
+    ],
+    default: [],
+  })
+  householdStudentDrafts?: { displayName: string; age: number }[];
+
+  @ApiProperty({
+    description: 'Avatar id (e.g. dragon, owl) from onboarding.',
+    nullable: true,
+  })
+  @Prop({
+    type: String,
+    default: null,
+    enum: ['🐉', '🦅', '🦉', '🦊', '🐻', '🐢'],
+  })
+  avatar?: string | null;
+
+  @ApiProperty({ description: 'Interest ids selected during onboarding.' })
+  @Prop({ type: [String], default: [] })
+  interests?: string[];
+
+  @ApiProperty({ nullable: true })
+  @Prop({ type: String, default: null })
+  shortTermGoal?: string | null;
+
+  @ApiProperty({ nullable: true })
+  @Prop({ type: String, default: null })
+  longTermGoal?: string | null;
+
+  @ApiProperty({ description: 'Learning style ids from onboarding.' })
+  @Prop({ type: [String], default: [] })
+  learningStyles?: string[];
+
+  @Prop({ type: [EnrolledClassSchema], default: [] })
+  addedClasses?: EnrolledClass[];
+}
+
+export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.virtual('age').get(function (this: User) {
+  if (!this.birthDate) {
+    return undefined;
+  }
+
+  return ageFromBirthDate(new Date(this.birthDate));
+});
+
+UserSchema.set('toJSON', {
+  virtuals: true,
+  transform: (_doc, ret) => {
+    const plain = ret as { __v?: number };
+    delete plain.__v;
+    return ret;
+  },
+});
+UserSchema.set('toObject', { virtuals: true });

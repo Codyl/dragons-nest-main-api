@@ -1,0 +1,23 @@
+/** Common homeschooling curriculum programs (expand with new enum members as needed). */
+export enum HomeschoolCurriculum {
+  Abeka = 'abeka',
+  AmblesideOnline = 'ambleside_online',
+  Apologia = 'apologia',
+  BjuPress = 'bju_press',
+  ClassicalConversations = 'classical_conversations',
+  EasyPeasyAllInOne = 'easy_peasy_all_in_one',
+  Eclectic = 'eclectic',
+  LifeOfFred = 'life_of_fred',
+  MasterBooks = 'master_books',
+  MathUsee = 'math_u_see',
+  Notgrass = 'notgrass',
+  OakMeadow = 'oak_meadow',
+  RobinsonCurriculum = 'robinson_curriculum',
+  Saxon = 'saxon',
+  Sonlight = 'sonlight',
+  TeachingTextbooks = 'teaching_textbooks',
+  TheGoodAndTheBeautiful = 'the_good_and_the_beautiful',
+  Time4Learning = 'time4_learning',
+  WellTrainedMind = 'well_trained_mind',
+  Other = 'other',
+}
