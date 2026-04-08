@@ -150,6 +150,12 @@ export class AuthController {
       body.code,
       body.session,
       body.password,
+      {
+        accountType: body.accountType,
+        givenName: body.givenName,
+        familyName: body.familyName,
+        coppaConsent: body.coppaConsent,
+      },
     );
 
     if (tokens.AccessToken && tokens.IdToken && tokens.RefreshToken) {
@@ -467,11 +473,7 @@ export class AuthController {
     );
 
     if (response.AuthenticationResult) {
-      setAuthCookies(
-        res,
-        response.AuthenticationResult,
-        this.cookieOptions,
-      );
+      setAuthCookies(res, response.AuthenticationResult, this.cookieOptions);
     }
 
     const data: InitiateLoginResponseDto = {

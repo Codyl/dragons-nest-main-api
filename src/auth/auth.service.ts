@@ -20,6 +20,7 @@ import {
   emptyMailslurpInbox,
 } from 'src/test-support/mailslurp.client';
 import { UsersService } from 'src/users/users.service';
+import { AccountType } from 'src/users/enums/account-type.enum';
 import type { SetSessionDto } from './dto/set-session.dto';
 import {
   VERIFICATION_CODE_RESOLVER,
@@ -86,6 +87,12 @@ export class AuthService {
     code: string,
     session: string,
     password: string,
+    account?: {
+      accountType?: AccountType;
+      givenName?: string;
+      familyName?: string;
+      coppaConsent?: boolean;
+    },
   ) {
     const resolvedCode = await this.verificationCodeResolver.resolve(
       code,
@@ -112,7 +119,17 @@ export class AuthService {
       throw new ConflictException('User already exists.');
     }
 
-    await this.usersService.createUser(sub, true);
+    await this.usersService.createUser({
+      cognitoSub: sub,
+      hasPassword: true,
+      accountType: account?.accountType ?? AccountType.Student,
+      givenName: account?.givenName ?? null,
+      familyName: account?.familyName ?? null,
+      coppaConsentAt:
+        account?.accountType === AccountType.Adult && account?.coppaConsent
+          ? new Date()
+          : null,
+    });
 
     const authResponse = await this.cognitoService.authenticateWithSrp(
       email,

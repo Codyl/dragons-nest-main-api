@@ -1,4 +1,12 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
+import { AccountType } from 'src/users/enums/account-type.enum';
 
 export class ConfirmSignupDto {
   @IsEmail()
@@ -15,4 +23,23 @@ export class ConfirmSignupDto {
   @IsString()
   @MinLength(8, { message: 'Password must be at least 8 characters' })
   password: string;
+
+  @IsOptional()
+  @IsEnum(AccountType)
+  accountType?: AccountType;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  givenName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  familyName?: string;
+
+  /** When true and account is adult, persists {@link User.coppaConsentAt} (household signup). */
+  @IsOptional()
+  @IsBoolean()
+  coppaConsent?: boolean;
 }
