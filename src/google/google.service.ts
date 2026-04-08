@@ -28,7 +28,8 @@ import * as crypto from 'crypto';
 import { GoogleCredentialDto } from './dto/google-credential.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User } from 'src/users/entities/user.entity';
+import { User } from 'src/users/entities/user.schema';
+import { AccountType } from 'src/users/enums/account-type.enum';
 import { COGNITO_CLIENT_ID, GOOGLE_CLIENT_ID } from 'src/env.constants';
 import { COGNITO_USER_POOL_ID } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
@@ -188,7 +189,13 @@ export class GoogleService {
       await this.userModel.updateOne(
         { cognitoSub },
         {
-          $setOnInsert: { hasPassword: false, email },
+          $setOnInsert: {
+            hasPassword: false,
+            email,
+            accountType: AccountType.Student,
+            state: null,
+            zipCode: null,
+          },
           $addToSet: { linkedProviders: 'GOOGLE' },
           $set: { 'linkedProviderSubjects.GOOGLE': googleSub },
         },
@@ -376,6 +383,9 @@ export class GoogleService {
         linkedProviderSubjects: { GOOGLE: googleSub },
         hasPassword: false,
         email,
+        accountType: AccountType.Student,
+        state: null,
+        zipCode: null,
       });
     }
 

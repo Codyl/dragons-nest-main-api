@@ -3,7 +3,7 @@ import { HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { getModelToken } from '@nestjs/mongoose';
 
-import { User } from 'src/users/entities/user.entity';
+import { User } from 'src/users/entities/user.schema';
 
 import { GoogleService } from './google.service';
 
