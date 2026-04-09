@@ -14,6 +14,7 @@ import { HealthModule } from './health/health.module';
 import { TestSupportModule } from './test-support/test-support.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { ComplianceModule } from './compliance/compliance.module';
+import { DiscoveryModule } from './discovery/discovery.module';
 
 const testOnlyImports =
   process.env.NODE_ENV === 'test' ? [TestSupportModule] : [];
@@ -89,6 +90,7 @@ const testOnlyImports =
     ...testOnlyImports,
     SubjectsModule,
     ComplianceModule,
+    DiscoveryModule,
   ],
   controllers: [],
   providers: [],
