@@ -52,11 +52,12 @@ export class AccountSetupDto {
   @MaxLength(256)
   name!: string;
 
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(150)
-  age!: number;
+  /** Local calendar date from account-setup wizard (`YYYY-MM-DD`). */
+  @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'birthDate must be YYYY-MM-DD',
+  })
+  birthDate!: string;
 
   @IsString()
   @MinLength(1)

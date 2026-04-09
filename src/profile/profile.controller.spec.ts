@@ -230,7 +230,7 @@ describe('ProfileController', () => {
     const dto = {
       accountType: AccountType.Student,
       name: 'Alex',
-      age: 12,
+      birthDate: '2010-05-01',
       avatar: '🐉',
       state: State.California,
       zipCode: '90210',
@@ -310,7 +310,7 @@ describe('ProfileController', () => {
           {
             accountType: AccountType.Student,
             name: 'A',
-            age: 10,
+            birthDate: '2015-01-01',
             avatar: '🐉',
             state: State.California,
             zipCode: '90210',

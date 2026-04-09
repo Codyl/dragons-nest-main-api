@@ -26,7 +26,7 @@ import { EnvironmentVariables } from 'src/env.config';
 import { DeleteMeDto } from './dto/delete-me.dto';
 import { AccountSetupDto } from './dto/account-setup.dto';
 import { AccountType } from 'src/users/enums/account-type.enum';
-import { birthDateFromStatedAge } from 'src/users/entities/user.schema';
+import { parseLocalDateFromYyyyMmDd } from 'src/users/entities/user.schema';
 import { Types } from 'mongoose';
 
 export interface GetMeData {
@@ -270,6 +270,23 @@ export class ProfileService {
       }
     }
 
+    const birthDateParsed = parseLocalDateFromYyyyMmDd(dto.birthDate);
+    if (!birthDateParsed) {
+      throw new BadRequestException('Invalid date of birth');
+    }
+    const derivedStatus = accountStatusFromBirthDate(birthDateParsed);
+    if (accountType === AccountType.Student) {
+      if (derivedStatus !== 'INDEPENDENT' && derivedStatus !== 'MANAGED') {
+        throw new BadRequestException(
+          'Date of birth must match a student age (under 18)',
+        );
+      }
+    } else if (derivedStatus !== 'ADULT') {
+      throw new BadRequestException(
+        'Date of birth must show the account holder is 18 or older',
+      );
+    }
+
     const name = dto.name.trim();
     const cognitoResponse = await this.cognitoService.updateUserAttributes(
       accessToken,
@@ -299,7 +316,7 @@ export class ProfileService {
 
     const baseUpdate: Record<string, unknown> = {
       accountType,
-      birthDate: birthDateFromStatedAge(dto.age),
+      birthDate: birthDateParsed,
       avatar: dto.avatar,
       interests: dto.interests,
       shortTermGoal: dto.shortTermGoal,

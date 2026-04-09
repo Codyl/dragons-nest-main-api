@@ -244,7 +244,7 @@ describe('ProfileService', () => {
     const dto = {
       accountType: AccountType.Student,
       name: 'Alex',
-      age: 12,
+      birthDate: '2010-05-01',
       avatar: '🐉',
       state: State.California,
       zipCode: '90210',

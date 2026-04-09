@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import {
   ageFromBirthDate,
   birthDateFromStatedAge,
+  parseLocalDateFromYyyyMmDd,
   UserSchema,
 } from './user.schema';
 import { AccountType } from '../enums/account-type.enum';
@@ -12,6 +13,22 @@ describe('user.schema', () => {
       const ref = new Date(Date.UTC(2024, 5, 15));
       const bd = birthDateFromStatedAge(10, ref);
       expect(bd.toISOString().startsWith('2014-01-01')).toBe(true);
+    });
+  });
+
+  describe('parseLocalDateFromYyyyMmDd', () => {
+    it('returns null for invalid strings', () => {
+      expect(parseLocalDateFromYyyyMmDd('')).toBeNull();
+      expect(parseLocalDateFromYyyyMmDd('2010-13-01')).toBeNull();
+      expect(parseLocalDateFromYyyyMmDd('2010-02-30')).toBeNull();
+    });
+
+    it('parses valid YYYY-MM-DD in local calendar', () => {
+      const d = parseLocalDateFromYyyyMmDd('2010-06-15');
+      expect(d).not.toBeNull();
+      expect(d!.getFullYear()).toBe(2010);
+      expect(d!.getMonth()).toBe(5);
+      expect(d!.getDate()).toBe(15);
     });
   });
 

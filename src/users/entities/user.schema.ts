@@ -17,6 +17,30 @@ export function birthDateFromStatedAge(
   return new Date(Date.UTC(y, 0, 1));
 }
 
+/** Parse `YYYY-MM-DD` as local calendar date (aligned with browser `input type="date"`). */
+export function parseLocalDateFromYyyyMmDd(s: string): Date | null {
+  const trimmed = s.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return null;
+  }
+
+  const [y, m, d] = trimmed.split('-').map(Number);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
+    return null;
+  }
+
+  if (m < 1 || m > 12 || d < 1 || d > 31) {
+    return null;
+  }
+
+  const dt = new Date(y, m - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) {
+    return null;
+  }
+
+  return dt;
+}
+
 /** Whole-year age in local calendar (matches User `age` virtual). */
 export function ageFromBirthDate(
   birthDate: Date,
@@ -81,7 +105,8 @@ export class EnrolledClass {
   hoursCompleted: number;
 
   @ApiPropertyOptional({
-    description: 'When the enrollment was recorded; used for parent-view privacy cutoffs.',
+    description:
+      'When the enrollment was recorded; used for parent-view privacy cutoffs.',
   })
   @Prop({ type: Date, default: Date.now })
   createdAt?: Date;
