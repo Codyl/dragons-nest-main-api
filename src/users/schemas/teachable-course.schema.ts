@@ -11,6 +11,13 @@ import { HomeschoolCurriculum } from '../enums/homeschool-curriculum.enum';
 @Schema({ _id: false })
 export class TeachableCourse {
   @ApiProperty({
+    description: 'Display name for this offering (from onboarding).',
+    required: false,
+  })
+  @Prop({ type: String, required: false, default: '', trim: true })
+  className?: string;
+
+  @ApiProperty({
     description:
       'Subject catalog id (references a Subject document in the subjects API / topics collection).',
     type: String,
@@ -23,13 +30,32 @@ export class TeachableCourse {
   })
   subjectId!: Types.ObjectId;
 
-  @ApiProperty({ enum: HomeschoolGrade })
+  /** @deprecated Prefer grades + matchesAllGrades; kept for legacy documents. */
+  @ApiProperty({ enum: HomeschoolGrade, required: false })
   @Prop({
     type: String,
     enum: Object.values(HomeschoolGrade),
-    required: true,
+    required: false,
   })
-  grade!: HomeschoolGrade;
+  grade?: HomeschoolGrade;
+
+  @ApiProperty({
+    enum: HomeschoolGrade,
+    isArray: true,
+    description: 'Target grades when matchesAllGrades is false.',
+  })
+  @Prop({
+    type: [String],
+    default: [],
+  })
+  grades?: HomeschoolGrade[];
+
+  @ApiProperty({
+    description: 'When true, offering applies to all grade levels.',
+    default: false,
+  })
+  @Prop({ type: Boolean, default: false })
+  matchesAllGrades?: boolean;
 
   @ApiProperty({ enum: HomeschoolCurriculum })
   @Prop({

@@ -314,9 +314,11 @@ export class ProfileService {
 
     const teachableCourses =
       dto.teachableCourses?.map((c) => ({
+        className: c.className.trim(),
         subjectId: new Types.ObjectId(c.subjectId),
-        grade: c.grade,
         curriculum: c.curriculum,
+        matchesAllGrades: c.matchesAllGrades,
+        grades: c.matchesAllGrades ? [] : [...c.grades],
       })) ?? [];
 
     const promotionYear = new Date().getFullYear();

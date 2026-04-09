@@ -14,8 +14,12 @@ import {
   MaxLength,
   Min,
   MinLength,
+  Validate,
   ValidateIf,
   ValidateNested,
+  ValidationArguments,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
 } from 'class-validator';
 import { AccountType } from 'src/users/enums/account-type.enum';
 import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
@@ -39,12 +43,49 @@ export class PendingStudentOnboardingDto {
   currentGrade!: number;
 }
 
+@ValidatorConstraint({ name: 'teachableCourseGrades', async: false })
+export class TeachableCourseGradesConstraint implements ValidatorConstraintInterface {
+  validate(grades: unknown, args: ValidationArguments): boolean {
+    const obj = args.object as TeachableCourseOnboardingDto;
+    const allowed = new Set<string>(Object.values(HomeschoolGrade));
+
+    if (!Array.isArray(grades)) return false;
+
+    if (obj.matchesAllGrades) {
+      return grades.length === 0;
+    }
+
+    if (grades.length < 1) return false;
+
+    return grades.every((g) => typeof g === 'string' && allowed.has(g));
+  }
+
+  defaultMessage(args: ValidationArguments): string {
+    const obj = args.object as TeachableCourseOnboardingDto;
+
+    if (obj.matchesAllGrades) {
+      return 'grades must be empty when matchesAllGrades is true';
+    }
+
+    return 'grades must list at least one HomeschoolGrade when matchesAllGrades is false';
+  }
+}
+
 export class TeachableCourseOnboardingDto {
+  @IsString()
+  @MinLength(1)
+  @MaxLength(256)
+  className!: string;
+
   @IsMongoId()
   subjectId!: string;
 
-  @IsEnum(HomeschoolGrade)
-  grade!: HomeschoolGrade;
+  @IsBoolean()
+  matchesAllGrades!: boolean;
+
+  @IsArray()
+  @Validate(TeachableCourseGradesConstraint)
+  grades!: HomeschoolGrade[];
 
   @IsEnum(HomeschoolCurriculum)
   curriculum!: HomeschoolCurriculum;

@@ -10,8 +10,12 @@ export type DiscoveryTeacherRow = {
   id: string;
   givenName: string | null;
   teachableCourses: {
+    className: string;
     subjectId: string;
-    grade: string;
+    /** @deprecated Legacy single grade */
+    grade?: string;
+    grades: string[];
+    matchesAllGrades: boolean;
     curriculum: string;
   }[];
 };
@@ -39,7 +43,15 @@ export class DiscoveryService {
       .find({
         accountType: AccountType.Adult,
         deleted: { $ne: true },
-        teachableCourses: { $elemMatch: { grade: { $in: gradeStrings } } },
+        teachableCourses: {
+          $elemMatch: {
+            $or: [
+              { grade: { $in: gradeStrings } },
+              { grades: { $in: gradeStrings } },
+              { matchesAllGrades: true },
+            ],
+          },
+        },
       })
       .select('_id givenName teachableCourses')
       .lean();
@@ -48,8 +60,14 @@ export class DiscoveryService {
       id: String(d._id),
       givenName: d.givenName ?? null,
       teachableCourses: (d.teachableCourses ?? []).map((c) => ({
+        className:
+          typeof c.className === 'string' && c.className.length > 0
+            ? c.className
+            : '',
         subjectId: String(c.subjectId),
-        grade: String(c.grade),
+        grade: c.grade != null ? String(c.grade) : undefined,
+        grades: Array.isArray(c.grades) ? c.grades.map(String) : [],
+        matchesAllGrades: Boolean(c.matchesAllGrades),
         curriculum: String(c.curriculum),
       })),
     }));
