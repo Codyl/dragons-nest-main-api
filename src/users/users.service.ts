@@ -6,6 +6,7 @@ import {
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Types } from 'mongoose';
 import { AccountType } from './enums/account-type.enum';
+import { AgeBandAtRegistration } from './enums/age-band-at-registration.enum';
 import { State } from './enums/state.enum';
 import { ageFromBirthDate, User } from './entities/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -34,6 +35,62 @@ export function accountStatusFromBirthDate(
   return 'ADULT';
 }
 
+export function isMinorAgeBand(
+  ageBand: AgeBandAtRegistration | null | undefined,
+): boolean {
+  return (
+    ageBand === AgeBandAtRegistration.Teen13To17 ||
+    ageBand === AgeBandAtRegistration.ChildUnder13Managed
+  );
+}
+
+export function accountStatusFromAgeBandAndAccountType(
+  ageBand: AgeBandAtRegistration | null | undefined,
+  accountType: AccountType | null | undefined,
+): AccountStatus | null {
+  if (ageBand == null || accountType == null) {
+    return null;
+  }
+
+  if (
+    ageBand === AgeBandAtRegistration.Adult18Plus &&
+    accountType === AccountType.Adult
+  ) {
+    return 'ADULT';
+  }
+
+  if (accountType === AccountType.Student) {
+    if (ageBand === AgeBandAtRegistration.Teen13To17) {
+      return 'INDEPENDENT';
+    }
+
+    if (ageBand === AgeBandAtRegistration.ChildUnder13Managed) {
+      return 'MANAGED';
+    }
+  }
+
+  return null;
+}
+
+/** Prefer attested age band; fall back to legacy birthDate. */
+export function resolveAccountStatusForUser(user: {
+  ageBandAtRegistration?: AgeBandAtRegistration | null;
+  accountType?: AccountType | null;
+  birthDate?: Date | null;
+}): AccountStatus | null {
+  const fromBand = accountStatusFromAgeBandAndAccountType(
+    user.ageBandAtRegistration ?? null,
+    user.accountType ?? null,
+  );
+  if (fromBand != null) {
+    return fromBand;
+  }
+
+  return accountStatusFromBirthDate(
+    user.birthDate == null ? null : new Date(user.birthDate),
+  );
+}
+
 /** Start of the local calendar day when the user turns 18 (exclusive upper bound for minor-era data). */
 export function eighteenthBirthdayStart(birthDate: Date): Date {
   const bd = new Date(birthDate);
@@ -49,21 +106,30 @@ export type EnrolledClassLean = {
 
 function filterAddedClassesForParentView(
   classes: EnrolledClassLean[] | undefined,
-  birthDate: Date,
+  birthDate: Date | null | undefined,
+  ageBandAtRegistration: AgeBandAtRegistration | null | undefined,
 ): EnrolledClassLean[] {
   if (!classes?.length) {
     return classes ?? [];
   }
 
-  const cutoff = eighteenthBirthdayStart(birthDate);
-  return classes.filter((c) => {
-    const t = c.createdAt;
-    if (t == null) {
-      return false;
-    }
+  if (isMinorAgeBand(ageBandAtRegistration)) {
+    return classes;
+  }
 
-    return new Date(t) < cutoff;
-  });
+  if (birthDate) {
+    const cutoff = eighteenthBirthdayStart(new Date(birthDate));
+    return classes.filter((c) => {
+      const t = c.createdAt;
+      if (t == null) {
+        return false;
+      }
+
+      return new Date(t) < cutoff;
+    });
+  }
+
+  return [];
 }
 
 function toObjectId(id: Types.ObjectId | string): Types.ObjectId {
@@ -106,6 +172,13 @@ export interface UserDoc {
   canManageOthers?: boolean;
   linkedStudents?: Types.ObjectId[];
   addedClasses?: EnrolledClassLean[];
+  ageBandAtRegistration?: AgeBandAtRegistration | null;
+  householdStudentDrafts?: {
+    studentDraftId: string;
+    displayName: string;
+    currentGrade: number;
+    lastPromotionYear: number;
+  }[];
 }
 
 export type CreateUserInput = {
@@ -158,13 +231,14 @@ export class UsersService {
         const tId = plain._id;
         if (vId.equals(tId)) {
           discloseEnrollments = 'self';
-        } else if (plain.birthDate && (await this.isParentOf(vId, tId))) {
+        } else if (await this.isParentOf(vId, tId)) {
           discloseEnrollments = 'parent';
           plain = {
             ...plain,
             addedClasses: filterAddedClassesForParentView(
               plain.addedClasses,
-              new Date(plain.birthDate),
+              plain.birthDate ? new Date(plain.birthDate) : null,
+              plain.ageBandAtRegistration ?? null,
             ),
           };
         }
@@ -305,18 +379,22 @@ export class UsersService {
     const childObjectId = toObjectId(childId);
     const child = await this.userModel
       .findById(childObjectId)
-      .select('parentId birthDate deleted')
+      .select('parentId birthDate deleted ageBandAtRegistration')
       .lean();
     if (!child || child.deleted || child.parentId == null) {
       return false;
     }
 
-    if (!child.birthDate) {
+    const pid = child.parentId;
+    if (!pid.equals(parentObjectId)) {
       return false;
     }
 
-    const pid = child.parentId;
-    if (!pid.equals(parentObjectId)) {
+    if (isMinorAgeBand(child.ageBandAtRegistration ?? null)) {
+      return true;
+    }
+
+    if (!child.birthDate) {
       return false;
     }
 

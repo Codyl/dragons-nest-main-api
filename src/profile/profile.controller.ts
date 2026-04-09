@@ -5,6 +5,8 @@ import {
   Get,
   Put,
   Post,
+  Patch,
+  Param,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -21,7 +23,7 @@ import type {
   ApiResponseDto,
   EmptyDataDto,
 } from 'src/common/dto/api-response.dto';
-import { ProfileService } from './profile.service';
+import { ProfileService, type HouseholdStudentMe } from './profile.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AccessToken } from 'src/auth/decorators/access-token.decorator';
@@ -157,6 +159,36 @@ export class ProfileController {
     );
     return {
       message: 'Account setup saved',
+      data,
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Promote a household student draft to the next grade (August UTC only, once per calendar year).',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Not authenticated.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Not August, already promoted, or invalid draft.',
+  })
+  @Patch('household-students/:studentDraftId/promote')
+  async promoteHouseholdStudent(
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
+    @Param('studentDraftId') studentDraftId: string,
+  ): Promise<ApiResponseDto<HouseholdStudentMe>> {
+    const cognitoSub = user?.sub;
+    if (!cognitoSub || typeof cognitoSub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    const data = await this.profileService.promoteHouseholdStudentDraft(
+      cognitoSub,
+      studentDraftId,
+    );
+    return {
+      message: 'Student grade updated',
       data,
     };
   }

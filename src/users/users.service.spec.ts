@@ -4,9 +4,12 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Types } from 'mongoose';
 
 import { User } from './entities/user.schema';
+import { AccountType } from './enums/account-type.enum';
+import { AgeBandAtRegistration } from './enums/age-band-at-registration.enum';
 import {
   accountStatusFromBirthDate,
   eighteenthBirthdayStart,
+  resolveAccountStatusForUser,
   UsersService,
 } from './users.service';
 
@@ -69,6 +72,33 @@ describe('UsersService', () => {
       expect(accountStatusFromBirthDate(new Date(2008, 3, 8), ref)).toBe(
         'ADULT',
       );
+    });
+  });
+
+  describe('resolveAccountStatusForUser', () => {
+    it('uses attested adult band', () => {
+      expect(
+        resolveAccountStatusForUser({
+          ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+          accountType: AccountType.Adult,
+        }),
+      ).toBe('ADULT');
+    });
+
+    it('falls back to legacy birthDate when band is absent', () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 3, 9));
+      try {
+        expect(
+          resolveAccountStatusForUser({
+            ageBandAtRegistration: null,
+            accountType: AccountType.Student,
+            birthDate: new Date(2010, 3, 8),
+          }),
+        ).toBe('INDEPENDENT');
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 
@@ -290,7 +320,19 @@ describe('UsersService', () => {
       await expect(service.isParentOf(parentId, childId)).resolves.toBe(false);
     });
 
-    it('returns false when birthDate is missing', async () => {
+    it('returns true for minor age band without birthDate', async () => {
+      userModel.findById.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue({
+          deleted: false,
+          parentId,
+          ageBandAtRegistration: AgeBandAtRegistration.Teen13To17,
+        }),
+      });
+      await expect(service.isParentOf(parentId, childId)).resolves.toBe(true);
+    });
+
+    it('returns false when birthDate and age band are both absent', async () => {
       userModel.findById.mockReturnValue({
         select: jest.fn().mockReturnThis(),
         lean: jest.fn().mockResolvedValue({

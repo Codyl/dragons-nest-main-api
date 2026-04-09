@@ -17,6 +17,8 @@ import { UpdateAccountDto } from './dto/update-account.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreatePasswordDto } from './dto/create-password.dto';
 import { AccountType } from 'src/users/enums/account-type.enum';
+import { AgeBandAtRegistration } from 'src/users/enums/age-band-at-registration.enum';
+import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
 import { State } from 'src/users/enums/state.enum';
 
 /* eslint-disable @typescript-eslint/unbound-method */
@@ -157,6 +159,7 @@ describe('ProfileService', () => {
       parentId: null,
       linkedStudentIds: [],
       accountStatus: null,
+      ageBandAtRegistration: null,
     });
     expect(cognitoService.listWebAuthnCredentials).toHaveBeenCalledWith(
       'accessToken',
@@ -243,8 +246,10 @@ describe('ProfileService', () => {
   describe('saveAccountSetup', () => {
     const dto = {
       accountType: AccountType.Student,
+      onboardingExpectedBand: OnboardingExpectedBand.Teen13to17,
+      teenAgeConfirmed: true,
+      teenPermissionConfirmed: true,
       name: 'Alex',
-      birthDate: '2010-05-01',
       avatar: '🐉',
       state: State.California,
       zipCode: '90210',
@@ -294,7 +299,8 @@ describe('ProfileService', () => {
         'sub',
         expect.objectContaining({
           $set: expect.objectContaining({
-            birthDate: expect.any(Date),
+            ageBandAtRegistration: AgeBandAtRegistration.Teen13To17,
+            ageAttestationConfirmedAt: expect.any(Date),
             avatar: '🐉',
             interests: ['reading'],
             shortTermGoal: 'Learn',
@@ -303,7 +309,7 @@ describe('ProfileService', () => {
             state: State.California,
             zipCode: '90210',
           }),
-          $unset: { age: '' },
+          $unset: { age: '', birthDate: '' },
         }),
       );
     });

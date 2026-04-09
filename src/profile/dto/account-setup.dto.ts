@@ -2,10 +2,13 @@ import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsEnum,
   IsInt,
   IsMongoId,
+  IsOptional,
   IsString,
+  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -15,11 +18,15 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { AccountType } from 'src/users/enums/account-type.enum';
+import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
 import { State } from 'src/users/enums/state.enum';
 import { HomeschoolCurriculum } from 'src/users/enums/homeschool-curriculum.enum';
 import { HomeschoolGrade } from 'src/users/enums/homeschool-grade.enum';
 
 export class PendingStudentOnboardingDto {
+  @IsUUID('4')
+  studentDraftId!: string;
+
   @IsString()
   @MinLength(1)
   @MaxLength(256)
@@ -27,9 +34,9 @@ export class PendingStudentOnboardingDto {
 
   @Type(() => Number)
   @IsInt()
-  @Min(1)
-  @Max(120)
-  age!: number;
+  @Min(0)
+  @Max(13)
+  currentGrade!: number;
 }
 
 export class TeachableCourseOnboardingDto {
@@ -47,17 +54,13 @@ export class AccountSetupDto {
   @IsEnum(AccountType)
   accountType!: AccountType;
 
+  @IsEnum(OnboardingExpectedBand)
+  onboardingExpectedBand!: OnboardingExpectedBand;
+
   @IsString()
   @MinLength(1)
   @MaxLength(256)
   name!: string;
-
-  /** Local calendar date from account-setup wizard (`YYYY-MM-DD`). */
-  @IsString()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
-    message: 'birthDate must be YYYY-MM-DD',
-  })
-  birthDate!: string;
 
   @IsString()
   @MinLength(1)
@@ -91,6 +94,36 @@ export class AccountSetupDto {
   @IsArray()
   @IsString({ each: true })
   learningStyles!: string[];
+
+  @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'adult')
+  @IsOptional()
+  @IsBoolean()
+  adultAgeConfirmed?: boolean;
+
+  @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'adult')
+  @IsOptional()
+  @IsBoolean()
+  adultGuardianDutyConfirmed?: boolean;
+
+  @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'teen13to17')
+  @IsOptional()
+  @IsBoolean()
+  teenAgeConfirmed?: boolean;
+
+  @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'teen13to17')
+  @IsOptional()
+  @IsBoolean()
+  teenPermissionConfirmed?: boolean;
+
+  @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'under13')
+  @IsOptional()
+  @IsBoolean()
+  under13ChildConfirmed?: boolean;
+
+  @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'under13')
+  @IsOptional()
+  @IsBoolean()
+  under13GuardianPermissionConfirmed?: boolean;
 
   @ValidateIf((o: AccountSetupDto) => o.accountType === AccountType.Adult)
   @IsArray()

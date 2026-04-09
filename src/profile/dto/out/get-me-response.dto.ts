@@ -25,9 +25,20 @@ export class GetMeResponseDto {
   linkedStudentIds?: string[];
 
   /**
-   * Derived from birthDate: MANAGED (under 13), INDEPENDENT (13–17), ADULT (18+); null if unknown.
+   * MANAGED (under 13), INDEPENDENT (13–17), ADULT (18+); from attested age band or legacy birthDate.
    */
   accountStatus?: 'MANAGED' | 'INDEPENDENT' | 'ADULT' | null;
+
+  /** Self-attested registration band when DOB is not stored. */
+  ageBandAtRegistration?: string | null;
+
+  /** Household learner drafts (adults only). */
+  householdStudents?: {
+    studentDraftId: string;
+    displayName: string;
+    currentGrade: number;
+    lastPromotionYear: number;
+  }[];
 
   // Allow arbitrary string keys for additional Cognito attributes.
   [key: string]:
@@ -39,5 +50,6 @@ export class GetMeResponseDto {
     | undefined
     | 'MANAGED'
     | 'INDEPENDENT'
-    | 'ADULT';
+    | 'ADULT'
+    | unknown;
 }

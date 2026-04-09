@@ -229,8 +229,10 @@ describe('ProfileController', () => {
   it('should save account setup', async () => {
     const dto = {
       accountType: AccountType.Student,
+      onboardingExpectedBand: 'teen13to17' as const,
+      teenAgeConfirmed: true,
+      teenPermissionConfirmed: true,
       name: 'Alex',
-      birthDate: '2010-05-01',
       avatar: '🐉',
       state: State.California,
       zipCode: '90210',
@@ -309,8 +311,10 @@ describe('ProfileController', () => {
           {},
           {
             accountType: AccountType.Student,
+            onboardingExpectedBand: 'under13',
+            under13ChildConfirmed: true,
+            under13GuardianPermissionConfirmed: true,
             name: 'A',
-            birthDate: '2015-01-01',
             avatar: '🐉',
             state: State.California,
             zipCode: '90210',

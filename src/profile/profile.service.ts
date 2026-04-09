@@ -11,7 +11,7 @@ import {
   UsersService,
   type UserDoc,
   type AccountStatus,
-  accountStatusFromBirthDate,
+  resolveAccountStatusForUser,
 } from 'src/users/users.service';
 import { GoogleService } from 'src/google/google.service';
 import { UpdateAccountDto } from './dto/update-account.dto';
@@ -26,8 +26,16 @@ import { EnvironmentVariables } from 'src/env.config';
 import { DeleteMeDto } from './dto/delete-me.dto';
 import { AccountSetupDto } from './dto/account-setup.dto';
 import { AccountType } from 'src/users/enums/account-type.enum';
-import { parseLocalDateFromYyyyMmDd } from 'src/users/entities/user.schema';
+import { AgeBandAtRegistration } from 'src/users/enums/age-band-at-registration.enum';
+import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
 import { Types } from 'mongoose';
+
+export type HouseholdStudentMe = {
+  studentDraftId: string;
+  displayName: string;
+  currentGrade: number;
+  lastPromotionYear: number;
+};
 
 export interface GetMeData {
   [key: string]:
@@ -37,7 +45,8 @@ export interface GetMeData {
     | number
     | null
     | undefined
-    | AccountStatus;
+    | AccountStatus
+    | HouseholdStudentMe[];
   loginMethods: string[];
   hasPassword: boolean;
   hasPasskey: boolean;
@@ -51,6 +60,8 @@ export interface GetMeData {
   parentId?: string | null;
   linkedStudentIds?: string[];
   accountStatus?: AccountStatus | null;
+  ageBandAtRegistration?: string | null;
+  householdStudents?: HouseholdStudentMe[];
 }
 
 function firstLoggedInAtToIso(value: Date | null | undefined): string | null {
@@ -142,8 +153,21 @@ export class ProfileService {
       response.UserMFASettingList?.includes('SOFTWARE_TOKEN_MFA') ?? false;
     const preferredMfa = response.PreferredMfaSetting ?? undefined;
 
-    const birthDate = mongoDateOrNull(user.birthDate);
-    const accountStatus = accountStatusFromBirthDate(birthDate);
+    const accountStatus = resolveAccountStatusForUser({
+      ageBandAtRegistration: user.ageBandAtRegistration ?? null,
+      accountType: user.accountType ?? null,
+      birthDate: user.birthDate ?? null,
+    });
+
+    const householdStudents: HouseholdStudentMe[] | undefined =
+      user.accountType === AccountType.Adult
+        ? (user.householdStudentDrafts ?? []).map((d) => ({
+            studentDraftId: d.studentDraftId,
+            displayName: d.displayName,
+            currentGrade: d.currentGrade,
+            lastPromotionYear: d.lastPromotionYear,
+          }))
+        : undefined;
 
     return {
       ...attributes,
@@ -164,6 +188,8 @@ export class ProfileService {
       parentId: user.parentId ? user.parentId.toString() : null,
       linkedStudentIds: (user.linkedStudents ?? []).map((id) => id.toString()),
       accountStatus,
+      ageBandAtRegistration: user.ageBandAtRegistration ?? null,
+      ...(householdStudents !== undefined ? { householdStudents } : {}),
     };
   }
 
@@ -270,22 +296,7 @@ export class ProfileService {
       }
     }
 
-    const birthDateParsed = parseLocalDateFromYyyyMmDd(dto.birthDate);
-    if (!birthDateParsed) {
-      throw new BadRequestException('Invalid date of birth');
-    }
-    const derivedStatus = accountStatusFromBirthDate(birthDateParsed);
-    if (accountType === AccountType.Student) {
-      if (derivedStatus !== 'INDEPENDENT' && derivedStatus !== 'MANAGED') {
-        throw new BadRequestException(
-          'Date of birth must match a student age (under 18)',
-        );
-      }
-    } else if (derivedStatus !== 'ADULT') {
-      throw new BadRequestException(
-        'Date of birth must show the account holder is 18 or older',
-      );
-    }
+    const ageBand = this.resolveAgeBandFromAccountSetup(dto);
 
     const name = dto.name.trim();
     const cognitoResponse = await this.cognitoService.updateUserAttributes(
@@ -308,15 +319,19 @@ export class ProfileService {
         curriculum: c.curriculum,
       })) ?? [];
 
+    const promotionYear = new Date().getFullYear();
     const householdStudentDrafts =
       dto.pendingStudents?.map((s) => ({
+        studentDraftId: s.studentDraftId,
         displayName: s.displayName.trim(),
-        age: s.age,
+        currentGrade: s.currentGrade,
+        lastPromotionYear: promotionYear,
       })) ?? [];
 
     const baseUpdate: Record<string, unknown> = {
       accountType,
-      birthDate: birthDateParsed,
+      ageBandAtRegistration: ageBand,
+      ageAttestationConfirmedAt: new Date(),
       avatar: dto.avatar,
       interests: dto.interests,
       shortTermGoal: dto.shortTermGoal,
@@ -334,7 +349,7 @@ export class ProfileService {
 
     const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
       $set: baseUpdate,
-      $unset: { age: '' },
+      $unset: { age: '', birthDate: '' },
     });
 
     if (!updated) {
@@ -347,6 +362,121 @@ export class ProfileService {
     }
 
     return { onboardingCompletedAt: firstLoggedInAtToIso(ts)! };
+  }
+
+  /**
+   * August (UTC): increment household student grade and set lastPromotionYear.
+   */
+  async promoteHouseholdStudentDraft(
+    cognitoSub: string,
+    studentDraftId: string,
+  ): Promise<HouseholdStudentMe> {
+    const row = await this.usersService.findOneByCognitoSub(cognitoSub);
+    if (!row || row.deleted) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (row.accountType !== AccountType.Adult) {
+      throw new BadRequestException(
+        'Only household adults can update student grades',
+      );
+    }
+
+    const now = new Date();
+    if (now.getUTCMonth() !== 7) {
+      throw new BadRequestException(
+        'Grade promotion is only available in August (UTC)',
+      );
+    }
+
+    const year = now.getUTCFullYear();
+    const drafts = row.householdStudentDrafts ?? [];
+    const idx = drafts.findIndex((d) => d.studentDraftId === studentDraftId);
+    if (idx < 0) {
+      throw new NotFoundException('Student draft not found');
+    }
+
+    const current = drafts[idx]!;
+    if (current.lastPromotionYear >= year) {
+      throw new BadRequestException(
+        'This school year has already been recorded for this student',
+      );
+    }
+
+    if (current.currentGrade >= 13) {
+      throw new BadRequestException('Student is already at the highest grade');
+    }
+
+    const nextDrafts = drafts.map((d, i) =>
+      i === idx
+        ? {
+            ...d,
+            currentGrade: d.currentGrade + 1,
+            lastPromotionYear: year,
+          }
+        : d,
+    );
+
+    const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
+      $set: { householdStudentDrafts: nextDrafts },
+    });
+
+    if (!updated) {
+      throw new InternalServerErrorException('Failed to promote student');
+    }
+
+    const promoted = (updated.householdStudentDrafts ?? [])[idx]!;
+    return {
+      studentDraftId: promoted.studentDraftId,
+      displayName: promoted.displayName,
+      currentGrade: promoted.currentGrade,
+      lastPromotionYear: promoted.lastPromotionYear,
+    };
+  }
+
+  private resolveAgeBandFromAccountSetup(dto: AccountSetupDto): AgeBandAtRegistration {
+    const path = dto.onboardingExpectedBand;
+
+    if (dto.accountType === AccountType.Adult) {
+      if (path !== OnboardingExpectedBand.Adult) {
+        throw new BadRequestException(
+          'Adult accounts must use the adult onboarding confirmation path',
+        );
+      }
+
+      if (!dto.adultAgeConfirmed || !dto.adultGuardianDutyConfirmed) {
+        throw new BadRequestException(
+          'Confirm your age and guardian responsibilities to continue',
+        );
+      }
+
+      return AgeBandAtRegistration.Adult18Plus;
+    }
+
+    if (path === OnboardingExpectedBand.Teen13to17) {
+      if (!dto.teenAgeConfirmed || !dto.teenPermissionConfirmed) {
+        throw new BadRequestException(
+          'Confirm your age and guardian permission to continue',
+        );
+      }
+
+      return AgeBandAtRegistration.Teen13To17;
+    }
+
+    if (path === OnboardingExpectedBand.Under13) {
+      if (
+        !dto.under13ChildConfirmed ||
+        !dto.under13GuardianPermissionConfirmed
+      ) {
+        throw new BadRequestException(
+          'Confirm guardian permission for this account',
+        );
+      }
+
+      return AgeBandAtRegistration.ChildUnder13Managed;
+    }
+
+    throw new BadRequestException('Invalid onboarding path');
   }
 
   /**

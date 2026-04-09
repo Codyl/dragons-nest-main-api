@@ -2,6 +2,7 @@ import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AccountType } from '../enums/account-type.enum';
+import { AgeBandAtRegistration } from '../enums/age-band-at-registration.enum';
 import { State } from '../enums/state.enum';
 import {
   TeachableCourse,
@@ -202,11 +203,30 @@ export class User extends Document {
 
   @ApiProperty({
     description:
-      'Date of birth; age is exposed as a virtual derived from this.',
+      'Legacy date of birth (no longer written at account setup; may exist on older documents).',
     nullable: true,
   })
   @Prop({ type: Date, default: null })
   birthDate?: Date | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Self-attested age band at registration (replaces DOB for new users).',
+    enum: AgeBandAtRegistration,
+  })
+  @Prop({
+    type: String,
+    enum: Object.values(AgeBandAtRegistration),
+    required: false,
+    default: null,
+  })
+  ageBandAtRegistration?: AgeBandAtRegistration | null;
+
+  @ApiPropertyOptional({
+    description: 'When age-band attestations were recorded at account setup.',
+  })
+  @Prop({ type: Date, default: null })
+  ageAttestationConfirmedAt?: Date | null;
 
   @ApiPropertyOptional({
     description: 'Computed from birthDate (virtual; not stored).',
@@ -286,13 +306,20 @@ export class User extends Document {
   @Prop({
     type: [
       {
+        studentDraftId: { type: String, required: true },
         displayName: { type: String, required: true },
-        age: { type: Number, required: true },
+        currentGrade: { type: Number, required: true, min: 0, max: 13 },
+        lastPromotionYear: { type: Number, required: true },
       },
     ],
     default: [],
   })
-  householdStudentDrafts?: { displayName: string; age: number }[];
+  householdStudentDrafts?: {
+    studentDraftId: string;
+    displayName: string;
+    currentGrade: number;
+    lastPromotionYear: number;
+  }[];
 
   @ApiProperty({
     description: 'Avatar id (e.g. dragon, owl) from onboarding.',
