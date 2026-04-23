@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   ArrayMinSize,
   IsArray,
   IsBoolean,
@@ -89,6 +90,35 @@ export class TeachableCourseOnboardingDto {
 
   @IsEnum(HomeschoolCurriculum)
   curriculum!: HomeschoolCurriculum;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(20)
+  maxStudents!: number;
+}
+
+const WEEKDAY_RE = /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/;
+
+export class TimeSlotOnboardingDto {
+  @IsString()
+  @Matches(/^\d{2}:\d{2}$/)
+  start!: string;
+
+  @IsString()
+  @Matches(/^\d{2}:\d{2}$/)
+  end!: string;
+}
+
+export class DayAvailabilityOnboardingDto {
+  @IsString()
+  @Matches(WEEKDAY_RE)
+  day!: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TimeSlotOnboardingDto)
+  slots!: TimeSlotOnboardingDto[];
 }
 
 export class AccountSetupDto {
@@ -135,6 +165,13 @@ export class AccountSetupDto {
   @IsArray()
   @IsString({ each: true })
   learningStyles!: string[];
+
+  @IsArray()
+  @ArrayMinSize(7)
+  @ArrayMaxSize(7)
+  @ValidateNested({ each: true })
+  @Type(() => DayAvailabilityOnboardingDto)
+  weeklyAvailability!: DayAvailabilityOnboardingDto[];
 
   @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'adult')
   @IsOptional()

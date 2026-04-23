@@ -64,6 +64,15 @@ export class TeachableCourse {
     required: true,
   })
   curriculum!: HomeschoolCurriculum;
+
+  @ApiProperty({
+    description: 'Maximum concurrent students for this offering (onboarding).',
+    minimum: 1,
+    maximum: 20,
+    required: false,
+  })
+  @Prop({ type: Number, required: false, min: 1, max: 20 })
+  maxStudents?: number;
 }
 
 export const TeachableCourseSchema =

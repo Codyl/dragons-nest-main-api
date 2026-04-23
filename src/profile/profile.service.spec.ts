@@ -244,6 +244,21 @@ describe('ProfileService', () => {
   });
 
   describe('saveAccountSetup', () => {
+    const weeklyAvailability = (
+      [
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ] as const
+    ).map((day) => ({
+      day,
+      slots: [{ start: '08:00', end: '21:00' }],
+    }));
+
     const dto = {
       accountType: AccountType.Student,
       onboardingExpectedBand: OnboardingExpectedBand.Teen13to17,
@@ -258,6 +273,7 @@ describe('ProfileService', () => {
       shortTermGoal: 'Learn',
       longTermGoal: 'Grow',
       learningStyles: ['hands-on'],
+      weeklyAvailability,
     };
 
     it('should throw NotFoundException when user is missing', async () => {
@@ -308,6 +324,7 @@ describe('ProfileService', () => {
             learningStyles: ['hands-on'],
             state: State.California,
             zipCode: '90210',
+            availablity: weeklyAvailability,
           }),
           $unset: { age: '', birthDate: '' },
         }),

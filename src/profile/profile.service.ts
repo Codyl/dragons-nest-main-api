@@ -91,6 +91,23 @@ function mongoDateOrNull(value: unknown): Date | null {
   return null;
 }
 
+function parseAvailabilitySlotMinutes(s: string): number | null {
+  if (typeof s !== 'string' || !/^\d{2}:\d{2}$/.test(s)) {
+    return null;
+  }
+
+  const [h, m] = s.split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) {
+    return null;
+  }
+
+  if (h < 0 || h > 23 || m < 0 || m > 59) {
+    return null;
+  }
+
+  return h * 60 + m;
+}
+
 @Injectable()
 export class ProfileService {
   constructor(
@@ -290,10 +307,6 @@ export class ProfileService {
       if (!dto.pendingStudents?.length) {
         throw new BadRequestException('Add at least one student');
       }
-
-      if (!dto.teachableCourses?.length) {
-        throw new BadRequestException('Add at least one course');
-      }
     }
 
     const ageBand = this.resolveAgeBandFromAccountSetup(dto);
@@ -312,6 +325,26 @@ export class ProfileService {
       );
     }
 
+    const totalAvailSlots = dto.weeklyAvailability.reduce(
+      (n, d) => n + (d.slots?.length ?? 0),
+      0,
+    );
+    if (totalAvailSlots < 1) {
+      throw new BadRequestException('Add at least one availability time range');
+    }
+
+    for (const d of dto.weeklyAvailability) {
+      for (const s of d.slots ?? []) {
+        const sm = parseAvailabilitySlotMinutes(s.start);
+        const em = parseAvailabilitySlotMinutes(s.end);
+        if (sm === null || em === null || sm >= em) {
+          throw new BadRequestException(
+            'Each availability range must have an end time after the start time',
+          );
+        }
+      }
+    }
+
     const teachableCourses =
       dto.teachableCourses?.map((c) => ({
         className: c.className.trim(),
@@ -319,7 +352,16 @@ export class ProfileService {
         curriculum: c.curriculum,
         matchesAllGrades: c.matchesAllGrades,
         grades: c.matchesAllGrades ? [] : [...c.grades],
+        maxStudents: c.maxStudents,
       })) ?? [];
+
+    const availabilityForStore = dto.weeklyAvailability.map((d) => ({
+      day: d.day,
+      slots: (d.slots ?? []).map((s) => ({
+        start: s.start,
+        end: s.end,
+      })),
+    }));
 
     const promotionYear = new Date().getFullYear();
     const householdStudentDrafts =
@@ -341,6 +383,7 @@ export class ProfileService {
       learningStyles: dto.learningStyles,
       state: dto.state,
       zipCode: dto.zipCode,
+      availablity: availabilityForStore,
       onboardingCompletedAt: new Date(),
     };
 

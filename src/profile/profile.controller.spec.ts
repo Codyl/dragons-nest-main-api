@@ -10,6 +10,7 @@ import { MfaPreferenceDto } from './dto/mfa-preference.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
 import { AccountType } from 'src/users/enums/account-type.enum';
+import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
 import { State } from 'src/users/enums/state.enum';
 
 describe('ProfileController', () => {
@@ -227,9 +228,24 @@ describe('ProfileController', () => {
   });
 
   it('should save account setup', async () => {
+    const weeklyAvailability = (
+      [
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ] as const
+    ).map((day) => ({
+      day,
+      slots: [{ start: '08:00', end: '21:00' }],
+    }));
+
     const dto = {
       accountType: AccountType.Student,
-      onboardingExpectedBand: 'teen13to17' as const,
+      onboardingExpectedBand: OnboardingExpectedBand.Teen13to17,
       teenAgeConfirmed: true,
       teenPermissionConfirmed: true,
       name: 'Alex',
@@ -241,6 +257,7 @@ describe('ProfileController', () => {
       shortTermGoal: '',
       longTermGoal: '',
       learningStyles: [] as string[],
+      weeklyAvailability,
     };
     profileService.saveAccountSetup.mockResolvedValue({
       onboardingCompletedAt: '2025-06-01T12:00:00.000Z',
@@ -305,13 +322,28 @@ describe('ProfileController', () => {
     });
 
     it('saveAccountSetup throws', async () => {
+      const weeklyAvailability = (
+        [
+          'monday',
+          'tuesday',
+          'wednesday',
+          'thursday',
+          'friday',
+          'saturday',
+          'sunday',
+        ] as const
+      ).map((day) => ({
+        day,
+        slots: [{ start: '08:00', end: '21:00' }],
+      }));
+
       await expect(
         controller.saveAccountSetup(
           'token',
           {},
           {
             accountType: AccountType.Student,
-            onboardingExpectedBand: 'under13',
+            onboardingExpectedBand: OnboardingExpectedBand.Under13,
             under13ChildConfirmed: true,
             under13GuardianPermissionConfirmed: true,
             name: 'A',
@@ -323,6 +355,7 @@ describe('ProfileController', () => {
             shortTermGoal: '',
             longTermGoal: '',
             learningStyles: [],
+            weeklyAvailability,
           },
         ),
       ).rejects.toThrow('Not authenticated');
