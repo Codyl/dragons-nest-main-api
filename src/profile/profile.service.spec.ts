@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
   InternalServerErrorException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { CognitoService, GetUserResult } from 'src/cognito/cognito.service';
@@ -20,6 +21,7 @@ import { AccountType } from 'src/users/enums/account-type.enum';
 import { AgeBandAtRegistration } from 'src/users/enums/age-band-at-registration.enum';
 import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
 import { State } from 'src/users/enums/state.enum';
+import { AddHouseholdStudentDto } from './dto/add-household-student.dto';
 
 /* eslint-disable @typescript-eslint/unbound-method */
 describe('ProfileService', () => {
@@ -2248,5 +2250,261 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
       ),
       { numRuns: 100 },
     );
+  });
+});
+
+describe('ProfileService household student drafts', () => {
+  let service: ProfileService;
+  let usersService: jest.Mocked<UsersService>;
+  let cognitoService: jest.Mocked<CognitoService>;
+  let configGet: jest.Mock;
+
+  beforeEach(async () => {
+    configGet = jest.fn();
+    const configServiceImpl = {
+      get: configGet,
+      getOrThrow: jest.fn((key: string) => {
+        const v = configGet(key);
+        if (v !== undefined && v !== null) {
+          return v;
+        }
+
+        if (key === MAXMIND_KEY) {
+          return '';
+        }
+
+        throw new Error(`Missing configuration key: ${key}`);
+      }),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ProfileService,
+        {
+          provide: CognitoService,
+          useValue: {
+            getUser: jest.fn<Promise<GetUserResult | undefined>, [string]>(),
+            updateUserAttributes: jest.fn(),
+            setUserMFAPreferenceWithSettings: jest.fn(),
+            changePassword: jest.fn(),
+            adminSetUserPassword: jest.fn(),
+            authenticateWithSrp: jest.fn(),
+            respondToSoftwareTokenMFAChallenge: jest.fn(),
+            deleteUser: jest.fn(),
+            adminLinkProviderForUser: jest.fn(),
+            adminDisableProviderForUser: jest.fn(),
+            listDevices: jest.fn(),
+            updateDeviceStatus: jest.fn(),
+            forgetDevice: jest.fn(),
+            listWebAuthnCredentials: jest
+              .fn()
+              .mockResolvedValue({ Credentials: [] }),
+          },
+        },
+        { provide: MaxmindService, useValue: { getLocation: jest.fn() } },
+        {
+          provide: GoogleService,
+          useValue: {
+            googleTokenExchange: jest.fn(),
+            googleSSOSignup: jest.fn(),
+            verifyCredential: jest.fn(),
+          },
+        },
+        {
+          provide: UsersService,
+          useValue: {
+            createUser: jest.fn(),
+            findAll: jest.fn(),
+            findOneById: jest.fn(),
+            findOneByCognitoSub: jest.fn(),
+            updateByCognitoSub: jest.fn(),
+            addLinkGoogle: jest.fn(),
+            removeLinkGoogle: jest.fn(),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: configServiceImpl,
+        },
+      ],
+    }).compile();
+
+    service = module.get<ProfileService>(ProfileService);
+    usersService = module.get<jest.Mocked<UsersService>>(UsersService);
+    cognitoService = module.get<jest.Mocked<CognitoService>>(CognitoService);
+  });
+
+  it('getMe returns householdStudents active-only and householdStudentDraftsAll for adults', async () => {
+    const cognitoSub = 'sub-adult';
+    cognitoService.getUser.mockResolvedValue({
+      UserAttributes: [
+        { Name: 'email', Value: 'a@ex.com' },
+        { Name: 'sub', Value: cognitoSub },
+      ],
+    });
+    const archivedDate = new Date('2024-01-02T00:00:00.000Z');
+    usersService.findOneByCognitoSub.mockResolvedValue({
+      _id: new Types.ObjectId(),
+      cognitoSub,
+      accountType: AccountType.Adult,
+      ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+      deleted: false,
+      householdStudentDrafts: [
+        {
+          studentDraftId: 'a',
+          displayName: 'Active',
+          currentGrade: 3,
+          lastPromotionYear: 2025,
+        },
+        {
+          studentDraftId: 'b',
+          displayName: 'Old',
+          currentGrade: 5,
+          lastPromotionYear: 2024,
+          archivedAt: archivedDate,
+        },
+      ],
+    } as UserDoc);
+
+    const profile = await service.getMe('tok', { sub: cognitoSub });
+
+    expect(profile.householdStudents).toHaveLength(1);
+    expect(profile.householdStudents![0]!.studentDraftId).toBe('a');
+    expect(profile.householdStudentDraftsAll).toHaveLength(2);
+    expect(profile.householdStudentDraftsAll![1]!.archivedAt).toBe(
+      archivedDate.toISOString(),
+    );
+  });
+
+  it('addHouseholdStudent forbids non-adult', async () => {
+    usersService.findOneByCognitoSub.mockResolvedValue({
+      _id: new Types.ObjectId(),
+      cognitoSub: 's',
+      accountType: AccountType.Student,
+      deleted: false,
+    } as UserDoc);
+
+    await expect(
+      service.addHouseholdStudent('s', {
+        displayName: 'X',
+        currentGrade: 1,
+      } as AddHouseholdStudentDto),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('addHouseholdStudent appends and returns mapped drafts', async () => {
+    const cognitoSub = 'adult';
+    usersService.findOneByCognitoSub.mockResolvedValue({
+      _id: new Types.ObjectId(),
+      cognitoSub,
+      accountType: AccountType.Adult,
+      ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+      deleted: false,
+      householdStudentDrafts: [],
+    } as never);
+
+    usersService.updateByCognitoSub.mockResolvedValue({
+      cognitoSub,
+      householdStudentDrafts: [
+        {
+          studentDraftId: '00000000-0000-4000-8000-000000000001',
+          displayName: 'Sam',
+          currentGrade: 2,
+          lastPromotionYear: new Date().getFullYear(),
+          archivedAt: null,
+        },
+      ],
+    } as never);
+
+    const rows = await service.addHouseholdStudent(cognitoSub, {
+      displayName: 'Sam',
+      currentGrade: 2,
+    } as AddHouseholdStudentDto);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.displayName).toBe('Sam');
+    expect(rows[0]!.archivedAt).toBeNull();
+    expect(usersService.updateByCognitoSub).toHaveBeenCalledWith(
+      cognitoSub,
+      expect.objectContaining({
+        $push: {
+          householdStudentDrafts: expect.objectContaining({
+            displayName: 'Sam',
+            currentGrade: 2,
+          }),
+        },
+      }),
+    );
+  });
+
+  it('archiveHouseholdStudent sets archivedAt', async () => {
+    const cognitoSub = 'adult';
+    usersService.findOneByCognitoSub.mockResolvedValue({
+      _id: new Types.ObjectId(),
+      cognitoSub,
+      accountType: AccountType.Adult,
+      ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+      deleted: false,
+      householdStudentDrafts: [
+        {
+          studentDraftId: 'x',
+          displayName: 'Sam',
+          currentGrade: 2,
+          lastPromotionYear: 2025,
+        },
+      ],
+    } as UserDoc);
+
+    usersService.updateByCognitoSub.mockResolvedValue({
+      cognitoSub,
+      householdStudentDrafts: [
+        {
+          studentDraftId: 'x',
+          displayName: 'Sam',
+          currentGrade: 2,
+          lastPromotionYear: 2025,
+          archivedAt: new Date('2025-06-01T00:00:00.000Z'),
+        },
+      ],
+    } as never);
+
+    const rows = await service.archiveHouseholdStudent(cognitoSub, 'x');
+    expect(rows[0]!.archivedAt).not.toBeNull();
+  });
+
+  it('restoreHouseholdStudent clears archivedAt', async () => {
+    const cognitoSub = 'adult';
+    usersService.findOneByCognitoSub.mockResolvedValue({
+      _id: new Types.ObjectId(),
+      cognitoSub,
+      accountType: AccountType.Adult,
+      ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+      deleted: false,
+      householdStudentDrafts: [
+        {
+          studentDraftId: 'x',
+          displayName: 'Sam',
+          currentGrade: 2,
+          lastPromotionYear: 2025,
+          archivedAt: new Date(),
+        },
+      ],
+    } as UserDoc);
+
+    usersService.updateByCognitoSub.mockResolvedValue({
+      cognitoSub,
+      householdStudentDrafts: [
+        {
+          studentDraftId: 'x',
+          displayName: 'Sam',
+          currentGrade: 2,
+          lastPromotionYear: 2025,
+          archivedAt: null,
+        },
+      ],
+    } as never);
+
+    const rows = await service.restoreHouseholdStudent(cognitoSub, 'x');
+    expect(rows[0]!.archivedAt).toBeNull();
   });
 });

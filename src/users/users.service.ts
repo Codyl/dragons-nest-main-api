@@ -178,6 +178,7 @@ export interface UserDoc {
     displayName: string;
     currentGrade: number;
     lastPromotionYear: number;
+    archivedAt?: Date | null;
   }[];
   teachableCourses?: {
     _id?: Types.ObjectId;

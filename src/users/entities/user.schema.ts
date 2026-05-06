@@ -310,6 +310,7 @@ export class User extends Document {
         displayName: { type: String, required: true },
         currentGrade: { type: Number, required: true, min: 0, max: 13 },
         lastPromotionYear: { type: Number, required: true },
+        archivedAt: { type: Date, default: null },
       },
     ],
     default: [],
@@ -319,6 +320,7 @@ export class User extends Document {
     displayName: string;
     currentGrade: number;
     lastPromotionYear: number;
+    archivedAt?: Date | null;
   }[];
 
   @ApiProperty({

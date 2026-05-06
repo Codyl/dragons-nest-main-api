@@ -31,6 +31,8 @@ import { AccountType } from 'src/users/enums/account-type.enum';
 import { AgeBandAtRegistration } from 'src/users/enums/age-band-at-registration.enum';
 import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
 import { Types } from 'mongoose';
+import { randomUUID } from 'crypto';
+import { AddHouseholdStudentDto } from './dto/add-household-student.dto';
 
 export type TeachableCourseResponseItem = {
   className: string;
@@ -47,6 +49,8 @@ export type HouseholdStudentMe = {
   displayName: string;
   currentGrade: number;
   lastPromotionYear: number;
+  /** ISO timestamp when archived; null when active. */
+  archivedAt?: string | null;
 };
 
 export interface GetMeData {
@@ -75,6 +79,8 @@ export interface GetMeData {
   accountStatus?: AccountStatus | null;
   ageBandAtRegistration?: string | null;
   householdStudents?: HouseholdStudentMe[];
+  /** Full list including archived drafts (adults only). */
+  householdStudentDraftsAll?: HouseholdStudentMe[];
   teachableCourses?: TeachableCourseResponseItem[];
 }
 
@@ -103,6 +109,28 @@ function mongoDateOrNull(value: unknown): Date | null {
   }
 
   return null;
+}
+
+/** Serialize archive timestamp for API; null when absent or not archived. */
+function householdDraftArchivedIso(d: { archivedAt?: unknown }): string | null {
+  const at = mongoDateOrNull(d.archivedAt);
+  return at ? at.toISOString() : null;
+}
+
+function mapStoredDraftToHouseholdStudentMe(d: {
+  studentDraftId: string;
+  displayName: string;
+  currentGrade: number;
+  lastPromotionYear: number;
+  archivedAt?: unknown;
+}): HouseholdStudentMe {
+  return {
+    studentDraftId: d.studentDraftId,
+    displayName: d.displayName,
+    currentGrade: d.currentGrade,
+    lastPromotionYear: d.lastPromotionYear,
+    archivedAt: householdDraftArchivedIso(d),
+  };
 }
 
 function parseAvailabilitySlotMinutes(s: string): number | null {
@@ -190,14 +218,24 @@ export class ProfileService {
       birthDate: user.birthDate ?? null,
     });
 
+    const draftsRaw = user.householdStudentDrafts ?? [];
+
+    const householdStudentDraftsAll: HouseholdStudentMe[] | undefined =
+      user.accountType === AccountType.Adult
+        ? draftsRaw.map((d) => mapStoredDraftToHouseholdStudentMe(d))
+        : undefined;
+
     const householdStudents: HouseholdStudentMe[] | undefined =
       user.accountType === AccountType.Adult
-        ? (user.householdStudentDrafts ?? []).map((d) => ({
-            studentDraftId: d.studentDraftId,
-            displayName: d.displayName,
-            currentGrade: d.currentGrade,
-            lastPromotionYear: d.lastPromotionYear,
-          }))
+        ? draftsRaw
+            .filter((d) => householdDraftArchivedIso(d) === null)
+            .map((d) => ({
+              studentDraftId: d.studentDraftId,
+              displayName: d.displayName,
+              currentGrade: d.currentGrade,
+              lastPromotionYear: d.lastPromotionYear,
+              archivedAt: null,
+            }))
         : undefined;
 
     // Compute activeEnrollmentCount for each teachable course when user is an adult
@@ -294,6 +332,9 @@ export class ProfileService {
       accountStatus,
       ageBandAtRegistration: user.ageBandAtRegistration ?? null,
       ...(householdStudents !== undefined ? { householdStudents } : {}),
+      ...(householdStudentDraftsAll !== undefined
+        ? { householdStudentDraftsAll }
+        : {}),
       ...(teachableCourses !== undefined ? { teachableCourses } : {}),
     };
   }
@@ -559,12 +600,135 @@ export class ProfileService {
     }
 
     const promoted = (updated.householdStudentDrafts ?? [])[idx]!;
-    return {
-      studentDraftId: promoted.studentDraftId,
-      displayName: promoted.displayName,
-      currentGrade: promoted.currentGrade,
-      lastPromotionYear: promoted.lastPromotionYear,
+    return mapStoredDraftToHouseholdStudentMe(promoted);
+  }
+
+  async addHouseholdStudent(
+    cognitoSub: string,
+    dto: AddHouseholdStudentDto,
+  ): Promise<HouseholdStudentMe[]> {
+    const row = await this.usersService.findOneByCognitoSub(cognitoSub);
+    if (!row || row.deleted) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (
+      row.accountType !== AccountType.Adult ||
+      row.ageBandAtRegistration !== AgeBandAtRegistration.Adult18Plus
+    ) {
+      throw new ForbiddenException(
+        'Only adult users may manage household students',
+      );
+    }
+
+    const newDraft = {
+      studentDraftId: randomUUID(),
+      displayName: dto.displayName.trim(),
+      currentGrade: dto.currentGrade,
+      lastPromotionYear: new Date().getFullYear(),
+      archivedAt: null as Date | null,
     };
+
+    const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
+      $push: { householdStudentDrafts: newDraft },
+    });
+
+    if (!updated) {
+      throw new InternalServerErrorException(
+        'Failed to add household student',
+      );
+    }
+
+    return (updated.householdStudentDrafts ?? []).map((d) =>
+      mapStoredDraftToHouseholdStudentMe(d),
+    );
+  }
+
+  async archiveHouseholdStudent(
+    cognitoSub: string,
+    studentDraftId: string,
+  ): Promise<HouseholdStudentMe[]> {
+    const row = await this.usersService.findOneByCognitoSub(cognitoSub);
+    if (!row || row.deleted) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (
+      row.accountType !== AccountType.Adult ||
+      row.ageBandAtRegistration !== AgeBandAtRegistration.Adult18Plus
+    ) {
+      throw new ForbiddenException(
+        'Only adult users may manage household students',
+      );
+    }
+
+    const drafts = [...(row.householdStudentDrafts ?? [])];
+    const idx = drafts.findIndex((d) => d.studentDraftId === studentDraftId);
+    if (idx < 0) {
+      throw new NotFoundException('Student draft not found');
+    }
+
+    const archivedAt = new Date();
+    const nextDrafts = drafts.map((d, i) =>
+      i === idx ? { ...d, archivedAt } : d,
+    );
+
+    const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
+      $set: { householdStudentDrafts: nextDrafts },
+    });
+
+    if (!updated) {
+      throw new InternalServerErrorException(
+        'Failed to archive household student',
+      );
+    }
+
+    return (updated.householdStudentDrafts ?? []).map((d) =>
+      mapStoredDraftToHouseholdStudentMe(d),
+    );
+  }
+
+  async restoreHouseholdStudent(
+    cognitoSub: string,
+    studentDraftId: string,
+  ): Promise<HouseholdStudentMe[]> {
+    const row = await this.usersService.findOneByCognitoSub(cognitoSub);
+    if (!row || row.deleted) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (
+      row.accountType !== AccountType.Adult ||
+      row.ageBandAtRegistration !== AgeBandAtRegistration.Adult18Plus
+    ) {
+      throw new ForbiddenException(
+        'Only adult users may manage household students',
+      );
+    }
+
+    const drafts = [...(row.householdStudentDrafts ?? [])];
+    const idx = drafts.findIndex((d) => d.studentDraftId === studentDraftId);
+    if (idx < 0) {
+      throw new NotFoundException('Student draft not found');
+    }
+
+    const nextDrafts = drafts.map((d, i) =>
+      i === idx ? { ...d, archivedAt: null } : d,
+    );
+
+    const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
+      $set: { householdStudentDrafts: nextDrafts },
+    });
+
+    if (!updated) {
+      throw new InternalServerErrorException(
+        'Failed to restore household student',
+      );
+    }
+
+    return (updated.householdStudentDrafts ?? []).map((d) =>
+      mapStoredDraftToHouseholdStudentMe(d),
+    );
   }
 
   /**

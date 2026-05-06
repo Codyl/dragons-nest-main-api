@@ -38,6 +38,16 @@ export class GetMeResponseDto {
     displayName: string;
     currentGrade: number;
     lastPromotionYear: number;
+    archivedAt?: string | null;
+  }[];
+
+  /** All drafts including archived (adults only); used by Child Accounts settings. */
+  householdStudentDraftsAll?: {
+    studentDraftId: string;
+    displayName: string;
+    currentGrade: number;
+    lastPromotionYear: number;
+    archivedAt?: string | null;
   }[];
 
   // Allow arbitrary string keys for additional Cognito attributes.

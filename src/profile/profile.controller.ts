@@ -42,6 +42,7 @@ import { WebAuthnRegisterCompleteDto } from './dto/webauthn-register-complete.dt
 import { WebAuthnDeleteCredentialDto } from './dto/webauthn-delete-credential.dto';
 import type { WebAuthnCredentialListItemDto } from './dto/out/webauthn-credential-list-item.dto';
 import { AddTeachableCourseDto } from './dto/add-teachable-course.dto';
+import { AddHouseholdStudentDto } from './dto/add-household-student.dto';
 import type { TeachableCourseResponseItem } from './profile.service';
 
 @ApiCookieAuth('ACCESS_TOKEN')
@@ -192,6 +193,111 @@ export class ProfileController {
     return {
       message: 'Student grade updated',
       data,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Adds a new household student draft for the authenticated adult user',
+  })
+  @ApiBadRequestResponse({
+    description: 'Validation failed (displayName or currentGrade).',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'User is not an adult (accountType or ageBandAtRegistration mismatch).',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @Post('household-students')
+  async addHouseholdStudent(
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
+    @Body() dto: AddHouseholdStudentDto,
+  ): Promise<
+    ApiResponseDto<{ householdStudentDrafts: HouseholdStudentMe[] }>
+  > {
+    const cognitoSub = user?.sub;
+    if (!cognitoSub || typeof cognitoSub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    const householdStudentDrafts =
+      await this.profileService.addHouseholdStudent(cognitoSub, dto);
+    return {
+      message: 'Student added',
+      data: { householdStudentDrafts },
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Archives a household student draft (soft-delete; retained for restore)',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'User is not an adult (accountType or ageBandAtRegistration mismatch).',
+  })
+  @ApiNotFoundResponse({
+    description: 'Student draft id not found on this user.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @Patch('household-students/:studentDraftId/archive')
+  async archiveHouseholdStudent(
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
+    @Param('studentDraftId') studentDraftId: string,
+  ): Promise<
+    ApiResponseDto<{ householdStudentDrafts: HouseholdStudentMe[] }>
+  > {
+    const cognitoSub = user?.sub;
+    if (!cognitoSub || typeof cognitoSub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    const householdStudentDrafts =
+      await this.profileService.archiveHouseholdStudent(
+        cognitoSub,
+        studentDraftId,
+      );
+    return {
+      message: 'Student archived',
+      data: { householdStudentDrafts },
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Restores an archived household student draft',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'User is not an adult (accountType or ageBandAtRegistration mismatch).',
+  })
+  @ApiNotFoundResponse({
+    description: 'Student draft id not found on this user.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @Patch('household-students/:studentDraftId/restore')
+  async restoreHouseholdStudent(
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
+    @Param('studentDraftId') studentDraftId: string,
+  ): Promise<
+    ApiResponseDto<{ householdStudentDrafts: HouseholdStudentMe[] }>
+  > {
+    const cognitoSub = user?.sub;
+    if (!cognitoSub || typeof cognitoSub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    const householdStudentDrafts =
+      await this.profileService.restoreHouseholdStudent(
+        cognitoSub,
+        studentDraftId,
+      );
+    return {
+      message: 'Student restored',
+      data: { householdStudentDrafts },
     };
   }
 
