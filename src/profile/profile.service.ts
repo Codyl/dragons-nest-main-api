@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -25,10 +26,21 @@ import { MAXMIND_KEY } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
 import { DeleteMeDto } from './dto/delete-me.dto';
 import { AccountSetupDto } from './dto/account-setup.dto';
+import { AddTeachableCourseDto } from './dto/add-teachable-course.dto';
 import { AccountType } from 'src/users/enums/account-type.enum';
 import { AgeBandAtRegistration } from 'src/users/enums/age-band-at-registration.enum';
 import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
 import { Types } from 'mongoose';
+
+export type TeachableCourseResponseItem = {
+  className: string;
+  subjectId: string;
+  matchesAllGrades: boolean;
+  grades: string[];
+  curriculum: string;
+  maxStudents: number;
+  activeEnrollmentCount: number;
+};
 
 export type HouseholdStudentMe = {
   studentDraftId: string;
@@ -46,7 +58,8 @@ export interface GetMeData {
     | null
     | undefined
     | AccountStatus
-    | HouseholdStudentMe[];
+    | HouseholdStudentMe[]
+    | TeachableCourseResponseItem[];
   loginMethods: string[];
   hasPassword: boolean;
   hasPasskey: boolean;
@@ -62,6 +75,7 @@ export interface GetMeData {
   accountStatus?: AccountStatus | null;
   ageBandAtRegistration?: string | null;
   householdStudents?: HouseholdStudentMe[];
+  teachableCourses?: TeachableCourseResponseItem[];
 }
 
 function firstLoggedInAtToIso(value: Date | null | undefined): string | null {
@@ -186,6 +200,79 @@ export class ProfileService {
           }))
         : undefined;
 
+    // Compute activeEnrollmentCount for each teachable course when user is an adult
+    let teachableCourses: TeachableCourseResponseItem[] | undefined;
+    if (user.accountType === AccountType.Adult) {
+      const rawCourses = (user.teachableCourses ?? []) as Array<{
+        _id?: Types.ObjectId;
+        className?: string;
+        subjectId?: Types.ObjectId;
+        matchesAllGrades?: boolean;
+        grades?: string[];
+        curriculum?: string;
+        maxStudents?: number;
+      }>;
+
+      const linkedStudentIds = user.linkedStudents ?? [];
+
+      // Fetch all linked students once
+      const studentDocs = await Promise.all(
+        linkedStudentIds.map((id) => this.usersService.findOneById(id)),
+      );
+
+      teachableCourses = rawCourses.map((course) => {
+        const courseId = course._id;
+        let activeEnrollmentCount = 0;
+
+        if (courseId) {
+          for (const student of studentDocs) {
+            if (!student || student.deleted) {
+              continue;
+            }
+
+            const addedClasses = (student.addedClasses ?? []) as Array<{
+              adult?: Types.ObjectId;
+              course?: Types.ObjectId | { _id?: Types.ObjectId };
+            }>;
+
+            const hasEnrollment = addedClasses.some((cls) => {
+              const adultMatches =
+                cls.adult && user._id && cls.adult.equals(user._id);
+              if (!adultMatches) {
+                return false;
+              }
+
+              const courseRef = cls.course;
+              if (!courseRef) {
+                return false;
+              }
+
+              if (courseRef instanceof Types.ObjectId) {
+                return courseRef.equals(courseId);
+              }
+
+              const refId = (courseRef as { _id?: Types.ObjectId })._id;
+              return refId ? refId.equals(courseId) : false;
+            });
+
+            if (hasEnrollment) {
+              activeEnrollmentCount++;
+            }
+          }
+        }
+
+        return {
+          className: course.className ?? '',
+          subjectId: course.subjectId ? course.subjectId.toString() : '',
+          matchesAllGrades: course.matchesAllGrades ?? false,
+          grades: course.grades ?? [],
+          curriculum: course.curriculum ?? '',
+          maxStudents: course.maxStudents ?? 0,
+          activeEnrollmentCount,
+        };
+      });
+    }
+
     return {
       ...attributes,
       loginMethods,
@@ -207,6 +294,7 @@ export class ProfileService {
       accountStatus,
       ageBandAtRegistration: user.ageBandAtRegistration ?? null,
       ...(householdStudents !== undefined ? { householdStudents } : {}),
+      ...(teachableCourses !== undefined ? { teachableCourses } : {}),
     };
   }
 
@@ -479,7 +567,236 @@ export class ProfileService {
     };
   }
 
-  private resolveAgeBandFromAccountSetup(dto: AccountSetupDto): AgeBandAtRegistration {
+  /**
+   * Appends a new teachable course to the authenticated adult user's
+   * `teachableCourses` array using an atomic `$push` operation.
+   *
+   * Throws `NotFoundException` if the user is not found.
+   * Throws `ForbiddenException` if the user is not an adult (accountType !== 'adult'
+   * or ageBandAtRegistration !== 'ADULT_18_PLUS').
+   */
+  async addTeachableCourse(
+    cognitoSub: string,
+    dto: AddTeachableCourseDto,
+  ): Promise<TeachableCourseResponseItem[]> {
+    const row = await this.usersService.findOneByCognitoSub(cognitoSub);
+    if (!row || row.deleted) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (
+      row.accountType !== AccountType.Adult ||
+      row.ageBandAtRegistration !== AgeBandAtRegistration.Adult18Plus
+    ) {
+      throw new ForbiddenException(
+        'Only adult users may manage teachable courses',
+      );
+    }
+
+    const newCourse = {
+      className: dto.className.trim(),
+      subjectId: new Types.ObjectId(dto.subjectId),
+      matchesAllGrades: dto.matchesAllGrades,
+      grades: dto.matchesAllGrades ? [] : [...dto.grades],
+      curriculum: dto.curriculum,
+      maxStudents: dto.maxStudents,
+    };
+
+    const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
+      $push: { teachableCourses: newCourse },
+    });
+
+    if (!updated) {
+      throw new InternalServerErrorException('Failed to add teachable course');
+    }
+
+    const courses = (updated.teachableCourses ?? []) as Array<{
+      className?: string;
+      subjectId?: Types.ObjectId;
+      matchesAllGrades?: boolean;
+      grades?: string[];
+      curriculum?: string;
+      maxStudents?: number;
+    }>;
+
+    return courses.map((c) => ({
+      className: c.className ?? '',
+      subjectId: c.subjectId ? c.subjectId.toString() : '',
+      matchesAllGrades: c.matchesAllGrades ?? false,
+      grades: c.grades ?? [],
+      curriculum: c.curriculum ?? '',
+      maxStudents: c.maxStudents ?? 0,
+      activeEnrollmentCount: 0,
+    }));
+  }
+
+  /**
+   * Removes the teachable course at the given zero-based index from the
+   * authenticated adult user's `teachableCourses` array.
+   *
+   * - Throws `NotFoundException` if the user is not found or deleted.
+   * - Throws `ForbiddenException` if the user is not an adult.
+   * - Throws `BadRequestException` if `index` is negative, non-integer, or ≥
+   *   `teachableCourses.length`.
+   * - When active enrollments exist for the course, records one
+   *   `NotificationEvent` per affected parent before removing.
+   * - Returns the updated `teachableCourses` array with `activeEnrollmentCount`
+   *   set to 0 for all remaining courses (full computation deferred to Task 5).
+   */
+  async removeTeachableCourse(
+    cognitoSub: string,
+    index: number,
+  ): Promise<TeachableCourseResponseItem[]> {
+    const row = await this.usersService.findOneByCognitoSub(cognitoSub);
+    if (!row || row.deleted) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (
+      row.accountType !== AccountType.Adult ||
+      row.ageBandAtRegistration !== AgeBandAtRegistration.Adult18Plus
+    ) {
+      throw new ForbiddenException(
+        'Only adult users may manage teachable courses',
+      );
+    }
+
+    // Validate index
+    if (!Number.isInteger(index) || index < 0) {
+      throw new BadRequestException('Index must be a non-negative integer');
+    }
+
+    const courses = (row.teachableCourses ?? []) as Array<{
+      _id?: Types.ObjectId;
+      className?: string;
+      subjectId?: Types.ObjectId;
+      matchesAllGrades?: boolean;
+      grades?: string[];
+      curriculum?: string;
+      maxStudents?: number;
+    }>;
+
+    if (index >= courses.length) {
+      throw new BadRequestException('Index out of range');
+    }
+
+    const courseToRemove = courses[index]!;
+    const courseId = courseToRemove._id;
+
+    // Detect active enrollments: check each linked student's addedClasses
+    const linkedStudentIds = row.linkedStudents ?? [];
+    const newNotificationEvents: {
+      type: 'COURSE_REMOVED';
+      recipientUserId: string;
+      payload: unknown;
+      createdAt: Date;
+    }[] = [];
+
+    if (courseId) {
+      for (const studentId of linkedStudentIds) {
+        const student = await this.usersService.findOneById(studentId);
+        if (!student || student.deleted) {
+          continue;
+        }
+
+        const addedClasses = (student.addedClasses ?? []) as Array<{
+          adult?: Types.ObjectId;
+          course?: Types.ObjectId | { _id?: Types.ObjectId };
+        }>;
+
+        const hasEnrollment = addedClasses.some((cls) => {
+          // Check adult matches
+          const adultMatches =
+            cls.adult && row._id && cls.adult.equals(row._id);
+          if (!adultMatches) {
+            return false;
+          }
+
+          // Check course matches — course may be an ObjectId or a populated object
+          const courseRef = cls.course;
+          if (!courseRef) {
+            return false;
+          }
+
+          if (courseRef instanceof Types.ObjectId) {
+            return courseRef.equals(courseId);
+          }
+
+          // Populated object with _id
+          const refId = (courseRef as { _id?: Types.ObjectId })._id;
+          return refId ? refId.equals(courseId) : false;
+        });
+
+        if (hasEnrollment) {
+          // Find the parent of this student to notify
+          const parentId = student.parentId;
+          if (parentId) {
+            newNotificationEvents.push({
+              type: 'COURSE_REMOVED',
+              recipientUserId: parentId.toString(),
+              payload: {
+                adultUserId: row._id.toString(),
+                courseClassName: courseToRemove.className ?? '',
+                courseSubjectId: courseToRemove.subjectId
+                  ? courseToRemove.subjectId.toString()
+                  : '',
+              },
+              createdAt: new Date(),
+            });
+          }
+        }
+      }
+    }
+
+    // Build the new courses array without the element at index
+    const newCourses = courses.filter((_, i) => i !== index);
+
+    // Build the $set update
+    const setPayload: Record<string, unknown> = {
+      teachableCourses: newCourses,
+    };
+
+    if (newNotificationEvents.length > 0) {
+      const existingEvents = row.notificationEvents ?? [];
+      setPayload['notificationEvents'] = [
+        ...existingEvents,
+        ...newNotificationEvents,
+      ];
+    }
+
+    const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
+      $set: setPayload,
+    });
+
+    if (!updated) {
+      throw new InternalServerErrorException(
+        'Failed to remove teachable course',
+      );
+    }
+
+    const updatedCourses = (updated.teachableCourses ?? []) as Array<{
+      className?: string;
+      subjectId?: Types.ObjectId;
+      matchesAllGrades?: boolean;
+      grades?: string[];
+      curriculum?: string;
+      maxStudents?: number;
+    }>;
+
+    return updatedCourses.map((c) => ({
+      className: c.className ?? '',
+      subjectId: c.subjectId ? c.subjectId.toString() : '',
+      matchesAllGrades: c.matchesAllGrades ?? false,
+      grades: c.grades ?? [],
+      curriculum: c.curriculum ?? '',
+      maxStudents: c.maxStudents ?? 0,
+      activeEnrollmentCount: 0,
+    }));
+  }
+
+  private resolveAgeBandFromAccountSetup(
+    dto: AccountSetupDto,
+  ): AgeBandAtRegistration {
     const path = dto.onboardingExpectedBand;
 
     if (dto.accountType === AccountType.Adult) {

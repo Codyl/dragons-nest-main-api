@@ -350,6 +350,24 @@ export class User extends Document {
 
   @Prop({ type: [EnrolledClassSchema], default: [] })
   addedClasses?: EnrolledClass[];
+
+  @Prop({
+    type: [
+      {
+        type: { type: String, enum: ['COURSE_REMOVED'], required: true },
+        recipientUserId: { type: String, required: true },
+        payload: { type: mongoose.Schema.Types.Mixed, required: true },
+        createdAt: { type: Date, required: true },
+      },
+    ],
+    default: [],
+  })
+  notificationEvents?: {
+    type: 'COURSE_REMOVED';
+    recipientUserId: string;
+    payload: unknown;
+    createdAt: Date;
+  }[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

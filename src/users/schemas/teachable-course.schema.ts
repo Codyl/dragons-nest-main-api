@@ -7,8 +7,12 @@ import { HomeschoolCurriculum } from '../enums/homeschool-curriculum.enum';
 /**
  * Embedded course descriptor: catalog subject from {@link Subject};
  * grade and curriculum are fixed enums. Not a standalone collection.
+ *
+ * `_id: true` is intentional — each embedded course gets a stable ObjectId
+ * so that enrollment records can reference it by ID for active-enrollment
+ * count lookups.
  */
-@Schema({ _id: false })
+@Schema({ _id: true })
 export class TeachableCourse {
   @ApiProperty({
     description: 'Display name for this offering (from onboarding).',

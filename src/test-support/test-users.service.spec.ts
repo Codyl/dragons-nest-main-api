@@ -73,7 +73,9 @@ describe('TestUsersService', () => {
   });
 
   it('should swallow UserNotFoundException (idempotent reset)', async () => {
-    send.mockRejectedValueOnce(new UserNotFoundException({ message: 'x' }));
+    send.mockRejectedValueOnce(
+      new UserNotFoundException({ message: 'x', $metadata: {} }),
+    );
 
     await expect(service.resetTestUsers()).resolves.toBeUndefined();
     expect(deleteAllUsers).not.toHaveBeenCalled();

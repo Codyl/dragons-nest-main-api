@@ -41,6 +41,8 @@ import type { KnownDeviceResponseDto } from './dto/out/known-device-response.dto
 import { WebAuthnRegisterCompleteDto } from './dto/webauthn-register-complete.dto';
 import { WebAuthnDeleteCredentialDto } from './dto/webauthn-delete-credential.dto';
 import type { WebAuthnCredentialListItemDto } from './dto/out/webauthn-credential-list-item.dto';
+import { AddTeachableCourseDto } from './dto/add-teachable-course.dto';
+import type { TeachableCourseResponseItem } from './profile.service';
 
 @ApiCookieAuth('ACCESS_TOKEN')
 @Controller('profile')
@@ -577,6 +579,77 @@ export class ProfileController {
     return {
       message: 'User deleted successfully',
       data: {},
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Adds a new teachable course to the authenticated adult user',
+  })
+  @ApiBadRequestResponse({
+    description: 'Request body failed validation or user is not an adult.',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'User is not an adult (accountType or ageBandAtRegistration mismatch).',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @Patch('teachable-courses')
+  async addTeachableCourse(
+    @CurrentUser() currentUser: Record<string, unknown> & { sub?: string },
+    @Body() dto: AddTeachableCourseDto,
+  ): Promise<
+    ApiResponseDto<{ teachableCourses: TeachableCourseResponseItem[] }>
+  > {
+    const cognitoSub = currentUser?.sub;
+    if (!cognitoSub || typeof cognitoSub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    const result = await this.profileService.addTeachableCourse(
+      cognitoSub,
+      dto,
+    );
+    return {
+      message: 'Teachable course added',
+      data: { teachableCourses: result },
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      'Removes a teachable course at the given index from the authenticated adult user',
+  })
+  @ApiBadRequestResponse({
+    description: 'Index is invalid (negative, non-integer, or out of range).',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'User is not an adult (accountType or ageBandAtRegistration mismatch).',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @Delete('teachable-courses/:index')
+  async removeTeachableCourse(
+    @CurrentUser() currentUser: Record<string, unknown> & { sub?: string },
+    @Param('index') index: string,
+  ): Promise<
+    ApiResponseDto<{ teachableCourses: TeachableCourseResponseItem[] }>
+  > {
+    const cognitoSub = currentUser?.sub;
+    if (!cognitoSub || typeof cognitoSub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    const result = await this.profileService.removeTeachableCourse(
+      cognitoSub,
+      parseInt(index, 10),
+    );
+    return {
+      message: 'Teachable course removed',
+      data: { teachableCourses: result },
     };
   }
 

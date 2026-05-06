@@ -179,6 +179,21 @@ export interface UserDoc {
     currentGrade: number;
     lastPromotionYear: number;
   }[];
+  teachableCourses?: {
+    _id?: Types.ObjectId;
+    className?: string;
+    subjectId?: Types.ObjectId;
+    matchesAllGrades?: boolean;
+    grades?: string[];
+    curriculum?: string;
+    maxStudents?: number;
+  }[];
+  notificationEvents?: {
+    type: 'COURSE_REMOVED';
+    recipientUserId: string;
+    payload: unknown;
+    createdAt: Date;
+  }[];
 }
 
 export type CreateUserInput = {

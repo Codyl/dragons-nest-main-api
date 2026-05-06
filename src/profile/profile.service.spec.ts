@@ -992,3 +992,1261 @@ describe('ProfileService', () => {
     });
   });
 });
+
+// Feature: manage-teachable-subjects, Property 10: PATCH endpoint rejects invalid payloads
+describe('Property 10: AddTeachableCourseDto rejects invalid payloads', () => {
+  // We test DTO validation directly using class-validator's validate() function,
+  // which mirrors what NestJS ValidationPipe does before the service is called.
+  // Invalid payloads must produce validation errors (HTTP 400 in the real endpoint).
+
+  const { validate } =
+    require('class-validator') as typeof import('class-validator');
+  const { plainToInstance } =
+    require('class-transformer') as typeof import('class-transformer');
+  const fc = require('fast-check') as typeof import('fast-check');
+  const { AddTeachableCourseDto } =
+    require('./dto/add-teachable-course.dto') as typeof import('./dto/add-teachable-course.dto');
+  const { HomeschoolCurriculum } =
+    require('src/users/enums/homeschool-curriculum.enum') as typeof import('src/users/enums/homeschool-curriculum.enum');
+  const { HomeschoolGrade } =
+    require('src/users/enums/homeschool-grade.enum') as typeof import('src/users/enums/homeschool-grade.enum');
+
+  const validCurriculumValues = Object.values(HomeschoolCurriculum);
+  const validGradeValues = Object.values(HomeschoolGrade);
+  const validMongoId = '507f1f77bcf86cd799439011';
+
+  /** Build a valid DTO plain object to use as a baseline. */
+  function validBase() {
+    return {
+      className: 'Math 101',
+      subjectId: validMongoId,
+      matchesAllGrades: true,
+      grades: [],
+      curriculum: HomeschoolCurriculum.Saxon,
+      maxStudents: 10,
+    };
+  }
+
+  async function expectInvalid(plain: Record<string, unknown>): Promise<void> {
+    const dto = plainToInstance(AddTeachableCourseDto, plain);
+    const errors = await validate(dto);
+    expect(errors.length).toBeGreaterThan(0);
+  }
+
+  it('property: missing className produces validation errors', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          subjectId: fc.constant(validMongoId),
+          matchesAllGrades: fc.boolean(),
+          grades: fc.constant([]),
+          curriculum: fc.constantFrom(...validCurriculumValues),
+          maxStudents: fc.integer({ min: 1, max: 20 }),
+        }),
+        async (partial) => {
+          // className is intentionally omitted
+          await expectInvalid(partial as Record<string, unknown>);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('property: missing subjectId produces validation errors', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          className: fc.string({ minLength: 1, maxLength: 256 }),
+          matchesAllGrades: fc.boolean(),
+          grades: fc.constant([]),
+          curriculum: fc.constantFrom(...validCurriculumValues),
+          maxStudents: fc.integer({ min: 1, max: 20 }),
+        }),
+        async (partial) => {
+          // subjectId is intentionally omitted
+          await expectInvalid(partial as Record<string, unknown>);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('property: invalid curriculum enum value produces validation errors', async () => {
+    // Generate strings that are NOT valid HomeschoolCurriculum values
+    const invalidCurriculumArb = fc
+      .string({ minLength: 1, maxLength: 50 })
+      .filter((s) => !(validCurriculumValues as string[]).includes(s));
+
+    await fc.assert(
+      fc.asyncProperty(invalidCurriculumArb, async (badCurriculum) => {
+        const plain = { ...validBase(), curriculum: badCurriculum };
+        await expectInvalid(plain);
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it('property: maxStudents = 0 produces validation errors', async () => {
+    await fc.assert(
+      fc.asyncProperty(fc.constant(0), async (maxStudents) => {
+        const plain = { ...validBase(), maxStudents };
+        await expectInvalid(plain);
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it('property: maxStudents negative produces validation errors', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: -10000, max: -1 }),
+        async (maxStudents) => {
+          const plain = { ...validBase(), maxStudents };
+          await expectInvalid(plain);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('property: maxStudents > 20 produces validation errors', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 21, max: 10000 }),
+        async (maxStudents) => {
+          const plain = { ...validBase(), maxStudents };
+          await expectInvalid(plain);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('property: missing matchesAllGrades produces validation errors', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          className: fc.string({ minLength: 1, maxLength: 256 }),
+          subjectId: fc.constant(validMongoId),
+          grades: fc.constant([]),
+          curriculum: fc.constantFrom(...validCurriculumValues),
+          maxStudents: fc.integer({ min: 1, max: 20 }),
+        }),
+        async (partial) => {
+          // matchesAllGrades is intentionally omitted
+          await expectInvalid(partial as Record<string, unknown>);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('property: empty className (length 0) produces validation errors', async () => {
+    await fc.assert(
+      fc.asyncProperty(fc.constant(''), async (emptyName) => {
+        const plain = { ...validBase(), className: emptyName };
+        await expectInvalid(plain);
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it('property: non-boolean matchesAllGrades produces validation errors', async () => {
+    const nonBooleanArb = fc.oneof(
+      fc.integer(),
+      fc.string(),
+      fc.constant(null),
+    );
+
+    await fc.assert(
+      fc.asyncProperty(nonBooleanArb, async (badValue) => {
+        const plain = { ...validBase(), matchesAllGrades: badValue };
+        await expectInvalid(plain);
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it('property: grades non-empty when matchesAllGrades=true produces validation errors', async () => {
+    // When matchesAllGrades is true, grades must be empty per TeachableCourseGradesConstraint
+    const nonEmptyGradesArb = fc.array(fc.constantFrom(...validGradeValues), {
+      minLength: 1,
+      maxLength: 5,
+    });
+
+    await fc.assert(
+      fc.asyncProperty(nonEmptyGradesArb, async (grades) => {
+        const plain = { ...validBase(), matchesAllGrades: true, grades };
+        await expectInvalid(plain);
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it('property: grades empty when matchesAllGrades=false produces validation errors', async () => {
+    // When matchesAllGrades is false, grades must have at least one entry
+    await fc.assert(
+      fc.asyncProperty(fc.constant([]), async (grades) => {
+        const plain = { ...validBase(), matchesAllGrades: false, grades };
+        await expectInvalid(plain);
+      }),
+      { numRuns: 100 },
+    );
+  });
+});
+
+// Feature: manage-teachable-subjects, Property 9: PATCH endpoint appends course (round-trip)
+// Validates: Requirements 7.1, 7.8
+describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
+  const fc = require('fast-check') as typeof import('fast-check');
+  const { HomeschoolCurriculum } =
+    require('src/users/enums/homeschool-curriculum.enum') as typeof import('src/users/enums/homeschool-curriculum.enum');
+  const { HomeschoolGrade } =
+    require('src/users/enums/homeschool-grade.enum') as typeof import('src/users/enums/homeschool-grade.enum');
+  const { Test } =
+    require('@nestjs/testing') as typeof import('@nestjs/testing');
+  const { ProfileService } =
+    require('./profile.service') as typeof import('./profile.service');
+  const { CognitoService } =
+    require('src/cognito/cognito.service') as typeof import('src/cognito/cognito.service');
+  const { UsersService } =
+    require('src/users/users.service') as typeof import('src/users/users.service');
+  const { GoogleService } =
+    require('src/google/google.service') as typeof import('src/google/google.service');
+  const { MaxmindService } =
+    require('src/maxmind/maxmind.service') as typeof import('src/maxmind/maxmind.service');
+  const { ConfigService } =
+    require('@nestjs/config') as typeof import('@nestjs/config');
+  const { Types } = require('mongoose') as typeof import('mongoose');
+  const { AccountType } =
+    require('src/users/enums/account-type.enum') as typeof import('src/users/enums/account-type.enum');
+  const { AgeBandAtRegistration } =
+    require('src/users/enums/age-band-at-registration.enum') as typeof import('src/users/enums/age-band-at-registration.enum');
+  const { MAXMIND_KEY } =
+    require('src/env.constants') as typeof import('src/env.constants');
+
+  const validCurriculumValues = Object.values(HomeschoolCurriculum);
+  const validGradeValues = Object.values(HomeschoolGrade);
+  const validMongoId = '507f1f77bcf86cd799439011';
+
+  /** Arbitrary for a valid AddTeachableCourseDto plain object. */
+  function arbitraryAddTeachableCourseDto() {
+    return fc.boolean().chain((matchesAllGrades) => {
+      const gradesArb = matchesAllGrades
+        ? fc.constant([] as string[])
+        : fc.array(fc.constantFrom(...validGradeValues), { minLength: 1 });
+
+      return fc.record({
+        className: fc.string({ minLength: 1, maxLength: 256 }),
+        subjectId: fc.constant(validMongoId),
+        matchesAllGrades: fc.constant(matchesAllGrades),
+        grades: gradesArb,
+        curriculum: fc.constantFrom(...validCurriculumValues),
+        maxStudents: fc.integer({ min: 1, max: 20 }),
+      });
+    });
+  }
+
+  /** Arbitrary for a single existing teachable course (as stored in the DB). */
+  function arbitraryExistingCourse() {
+    return fc.boolean().chain((matchesAllGrades) => {
+      const gradesArb = matchesAllGrades
+        ? fc.constant([] as string[])
+        : fc.array(fc.constantFrom(...validGradeValues), { minLength: 1 });
+
+      return fc.record({
+        className: fc.string({ minLength: 1, maxLength: 256 }),
+        subjectId: fc.constant(new Types.ObjectId(validMongoId)),
+        matchesAllGrades: fc.constant(matchesAllGrades),
+        grades: gradesArb,
+        curriculum: fc.constantFrom(...validCurriculumValues),
+        maxStudents: fc.integer({ min: 1, max: 20 }),
+        activeEnrollmentCount: fc.constant(0),
+      });
+    });
+  }
+
+  it('property: returned array length = original length + 1 and last element matches DTO fields', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        arbitraryAddTeachableCourseDto(),
+        fc.array(arbitraryExistingCourse(), { minLength: 0, maxLength: 5 }),
+        async (dto, existingCourses) => {
+          // Build the NestJS testing module fresh for each run
+          const configGet = jest.fn();
+          const module = await Test.createTestingModule({
+            providers: [
+              ProfileService,
+              {
+                provide: CognitoService,
+                useValue: {
+                  getUser: jest.fn(),
+                  updateUserAttributes: jest.fn(),
+                  setUserMFAPreferenceWithSettings: jest.fn(),
+                  changePassword: jest.fn(),
+                  adminSetUserPassword: jest.fn(),
+                  authenticateWithSrp: jest.fn(),
+                  respondToSoftwareTokenMFAChallenge: jest.fn(),
+                  deleteUser: jest.fn(),
+                  adminLinkProviderForUser: jest.fn(),
+                  adminDisableProviderForUser: jest.fn(),
+                  listDevices: jest.fn(),
+                  updateDeviceStatus: jest.fn(),
+                  forgetDevice: jest.fn(),
+                  listWebAuthnCredentials: jest
+                    .fn()
+                    .mockResolvedValue({ Credentials: [] }),
+                },
+              },
+              {
+                provide: MaxmindService,
+                useValue: { getLocation: jest.fn() },
+              },
+              {
+                provide: GoogleService,
+                useValue: {
+                  googleTokenExchange: jest.fn(),
+                  googleSSOSignup: jest.fn(),
+                  verifyCredential: jest.fn(),
+                },
+              },
+              {
+                provide: UsersService,
+                useValue: {
+                  createUser: jest.fn(),
+                  findAll: jest.fn(),
+                  findOneById: jest.fn(),
+                  findOneByCognitoSub: jest.fn(),
+                  updateByCognitoSub: jest.fn(),
+                  addLinkGoogle: jest.fn(),
+                  removeLinkGoogle: jest.fn(),
+                },
+              },
+              {
+                provide: ConfigService,
+                useValue: {
+                  get: configGet,
+                  getOrThrow: jest.fn((key: string) => {
+                    const v = configGet(key);
+                    if (v !== undefined && v !== null) return v;
+                    if (key === MAXMIND_KEY) return '';
+                    throw new Error(`Missing configuration key: ${key}`);
+                  }),
+                },
+              },
+            ],
+          }).compile();
+
+          const svc =
+            module.get<InstanceType<typeof ProfileService>>(ProfileService);
+          const users = module.get(UsersService) as jest.Mocked<
+            InstanceType<typeof UsersService>
+          >;
+
+          const cognitoSub = 'test-sub';
+
+          // The user returned by findOneByCognitoSub is an adult with existing courses
+          const userDoc = {
+            _id: new Types.ObjectId(),
+            cognitoSub,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            deleted: false,
+            teachableCourses: existingCourses,
+          };
+          users.findOneByCognitoSub.mockResolvedValue(userDoc as never);
+
+          // The new course that will be appended (mirrors what the service builds)
+          const newCourse = {
+            className: dto.className.trim(),
+            subjectId: new Types.ObjectId(dto.subjectId),
+            matchesAllGrades: dto.matchesAllGrades,
+            grades: dto.matchesAllGrades ? [] : [...dto.grades],
+            curriculum: dto.curriculum,
+            maxStudents: dto.maxStudents,
+            activeEnrollmentCount: 0,
+          };
+
+          // updateByCognitoSub returns the user with the new course appended
+          const updatedCourses = [...existingCourses, newCourse];
+          users.updateByCognitoSub.mockResolvedValue({
+            ...userDoc,
+            teachableCourses: updatedCourses,
+          } as never);
+
+          const result = await svc.addTeachableCourse(cognitoSub, dto as never);
+
+          // Assert: returned array length = original length + 1
+          expect(result).toHaveLength(existingCourses.length + 1);
+
+          // Assert: last element matches the DTO input fields
+          const last = result[result.length - 1]!;
+          expect(last.className).toBe(dto.className.trim());
+          expect(last.subjectId).toBe(validMongoId);
+          expect(last.matchesAllGrades).toBe(dto.matchesAllGrades);
+          expect(last.curriculum).toBe(dto.curriculum);
+          expect(last.maxStudents).toBe(dto.maxStudents);
+          if (dto.matchesAllGrades) {
+            expect(last.grades).toEqual([]);
+          } else {
+            expect(last.grades).toEqual(dto.grades);
+          }
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+});
+
+// Feature: manage-teachable-subjects, Property 11: DELETE endpoint removes course at index (round-trip)
+// Validates: Requirements 7.4, 7.8
+describe('Property 11: DELETE endpoint removes course at index (round-trip)', () => {
+  const fc = require('fast-check') as typeof import('fast-check');
+  const { HomeschoolCurriculum } =
+    require('src/users/enums/homeschool-curriculum.enum') as typeof import('src/users/enums/homeschool-curriculum.enum');
+  const { HomeschoolGrade } =
+    require('src/users/enums/homeschool-grade.enum') as typeof import('src/users/enums/homeschool-grade.enum');
+  const { Test } =
+    require('@nestjs/testing') as typeof import('@nestjs/testing');
+  const { ProfileService } =
+    require('./profile.service') as typeof import('./profile.service');
+  const { CognitoService } =
+    require('src/cognito/cognito.service') as typeof import('src/cognito/cognito.service');
+  const { UsersService } =
+    require('src/users/users.service') as typeof import('src/users/users.service');
+  const { GoogleService } =
+    require('src/google/google.service') as typeof import('src/google/google.service');
+  const { MaxmindService } =
+    require('src/maxmind/maxmind.service') as typeof import('src/maxmind/maxmind.service');
+  const { ConfigService } =
+    require('@nestjs/config') as typeof import('@nestjs/config');
+  const { Types } = require('mongoose') as typeof import('mongoose');
+  const { AccountType } =
+    require('src/users/enums/account-type.enum') as typeof import('src/users/enums/account-type.enum');
+  const { AgeBandAtRegistration } =
+    require('src/users/enums/age-band-at-registration.enum') as typeof import('src/users/enums/age-band-at-registration.enum');
+  const { MAXMIND_KEY } =
+    require('src/env.constants') as typeof import('src/env.constants');
+
+  const validCurriculumValues = Object.values(HomeschoolCurriculum);
+  const validGradeValues = Object.values(HomeschoolGrade);
+  const validMongoId = '507f1f77bcf86cd799439011';
+
+  function arbitraryStoredCourse() {
+    return fc.boolean().chain((matchesAllGrades) => {
+      const gradesArb = matchesAllGrades
+        ? fc.constant([] as string[])
+        : fc.array(fc.constantFrom(...validGradeValues), { minLength: 1 });
+
+      return fc.record({
+        _id: fc.constant(new Types.ObjectId()),
+        className: fc.string({ minLength: 1, maxLength: 256 }),
+        subjectId: fc.constant(new Types.ObjectId(validMongoId)),
+        matchesAllGrades: fc.constant(matchesAllGrades),
+        grades: gradesArb,
+        curriculum: fc.constantFrom(...validCurriculumValues),
+        maxStudents: fc.integer({ min: 1, max: 20 }),
+      });
+    });
+  }
+
+  async function buildModule() {
+    const configGet = jest.fn();
+    const module = await Test.createTestingModule({
+      providers: [
+        ProfileService,
+        {
+          provide: CognitoService,
+          useValue: {
+            getUser: jest.fn(),
+            updateUserAttributes: jest.fn(),
+            setUserMFAPreferenceWithSettings: jest.fn(),
+            changePassword: jest.fn(),
+            adminSetUserPassword: jest.fn(),
+            authenticateWithSrp: jest.fn(),
+            respondToSoftwareTokenMFAChallenge: jest.fn(),
+            deleteUser: jest.fn(),
+            adminLinkProviderForUser: jest.fn(),
+            adminDisableProviderForUser: jest.fn(),
+            listDevices: jest.fn(),
+            updateDeviceStatus: jest.fn(),
+            forgetDevice: jest.fn(),
+            listWebAuthnCredentials: jest
+              .fn()
+              .mockResolvedValue({ Credentials: [] }),
+          },
+        },
+        { provide: MaxmindService, useValue: { getLocation: jest.fn() } },
+        {
+          provide: GoogleService,
+          useValue: {
+            googleTokenExchange: jest.fn(),
+            googleSSOSignup: jest.fn(),
+            verifyCredential: jest.fn(),
+          },
+        },
+        {
+          provide: UsersService,
+          useValue: {
+            createUser: jest.fn(),
+            findAll: jest.fn(),
+            findOneById: jest.fn(),
+            findOneByCognitoSub: jest.fn(),
+            updateByCognitoSub: jest.fn(),
+            addLinkGoogle: jest.fn(),
+            removeLinkGoogle: jest.fn(),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: configGet,
+            getOrThrow: jest.fn((key: string) => {
+              const v = configGet(key);
+              if (v !== undefined && v !== null) return v;
+              if (key === MAXMIND_KEY) return '';
+              throw new Error(`Missing configuration key: ${key}`);
+            }),
+          },
+        },
+      ],
+    }).compile();
+
+    return {
+      svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
+      users: module.get(UsersService) as jest.Mocked<
+        InstanceType<typeof UsersService>
+      >,
+    };
+  }
+
+  it('property: returned array length = original − 1 and removed course is absent', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc
+          .array(arbitraryStoredCourse(), { minLength: 1, maxLength: 10 })
+          .chain((courses) =>
+            fc.record({
+              courses: fc.constant(courses),
+              index: fc.integer({ min: 0, max: courses.length - 1 }),
+            }),
+          ),
+        async ({ courses, index }) => {
+          const { svc, users } = await buildModule();
+          const cognitoSub = 'test-sub';
+          const userId = new Types.ObjectId();
+
+          const userDoc = {
+            _id: userId,
+            cognitoSub,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            deleted: false,
+            teachableCourses: courses,
+            linkedStudents: [],
+            notificationEvents: [],
+          };
+          users.findOneByCognitoSub.mockResolvedValue(userDoc as never);
+
+          // The updated courses array after removal
+          const remainingCourses = courses.filter((_, i) => i !== index);
+          users.updateByCognitoSub.mockResolvedValue({
+            ...userDoc,
+            teachableCourses: remainingCourses,
+          } as never);
+
+          const result = await svc.removeTeachableCourse(cognitoSub, index);
+
+          // Assert: returned array length = original − 1
+          expect(result).toHaveLength(courses.length - 1);
+
+          // Assert: the course originally at `index` is absent from the result
+          const removedSubjectId = courses[index]!.subjectId.toString();
+          const removedClassName = courses[index]!.className;
+          // Check that the exact combination is not present (unless duplicates existed)
+          const removedCount = courses.filter(
+            (c, i) =>
+              i !== index &&
+              c.subjectId.toString() === removedSubjectId &&
+              c.className === removedClassName,
+          ).length;
+          const resultCount = result.filter(
+            (c) =>
+              c.subjectId === removedSubjectId &&
+              c.className === removedClassName,
+          ).length;
+          expect(resultCount).toBe(removedCount);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+});
+
+// Feature: manage-teachable-subjects, Property 12: DELETE endpoint rejects invalid indices
+// Validates: Requirements 7.5
+describe('Property 12: DELETE endpoint rejects invalid indices', () => {
+  const fc = require('fast-check') as typeof import('fast-check');
+  const { HomeschoolCurriculum } =
+    require('src/users/enums/homeschool-curriculum.enum') as typeof import('src/users/enums/homeschool-curriculum.enum');
+  const { HomeschoolGrade } =
+    require('src/users/enums/homeschool-grade.enum') as typeof import('src/users/enums/homeschool-grade.enum');
+  const { Test } =
+    require('@nestjs/testing') as typeof import('@nestjs/testing');
+  const { ProfileService } =
+    require('./profile.service') as typeof import('./profile.service');
+  const { CognitoService } =
+    require('src/cognito/cognito.service') as typeof import('src/cognito/cognito.service');
+  const { UsersService } =
+    require('src/users/users.service') as typeof import('src/users/users.service');
+  const { GoogleService } =
+    require('src/google/google.service') as typeof import('src/google/google.service');
+  const { MaxmindService } =
+    require('src/maxmind/maxmind.service') as typeof import('src/maxmind/maxmind.service');
+  const { ConfigService } =
+    require('@nestjs/config') as typeof import('@nestjs/config');
+  const { BadRequestException } =
+    require('@nestjs/common') as typeof import('@nestjs/common');
+  const { Types } = require('mongoose') as typeof import('mongoose');
+  const { AccountType } =
+    require('src/users/enums/account-type.enum') as typeof import('src/users/enums/account-type.enum');
+  const { AgeBandAtRegistration } =
+    require('src/users/enums/age-band-at-registration.enum') as typeof import('src/users/enums/age-band-at-registration.enum');
+  const { MAXMIND_KEY } =
+    require('src/env.constants') as typeof import('src/env.constants');
+
+  const validCurriculumValues = Object.values(HomeschoolCurriculum);
+  const validGradeValues = Object.values(HomeschoolGrade);
+  const validMongoId = '507f1f77bcf86cd799439011';
+
+  function arbitraryStoredCourse() {
+    return fc.boolean().chain((matchesAllGrades) => {
+      const gradesArb = matchesAllGrades
+        ? fc.constant([] as string[])
+        : fc.array(fc.constantFrom(...validGradeValues), { minLength: 1 });
+
+      return fc.record({
+        _id: fc.constant(new Types.ObjectId()),
+        className: fc.string({ minLength: 1, maxLength: 256 }),
+        subjectId: fc.constant(new Types.ObjectId(validMongoId)),
+        matchesAllGrades: fc.constant(matchesAllGrades),
+        grades: gradesArb,
+        curriculum: fc.constantFrom(...validCurriculumValues),
+        maxStudents: fc.integer({ min: 1, max: 20 }),
+      });
+    });
+  }
+
+  async function buildModule() {
+    const configGet = jest.fn();
+    const module = await Test.createTestingModule({
+      providers: [
+        ProfileService,
+        {
+          provide: CognitoService,
+          useValue: {
+            getUser: jest.fn(),
+            updateUserAttributes: jest.fn(),
+            setUserMFAPreferenceWithSettings: jest.fn(),
+            changePassword: jest.fn(),
+            adminSetUserPassword: jest.fn(),
+            authenticateWithSrp: jest.fn(),
+            respondToSoftwareTokenMFAChallenge: jest.fn(),
+            deleteUser: jest.fn(),
+            adminLinkProviderForUser: jest.fn(),
+            adminDisableProviderForUser: jest.fn(),
+            listDevices: jest.fn(),
+            updateDeviceStatus: jest.fn(),
+            forgetDevice: jest.fn(),
+            listWebAuthnCredentials: jest
+              .fn()
+              .mockResolvedValue({ Credentials: [] }),
+          },
+        },
+        { provide: MaxmindService, useValue: { getLocation: jest.fn() } },
+        {
+          provide: GoogleService,
+          useValue: {
+            googleTokenExchange: jest.fn(),
+            googleSSOSignup: jest.fn(),
+            verifyCredential: jest.fn(),
+          },
+        },
+        {
+          provide: UsersService,
+          useValue: {
+            createUser: jest.fn(),
+            findAll: jest.fn(),
+            findOneById: jest.fn(),
+            findOneByCognitoSub: jest.fn(),
+            updateByCognitoSub: jest.fn(),
+            addLinkGoogle: jest.fn(),
+            removeLinkGoogle: jest.fn(),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: configGet,
+            getOrThrow: jest.fn((key: string) => {
+              const v = configGet(key);
+              if (v !== undefined && v !== null) return v;
+              if (key === MAXMIND_KEY) return '';
+              throw new Error(`Missing configuration key: ${key}`);
+            }),
+          },
+        },
+      ],
+    }).compile();
+
+    return {
+      svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
+      users: module.get(UsersService) as jest.Mocked<
+        InstanceType<typeof UsersService>
+      >,
+    };
+  }
+
+  it('property: negative integers throw BadRequestException', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ max: -1 }),
+        fc.array(arbitraryStoredCourse(), { minLength: 0, maxLength: 5 }),
+        async (negativeIndex, courses) => {
+          const { svc, users } = await buildModule();
+          const cognitoSub = 'test-sub';
+
+          users.findOneByCognitoSub.mockResolvedValue({
+            _id: new Types.ObjectId(),
+            cognitoSub,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            deleted: false,
+            teachableCourses: courses,
+            linkedStudents: [],
+          } as never);
+
+          await expect(
+            svc.removeTeachableCourse(cognitoSub, negativeIndex),
+          ).rejects.toThrow(BadRequestException);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('property: non-integer numbers throw BadRequestException', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc
+          .float({
+            min: Math.fround(0.001),
+            max: Math.fround(1000),
+            noNaN: true,
+          })
+          .filter((n) => !Number.isInteger(n)),
+        fc.array(arbitraryStoredCourse(), { minLength: 1, maxLength: 5 }),
+        async (nonIntIndex, courses) => {
+          const { svc, users } = await buildModule();
+          const cognitoSub = 'test-sub';
+
+          users.findOneByCognitoSub.mockResolvedValue({
+            _id: new Types.ObjectId(),
+            cognitoSub,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            deleted: false,
+            teachableCourses: courses,
+            linkedStudents: [],
+          } as never);
+
+          await expect(
+            svc.removeTeachableCourse(cognitoSub, nonIntIndex),
+          ).rejects.toThrow(BadRequestException);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('property: index >= array length throws BadRequestException', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc
+          .array(arbitraryStoredCourse(), { minLength: 0, maxLength: 5 })
+          .chain((courses) =>
+            fc.record({
+              courses: fc.constant(courses),
+              // index is >= courses.length (out of range)
+              index: fc.integer({
+                min: courses.length,
+                max: courses.length + 100,
+              }),
+            }),
+          ),
+        async ({ courses, index }) => {
+          const { svc, users } = await buildModule();
+          const cognitoSub = 'test-sub';
+
+          users.findOneByCognitoSub.mockResolvedValue({
+            _id: new Types.ObjectId(),
+            cognitoSub,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            deleted: false,
+            teachableCourses: courses,
+            linkedStudents: [],
+          } as never);
+
+          await expect(
+            svc.removeTeachableCourse(cognitoSub, index),
+          ).rejects.toThrow(BadRequestException);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+});
+
+// Feature: manage-teachable-subjects, Property 13: DELETE with active enrollments produces notification events
+// Validates: Requirements 7.7
+describe('Property 13: DELETE with active enrollments produces notification events', () => {
+  const fc = require('fast-check') as typeof import('fast-check');
+  const { HomeschoolCurriculum } =
+    require('src/users/enums/homeschool-curriculum.enum') as typeof import('src/users/enums/homeschool-curriculum.enum');
+  const { Test } =
+    require('@nestjs/testing') as typeof import('@nestjs/testing');
+  const { ProfileService } =
+    require('./profile.service') as typeof import('./profile.service');
+  const { CognitoService } =
+    require('src/cognito/cognito.service') as typeof import('src/cognito/cognito.service');
+  const { UsersService } =
+    require('src/users/users.service') as typeof import('src/users/users.service');
+  const { GoogleService } =
+    require('src/google/google.service') as typeof import('src/google/google.service');
+  const { MaxmindService } =
+    require('src/maxmind/maxmind.service') as typeof import('src/maxmind/maxmind.service');
+  const { ConfigService } =
+    require('@nestjs/config') as typeof import('@nestjs/config');
+  const { Types } = require('mongoose') as typeof import('mongoose');
+  const { AccountType } =
+    require('src/users/enums/account-type.enum') as typeof import('src/users/enums/account-type.enum');
+  const { AgeBandAtRegistration } =
+    require('src/users/enums/age-band-at-registration.enum') as typeof import('src/users/enums/age-band-at-registration.enum');
+  const { MAXMIND_KEY } =
+    require('src/env.constants') as typeof import('src/env.constants');
+
+  const validCurriculumValues = Object.values(HomeschoolCurriculum);
+  const validMongoId = '507f1f77bcf86cd799439011';
+
+  async function buildModule() {
+    const configGet = jest.fn();
+    const module = await Test.createTestingModule({
+      providers: [
+        ProfileService,
+        {
+          provide: CognitoService,
+          useValue: {
+            getUser: jest.fn(),
+            updateUserAttributes: jest.fn(),
+            setUserMFAPreferenceWithSettings: jest.fn(),
+            changePassword: jest.fn(),
+            adminSetUserPassword: jest.fn(),
+            authenticateWithSrp: jest.fn(),
+            respondToSoftwareTokenMFAChallenge: jest.fn(),
+            deleteUser: jest.fn(),
+            adminLinkProviderForUser: jest.fn(),
+            adminDisableProviderForUser: jest.fn(),
+            listDevices: jest.fn(),
+            updateDeviceStatus: jest.fn(),
+            forgetDevice: jest.fn(),
+            listWebAuthnCredentials: jest
+              .fn()
+              .mockResolvedValue({ Credentials: [] }),
+          },
+        },
+        { provide: MaxmindService, useValue: { getLocation: jest.fn() } },
+        {
+          provide: GoogleService,
+          useValue: {
+            googleTokenExchange: jest.fn(),
+            googleSSOSignup: jest.fn(),
+            verifyCredential: jest.fn(),
+          },
+        },
+        {
+          provide: UsersService,
+          useValue: {
+            createUser: jest.fn(),
+            findAll: jest.fn(),
+            findOneById: jest.fn(),
+            findOneByCognitoSub: jest.fn(),
+            updateByCognitoSub: jest.fn(),
+            addLinkGoogle: jest.fn(),
+            removeLinkGoogle: jest.fn(),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: configGet,
+            getOrThrow: jest.fn((key: string) => {
+              const v = configGet(key);
+              if (v !== undefined && v !== null) return v;
+              if (key === MAXMIND_KEY) return '';
+              throw new Error(`Missing configuration key: ${key}`);
+            }),
+          },
+        },
+      ],
+    }).compile();
+
+    return {
+      svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
+      users: module.get(UsersService) as jest.Mocked<
+        InstanceType<typeof UsersService>
+      >,
+    };
+  }
+
+  it('property: notificationEvents array length equals enrollment count M after DELETE', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 1, max: 20 }),
+        async (enrollmentCount) => {
+          const { svc, users } = await buildModule();
+          const cognitoSub = 'test-sub';
+          const userId = new Types.ObjectId();
+          const courseId = new Types.ObjectId();
+
+          // The course being removed (at index 0)
+          const courseToRemove = {
+            _id: courseId,
+            className: 'Test Class',
+            subjectId: new Types.ObjectId(validMongoId),
+            matchesAllGrades: true,
+            grades: [],
+            curriculum: validCurriculumValues[0],
+            maxStudents: 5,
+          };
+
+          // Build M linked students, each with an addedClasses entry referencing
+          // the adult user and the course being removed
+          const linkedStudentIds: (typeof Types.ObjectId)[] = [];
+          const studentDocs: Record<string, unknown>[] = [];
+
+          for (let i = 0; i < enrollmentCount; i++) {
+            const studentId = new Types.ObjectId();
+            const parentId = new Types.ObjectId();
+            linkedStudentIds.push(studentId as never);
+            studentDocs.push({
+              _id: studentId,
+              parentId,
+              deleted: false,
+              addedClasses: [
+                {
+                  adult: userId,
+                  course: courseId,
+                  hoursCompleted: 0,
+                },
+              ],
+            });
+          }
+
+          const userDoc = {
+            _id: userId,
+            cognitoSub,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            deleted: false,
+            teachableCourses: [courseToRemove],
+            linkedStudents: linkedStudentIds,
+            notificationEvents: [],
+          };
+
+          users.findOneByCognitoSub.mockResolvedValue(userDoc as never);
+
+          // findOneById returns each student in order
+          let callCount = 0;
+          users.findOneById.mockImplementation((() => {
+            const doc = studentDocs[callCount++];
+            return Promise.resolve(doc) as never;
+          }) as never);
+
+          // Capture what updateByCognitoSub is called with
+          let capturedUpdate: Record<string, unknown> | null = null;
+          users.updateByCognitoSub.mockImplementation(((
+            _sub: string,
+            update: Record<string, unknown>,
+          ) => {
+            capturedUpdate = update;
+            return Promise.resolve({
+              ...userDoc,
+              teachableCourses: [],
+              notificationEvents:
+                ((update as { $set: Record<string, unknown> }).$set[
+                  'notificationEvents'
+                ] as unknown[]) ?? [],
+            }) as never;
+          }) as never);
+
+          await svc.removeTeachableCourse(cognitoSub, 0);
+
+          // Assert: notificationEvents in the update equals M
+          expect(capturedUpdate).not.toBeNull();
+          const setPayload = (
+            capturedUpdate! as { $set: Record<string, unknown> }
+          ).$set;
+          const events = setPayload['notificationEvents'] as unknown[];
+          expect(events).toHaveLength(enrollmentCount);
+
+          // Assert: each event has type COURSE_REMOVED
+          for (const event of events) {
+            expect((event as { type: string }).type).toBe('COURSE_REMOVED');
+          }
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+});
+
+// Feature: manage-teachable-subjects, Property 14: GET /profile includes activeEnrollmentCount for every course
+// Validates: Requirements 8.2
+describe('Property 14: GET /profile includes activeEnrollmentCount for every course', () => {
+  const fc = require('fast-check') as typeof import('fast-check');
+  const { HomeschoolCurriculum } =
+    require('src/users/enums/homeschool-curriculum.enum') as typeof import('src/users/enums/homeschool-curriculum.enum');
+  const { HomeschoolGrade } =
+    require('src/users/enums/homeschool-grade.enum') as typeof import('src/users/enums/homeschool-grade.enum');
+  const { Test } =
+    require('@nestjs/testing') as typeof import('@nestjs/testing');
+  const { ProfileService } =
+    require('./profile.service') as typeof import('./profile.service');
+  const { CognitoService } =
+    require('src/cognito/cognito.service') as typeof import('src/cognito/cognito.service');
+  const { UsersService } =
+    require('src/users/users.service') as typeof import('src/users/users.service');
+  const { GoogleService } =
+    require('src/google/google.service') as typeof import('src/google/google.service');
+  const { MaxmindService } =
+    require('src/maxmind/maxmind.service') as typeof import('src/maxmind/maxmind.service');
+  const { ConfigService } =
+    require('@nestjs/config') as typeof import('@nestjs/config');
+  const { Types } = require('mongoose') as typeof import('mongoose');
+  const { AccountType } =
+    require('src/users/enums/account-type.enum') as typeof import('src/users/enums/account-type.enum');
+  const { AgeBandAtRegistration } =
+    require('src/users/enums/age-band-at-registration.enum') as typeof import('src/users/enums/age-band-at-registration.enum');
+  const { MAXMIND_KEY } =
+    require('src/env.constants') as typeof import('src/env.constants');
+
+  const validCurriculumValues = Object.values(HomeschoolCurriculum);
+  const validGradeValues = Object.values(HomeschoolGrade);
+  const validMongoId = '507f1f77bcf86cd799439011';
+
+  function arbitraryStoredCourse() {
+    return fc.boolean().chain((matchesAllGrades) => {
+      const gradesArb = matchesAllGrades
+        ? fc.constant([] as string[])
+        : fc.array(fc.constantFrom(...validGradeValues), { minLength: 1 });
+
+      return fc.record({
+        _id: fc.constant(new Types.ObjectId()),
+        className: fc.string({ minLength: 1, maxLength: 64 }),
+        subjectId: fc.constant(new Types.ObjectId(validMongoId)),
+        matchesAllGrades: fc.constant(matchesAllGrades),
+        grades: gradesArb,
+        curriculum: fc.constantFrom(...validCurriculumValues),
+        maxStudents: fc.integer({ min: 1, max: 20 }),
+      });
+    });
+  }
+
+  async function buildModule() {
+    const configGet = jest.fn();
+    const module = await Test.createTestingModule({
+      providers: [
+        ProfileService,
+        {
+          provide: CognitoService,
+          useValue: {
+            getUser: jest.fn(),
+            updateUserAttributes: jest.fn(),
+            setUserMFAPreferenceWithSettings: jest.fn(),
+            changePassword: jest.fn(),
+            adminSetUserPassword: jest.fn(),
+            authenticateWithSrp: jest.fn(),
+            respondToSoftwareTokenMFAChallenge: jest.fn(),
+            deleteUser: jest.fn(),
+            adminLinkProviderForUser: jest.fn(),
+            adminDisableProviderForUser: jest.fn(),
+            listDevices: jest.fn(),
+            updateDeviceStatus: jest.fn(),
+            forgetDevice: jest.fn(),
+            listWebAuthnCredentials: jest
+              .fn()
+              .mockResolvedValue({ Credentials: [] }),
+          },
+        },
+        { provide: MaxmindService, useValue: { getLocation: jest.fn() } },
+        {
+          provide: GoogleService,
+          useValue: {
+            googleTokenExchange: jest.fn(),
+            googleSSOSignup: jest.fn(),
+            verifyCredential: jest.fn(),
+          },
+        },
+        {
+          provide: UsersService,
+          useValue: {
+            createUser: jest.fn(),
+            findAll: jest.fn(),
+            findOneById: jest.fn(),
+            findOneByCognitoSub: jest.fn(),
+            updateByCognitoSub: jest.fn(),
+            addLinkGoogle: jest.fn(),
+            removeLinkGoogle: jest.fn(),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: configGet,
+            getOrThrow: jest.fn((key: string) => {
+              const v = configGet(key);
+              if (v !== undefined && v !== null) return v;
+              if (key === MAXMIND_KEY) return '';
+              throw new Error(`Missing configuration key: ${key}`);
+            }),
+          },
+        },
+      ],
+    }).compile();
+
+    return {
+      svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
+      users: module.get(UsersService) as jest.Mocked<
+        InstanceType<typeof UsersService>
+      >,
+      cognito: module.get(CognitoService) as jest.Mocked<
+        InstanceType<typeof CognitoService>
+      >,
+    };
+  }
+
+  it('property: response.teachableCourses[i].activeEnrollmentCount equals actual matching addedClasses count for each i', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        // Generate 0–5 courses
+        fc.array(arbitraryStoredCourse(), { minLength: 0, maxLength: 5 }),
+        // Generate 0–5 linked students
+        fc.array(
+          fc.record({
+            // Each student has 0–3 addedClasses entries per course
+            enrollmentCounts: fc.array(fc.integer({ min: 0, max: 3 }), {
+              minLength: 0,
+              maxLength: 5,
+            }),
+          }),
+          { minLength: 0, maxLength: 5 },
+        ),
+        async (courses, studentEnrollmentSpecs) => {
+          const { svc, users, cognito } = await buildModule();
+          const cognitoSub = 'adult-sub';
+          const userId = new Types.ObjectId();
+
+          // Build linked student docs with addedClasses referencing the adult + courses
+          const linkedStudentIds: (typeof Types.ObjectId)[] = [];
+          const studentDocs: Record<string, unknown>[] = [];
+
+          // Compute expected counts per course index
+          const expectedCounts = new Array<number>(courses.length).fill(0);
+
+          for (const spec of studentEnrollmentSpecs) {
+            const studentId = new Types.ObjectId();
+            linkedStudentIds.push(studentId as never);
+
+            const addedClasses: {
+              adult: typeof Types.ObjectId;
+              course: typeof Types.ObjectId;
+              hoursCompleted: number;
+            }[] = [];
+
+            // For each course, add spec.enrollmentCounts[i] entries (capped to 1 per student per course
+            // since we're counting students, not entries — but the spec says "count of linked students
+            // whose addedClasses contain an entry", so one entry per student per course is sufficient)
+            for (let i = 0; i < courses.length; i++) {
+              const count = spec.enrollmentCounts[i] ?? 0;
+              if (count > 0 && courses[i]!._id) {
+                // Add one enrollment entry for this student+course combination
+                addedClasses.push({
+                  adult: userId as never,
+                  course: courses[i]!._id as never,
+                  hoursCompleted: 0,
+                });
+                expectedCounts[i]++;
+              }
+            }
+
+            studentDocs.push({
+              _id: studentId,
+              deleted: false,
+              addedClasses,
+            });
+          }
+
+          const userDoc = {
+            _id: userId,
+            cognitoSub,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            deleted: false,
+            teachableCourses: courses,
+            linkedStudents: linkedStudentIds,
+            householdStudentDrafts: [],
+          };
+
+          // Mock Cognito getUser
+          cognito.getUser.mockResolvedValue({
+            UserAttributes: [
+              { Name: 'sub', Value: cognitoSub },
+              { Name: 'email', Value: 'adult@example.com' },
+            ],
+          } as never);
+
+          users.findOneByCognitoSub.mockResolvedValue(userDoc as never);
+
+          // findOneById returns each student in order
+          let callIdx = 0;
+          users.findOneById.mockImplementation((() => {
+            const doc = studentDocs[callIdx++];
+            return Promise.resolve(doc ?? null) as never;
+          }) as never);
+
+          const result = await svc.getMe('access-token', { sub: cognitoSub });
+
+          // Assert: teachableCourses is present in the response
+          expect(result.teachableCourses).toBeDefined();
+          expect(Array.isArray(result.teachableCourses)).toBe(true);
+
+          const resultCourses = result.teachableCourses as Array<{
+            activeEnrollmentCount: number;
+          }>;
+
+          // Assert: length matches
+          expect(resultCourses).toHaveLength(courses.length);
+
+          // Assert: each course's activeEnrollmentCount matches expected
+          for (let i = 0; i < courses.length; i++) {
+            expect(resultCourses[i]!.activeEnrollmentCount).toBe(
+              expectedCounts[i],
+            );
+          }
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+});
