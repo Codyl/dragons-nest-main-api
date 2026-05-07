@@ -65,7 +65,7 @@ export class DiscoveryService {
             ? c.className
             : '',
         subjectId: String(c.subjectId),
-        grade: c.grade != null ? String(c.grade) : undefined,
+        // grade: c.grade != null ? String(c.grade) : undefined,
         grades: Array.isArray(c.grades) ? c.grades.map(String) : [],
         matchesAllGrades: Boolean(c.matchesAllGrades),
         curriculum: String(c.curriculum),

@@ -34,15 +34,6 @@ export class TeachableCourse {
   })
   subjectId!: Types.ObjectId;
 
-  /** @deprecated Prefer grades + matchesAllGrades; kept for legacy documents. */
-  @ApiProperty({ enum: HomeschoolGrade, required: false })
-  @Prop({
-    type: String,
-    enum: Object.values(HomeschoolGrade),
-    required: false,
-  })
-  grade?: HomeschoolGrade;
-
   @ApiProperty({
     enum: HomeschoolGrade,
     isArray: true,

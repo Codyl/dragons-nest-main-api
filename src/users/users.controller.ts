@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import type { ApiResponseDto } from 'src/common/dto/api-response.dto';
 import { UsersService } from './users.service';
 import type { UserResponseDto } from './dto/out/user-response.dto';
@@ -12,6 +12,8 @@ import {
 } from '@nestjs/swagger';
 import { OptionalAuthGuard } from 'src/common/guards/optional-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { HomeschoolGrade } from './enums/homeschool-grade.enum';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 
 @Controller('users')
 export class UsersController {
@@ -23,20 +25,31 @@ export class UsersController {
   @ApiInternalServerErrorResponse({
     description: 'Unexpected database or server failure while listing users.',
   })
-  @Get()
-  async findAll(): Promise<ApiResponseDto<UserResponseDto[]>> {
-    const users = await this.usersService.findAll();
-    const data = users.map((doc) => ({
-      _id: doc._id,
-      cognitoSub: doc.cognitoSub ?? null,
-      linkedProviders: doc.linkedProviders,
-      linkedProviderSubjects: doc.linkedProviderSubjects,
-      hasPassword: doc.hasPassword,
-      email: doc.email ?? null,
-    })) as UserResponseDto[];
+  @UseGuards(AuthGuard)
+  async findAll(
+    @Query('state') state: string,
+    @Query('grade') grade: HomeschoolGrade,
+    @Query('subjectId', MongoIdPipe) subjectId: Types.ObjectId,
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
+  ): Promise<ApiResponseDto<UserResponseDto[]>> {
+    const users = await this.usersService.aggregate([
+      {
+        $match: {
+          _id: { $ne: user?._id },
+          state: state.toLocaleLowerCase(),
+          teachableCourses: {
+            $elemMatch: {
+              grades: grade,
+              subjectId,
+            },
+          },
+        },
+      },
+    ]);
+
     return {
       message: 'Users retrieved successfully',
-      data,
+      data: users,
     };
   }
 

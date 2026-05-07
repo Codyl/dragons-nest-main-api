@@ -54,16 +54,6 @@ export type HouseholdStudentMe = {
 };
 
 export interface GetMeData {
-  [key: string]:
-    | string
-    | string[]
-    | boolean
-    | number
-    | null
-    | undefined
-    | AccountStatus
-    | HouseholdStudentMe[]
-    | TeachableCourseResponseItem[];
   loginMethods: string[];
   hasPassword: boolean;
   hasPasskey: boolean;
@@ -82,6 +72,7 @@ export interface GetMeData {
   /** Full list including archived drafts (adults only). */
   householdStudentDraftsAll?: HouseholdStudentMe[];
   teachableCourses?: TeachableCourseResponseItem[];
+  address?: { state?: string | null };
 }
 
 function firstLoggedInAtToIso(value: Date | null | undefined): string | null {
@@ -336,6 +327,7 @@ export class ProfileService {
         ? { householdStudentDraftsAll }
         : {}),
       ...(teachableCourses !== undefined ? { teachableCourses } : {}),
+      address: { state: user.state },
     };
   }
 
@@ -570,7 +562,7 @@ export class ProfileService {
       throw new NotFoundException('Student draft not found');
     }
 
-    const current = drafts[idx]!;
+    const current = drafts[idx];
     if (current.lastPromotionYear >= year) {
       throw new BadRequestException(
         'This school year has already been recorded for this student',
@@ -599,7 +591,7 @@ export class ProfileService {
       throw new InternalServerErrorException('Failed to promote student');
     }
 
-    const promoted = (updated.householdStudentDrafts ?? [])[idx]!;
+    const promoted = (updated.householdStudentDrafts ?? [])[idx];
     return mapStoredDraftToHouseholdStudentMe(promoted);
   }
 
@@ -634,9 +626,7 @@ export class ProfileService {
     });
 
     if (!updated) {
-      throw new InternalServerErrorException(
-        'Failed to add household student',
-      );
+      throw new InternalServerErrorException('Failed to add household student');
     }
 
     return (updated.householdStudentDrafts ?? []).map((d) =>
@@ -844,7 +834,7 @@ export class ProfileService {
       throw new BadRequestException('Index out of range');
     }
 
-    const courseToRemove = courses[index]!;
+    const courseToRemove = courses[index];
     const courseId = courseToRemove._id;
 
     // Detect active enrollments: check each linked student's addedClasses

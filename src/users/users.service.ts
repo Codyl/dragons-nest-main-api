@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Types } from 'mongoose';
+import { PipelineStage, Types } from 'mongoose';
 import { AccountType } from './enums/account-type.enum';
 import { AgeBandAtRegistration } from './enums/age-band-at-registration.enum';
 import { State } from './enums/state.enum';
@@ -215,8 +215,27 @@ export class UsersService {
     return this.userModel.create(input);
   }
 
-  findAll() {
-    return this.userModel.find();
+  aggregate(pipelines: PipelineStage[]) {
+    return this.userModel.aggregate<UserDoc>([
+      ...pipelines,
+      {
+        $match: {
+          deleted: { $ne: true },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          email: 1,
+          familyName: 1,
+          givenName: 1,
+          state: 1,
+          zipCode: 1,
+          availability: 1,
+          teachableCourses: 1,
+        },
+      },
+    ]);
   }
 
   findOneById(_id: Types.ObjectId) {
