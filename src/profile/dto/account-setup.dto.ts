@@ -98,7 +98,8 @@ export class TeachableCourseOnboardingDto {
   maxStudents!: number;
 }
 
-const WEEKDAY_RE = /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/;
+const WEEKDAY_RE =
+  /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/;
 
 export class TimeSlotOnboardingDto {
   @IsString()

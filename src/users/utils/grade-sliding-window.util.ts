@@ -1,7 +1,4 @@
-import {
-  MAX_GRADE_ORDINAL,
-  MIN_GRADE_ORDINAL,
-} from './homeschool-grade-order';
+import { MAX_GRADE_ORDINAL, MIN_GRADE_ORDINAL } from './homeschool-grade-order';
 
 /** Sliding window [current-1, current, current+1] clamped to grade ordinals. */
 export function getGradeSlidingWindowOrdinals(

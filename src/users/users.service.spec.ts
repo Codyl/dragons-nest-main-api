@@ -182,7 +182,9 @@ describe('UsersService', () => {
           }),
         });
         const res = await service.findOneByIdForViewer(viewerSub, targetId);
-        expect(res?.addedClasses).toEqual([{ hoursCompleted: 1, createdAt: before }]);
+        expect(res?.addedClasses).toEqual([
+          { hoursCompleted: 1, createdAt: before },
+        ]);
       } finally {
         jest.useRealTimers();
       }

@@ -197,7 +197,8 @@ export class ProfileController {
   }
 
   @ApiOperation({
-    summary: 'Adds a new household student draft for the authenticated adult user',
+    summary:
+      'Adds a new household student draft for the authenticated adult user',
   })
   @ApiBadRequestResponse({
     description: 'Validation failed (displayName or currentGrade).',
@@ -213,9 +214,7 @@ export class ProfileController {
   async addHouseholdStudent(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Body() dto: AddHouseholdStudentDto,
-  ): Promise<
-    ApiResponseDto<{ householdStudentDrafts: HouseholdStudentMe[] }>
-  > {
+  ): Promise<ApiResponseDto<{ householdStudentDrafts: HouseholdStudentMe[] }>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
@@ -230,7 +229,8 @@ export class ProfileController {
   }
 
   @ApiOperation({
-    summary: 'Archives a household student draft (soft-delete; retained for restore)',
+    summary:
+      'Archives a household student draft (soft-delete; retained for restore)',
   })
   @ApiForbiddenResponse({
     description:
@@ -246,9 +246,7 @@ export class ProfileController {
   async archiveHouseholdStudent(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Param('studentDraftId') studentDraftId: string,
-  ): Promise<
-    ApiResponseDto<{ householdStudentDrafts: HouseholdStudentMe[] }>
-  > {
+  ): Promise<ApiResponseDto<{ householdStudentDrafts: HouseholdStudentMe[] }>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
@@ -282,9 +280,7 @@ export class ProfileController {
   async restoreHouseholdStudent(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Param('studentDraftId') studentDraftId: string,
-  ): Promise<
-    ApiResponseDto<{ householdStudentDrafts: HouseholdStudentMe[] }>
-  > {
+  ): Promise<ApiResponseDto<{ householdStudentDrafts: HouseholdStudentMe[] }>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
