@@ -26,6 +26,7 @@ export class UsersController {
     description: 'Unexpected database or server failure while listing users.',
   })
   @UseGuards(AuthGuard)
+  @Get()
   async findAll(
     @Query('state') state: string,
     @Query('grade') grade: HomeschoolGrade,
