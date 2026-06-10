@@ -9,7 +9,6 @@ import {
   IsMongoId,
   IsOptional,
   IsString,
-  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -29,8 +28,10 @@ import { HomeschoolCurriculum } from 'src/users/enums/homeschool-curriculum.enum
 import { HomeschoolGrade } from 'src/users/enums/homeschool-grade.enum';
 
 export class PendingStudentOnboardingDto {
-  @IsUUID('4')
-  studentDraftId!: string;
+  @IsString()
+  @MinLength(1)
+  @MaxLength(256)
+  studentId!: string;
 
   @IsString()
   @MinLength(1)

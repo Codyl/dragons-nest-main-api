@@ -44,6 +44,8 @@ import type { WebAuthnCredentialListItemDto } from './dto/out/webauthn-credentia
 import { AddTeachableCourseDto } from './dto/add-teachable-course.dto';
 import { AddHouseholdStudentDto } from './dto/add-household-student.dto';
 import type { TeachableCourseResponseItem } from './profile.service';
+import { MongoIdPipe } from 'src/common/pipes/mongo-id.pipe';
+import { Types } from 'mongoose';
 
 @ApiCookieAuth('ACCESS_TOKEN')
 @Controller('profile')
@@ -176,10 +178,10 @@ export class ProfileController {
   @ApiBadRequestResponse({
     description: 'Not August, already promoted, or invalid draft.',
   })
-  @Patch('household-students/:studentDraftId/promote')
+  @Patch('household-students/:studentId/promote')
   async promoteHouseholdStudent(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
-    @Param('studentDraftId') studentDraftId: string,
+    @Param('studentId', MongoIdPipe) studentId: Types.ObjectId,
   ): Promise<ApiResponseDto<HouseholdStudentMe>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
@@ -188,7 +190,7 @@ export class ProfileController {
 
     const data = await this.profileService.promoteHouseholdStudentDraft(
       cognitoSub,
-      studentDraftId,
+      studentId,
     );
     return {
       message: 'Student grade updated',
@@ -214,17 +216,19 @@ export class ProfileController {
   async addHouseholdStudent(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Body() dto: AddHouseholdStudentDto,
-  ): Promise<ApiResponseDto<{ householdStudentDrafts: HouseholdStudentMe[] }>> {
+  ): Promise<ApiResponseDto<{ managedAccountsView: HouseholdStudentMe[] }>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
     }
 
-    const householdStudentDrafts =
-      await this.profileService.addHouseholdStudent(cognitoSub, dto);
+    const managedAccountsView = await this.profileService.addHouseholdStudent(
+      cognitoSub,
+      dto,
+    );
     return {
       message: 'Student added',
-      data: { householdStudentDrafts },
+      data: { managedAccountsView },
     };
   }
 
@@ -242,24 +246,21 @@ export class ProfileController {
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
-  @Patch('household-students/:studentDraftId/archive')
+  @Patch('household-students/:studentId/archive')
   async archiveHouseholdStudent(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
-    @Param('studentDraftId') studentDraftId: string,
-  ): Promise<ApiResponseDto<{ householdStudentDrafts: HouseholdStudentMe[] }>> {
+    @Param('studentId') studentId: Types.ObjectId,
+  ): Promise<ApiResponseDto<{ managedAccountsView: HouseholdStudentMe[] }>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
     }
 
-    const householdStudentDrafts =
-      await this.profileService.archiveHouseholdStudent(
-        cognitoSub,
-        studentDraftId,
-      );
+    const managedAccountsView =
+      await this.profileService.archiveHouseholdStudent(cognitoSub, studentId);
     return {
       message: 'Student archived',
-      data: { householdStudentDrafts },
+      data: { managedAccountsView },
     };
   }
 
@@ -276,24 +277,63 @@ export class ProfileController {
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
-  @Patch('household-students/:studentDraftId/restore')
+  @Patch('household-students/:studentId/restore')
   async restoreHouseholdStudent(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
-    @Param('studentDraftId') studentDraftId: string,
-  ): Promise<ApiResponseDto<{ householdStudentDrafts: HouseholdStudentMe[] }>> {
+    @Param('studentId') studentId: Types.ObjectId,
+  ): Promise<ApiResponseDto<{ managedAccountsView: HouseholdStudentMe[] }>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
     }
 
-    const householdStudentDrafts =
-      await this.profileService.restoreHouseholdStudent(
-        cognitoSub,
-        studentDraftId,
-      );
+    const managedAccountsView =
+      await this.profileService.restoreHouseholdStudent(cognitoSub, studentId);
     return {
       message: 'Student restored',
-      data: { householdStudentDrafts },
+      data: { managedAccountsView },
+    };
+  }
+
+  @ApiOperation({
+    summary:
+      "Returns the student's enrolled classes (addedClasses) for the given draft ID",
+  })
+  @ApiNotFoundResponse({
+    description: 'Student draft not found on this user.',
+  })
+  @ApiForbiddenResponse({
+    description: 'User is not an adult.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @Get('household-students/:studentId/classes')
+  async getStudentClasses(
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
+    @Param('studentId', MongoIdPipe) studentId: Types.ObjectId,
+  ): Promise<
+    ApiResponseDto<
+      {
+        subjectId: string | null;
+        curriculumId: string | null;
+        hoursCompleted: number;
+        createdAt: string | null;
+      }[]
+    >
+  > {
+    const cognitoSub = user?.sub;
+    if (!cognitoSub || typeof cognitoSub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    const classes = await this.profileService.getStudentClasses(
+      cognitoSub,
+      studentId,
+    );
+    return {
+      message: 'Student classes retrieved successfully',
+      data: classes,
     };
   }
 

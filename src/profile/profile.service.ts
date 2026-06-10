@@ -31,7 +31,6 @@ import { AccountType } from 'src/users/enums/account-type.enum';
 import { AgeBandAtRegistration } from 'src/users/enums/age-band-at-registration.enum';
 import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
 import { Types } from 'mongoose';
-import { randomUUID } from 'crypto';
 import { AddHouseholdStudentDto } from './dto/add-household-student.dto';
 
 export type TeachableCourseResponseItem = {
@@ -45,7 +44,7 @@ export type TeachableCourseResponseItem = {
 };
 
 export type HouseholdStudentMe = {
-  studentDraftId: string;
+  studentId: Types.ObjectId;
   displayName: string;
   currentGrade: number;
   lastPromotionYear: number;
@@ -54,6 +53,7 @@ export type HouseholdStudentMe = {
 };
 
 export interface GetMeData {
+  _id: string;
   loginMethods: string[];
   hasPassword: boolean;
   hasPasskey: boolean;
@@ -70,7 +70,7 @@ export interface GetMeData {
   ageBandAtRegistration?: string | null;
   householdStudents?: HouseholdStudentMe[];
   /** Full list including archived drafts (adults only). */
-  householdStudentDraftsAll?: HouseholdStudentMe[];
+  managedAccountsViewAll?: HouseholdStudentMe[];
   teachableCourses?: TeachableCourseResponseItem[];
   address?: { state?: string | null };
 }
@@ -108,19 +108,19 @@ function householdDraftArchivedIso(d: { archivedAt?: unknown }): string | null {
   return at ? at.toISOString() : null;
 }
 
-function mapStoredDraftToHouseholdStudentMe(d: {
-  studentDraftId: string;
+function mapStoredDraftToHouseholdStudentMe(managedAccount: {
+  studentId: Types.ObjectId;
   displayName: string;
   currentGrade: number;
   lastPromotionYear: number;
   archivedAt?: unknown;
 }): HouseholdStudentMe {
   return {
-    studentDraftId: d.studentDraftId,
-    displayName: d.displayName,
-    currentGrade: d.currentGrade,
-    lastPromotionYear: d.lastPromotionYear,
-    archivedAt: householdDraftArchivedIso(d),
+    studentId: managedAccount.studentId,
+    displayName: managedAccount.displayName,
+    currentGrade: managedAccount.currentGrade,
+    lastPromotionYear: managedAccount.lastPromotionYear,
+    archivedAt: householdDraftArchivedIso(managedAccount),
   };
 }
 
@@ -209,9 +209,9 @@ export class ProfileService {
       birthDate: user.birthDate ?? null,
     });
 
-    const draftsRaw = user.householdStudentDrafts ?? [];
+    const draftsRaw = user.managedAccountsView ?? [];
 
-    const householdStudentDraftsAll: HouseholdStudentMe[] | undefined =
+    const managedAccountsViewAll: HouseholdStudentMe[] | undefined =
       user.accountType === AccountType.Adult
         ? draftsRaw.map((d) => mapStoredDraftToHouseholdStudentMe(d))
         : undefined;
@@ -221,7 +221,7 @@ export class ProfileService {
         ? draftsRaw
             .filter((d) => householdDraftArchivedIso(d) === null)
             .map((d) => ({
-              studentDraftId: d.studentDraftId,
+              studentId: d.studentId,
               displayName: d.displayName,
               currentGrade: d.currentGrade,
               lastPromotionYear: d.lastPromotionYear,
@@ -310,6 +310,7 @@ export class ProfileService {
       passkeyCount,
       softwareTokenMfaEnabled,
       preferredMfa,
+      _id: user._id.toString(),
       firstLoggedInAt: firstLoggedInAtToIso(
         mongoDateOrNull(Reflect.get(user, 'firstLoggedInAt')),
       ),
@@ -323,8 +324,8 @@ export class ProfileService {
       accountStatus,
       ageBandAtRegistration: user.ageBandAtRegistration ?? null,
       ...(householdStudents !== undefined ? { householdStudents } : {}),
-      ...(householdStudentDraftsAll !== undefined
-        ? { householdStudentDraftsAll }
+      ...(managedAccountsViewAll !== undefined
+        ? { managedAccountsViewAll }
         : {}),
       ...(teachableCourses !== undefined ? { teachableCourses } : {}),
       address: { state: user.state },
@@ -485,9 +486,9 @@ export class ProfileService {
     }));
 
     const promotionYear = new Date().getFullYear();
-    const householdStudentDrafts =
+    const managedAccountsView =
       dto.pendingStudents?.map((s) => ({
-        studentDraftId: s.studentDraftId,
+        studentId: new Types.ObjectId(),
         displayName: s.displayName.trim(),
         currentGrade: s.currentGrade,
         lastPromotionYear: promotionYear,
@@ -510,7 +511,7 @@ export class ProfileService {
 
     if (accountType === AccountType.Adult) {
       baseUpdate.teachableCourses = teachableCourses;
-      baseUpdate.householdStudentDrafts = householdStudentDrafts;
+      baseUpdate.managedAccountsView = managedAccountsView;
     }
 
     const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
@@ -520,6 +521,21 @@ export class ProfileService {
 
     if (!updated) {
       throw new InternalServerErrorException('Failed to save account setup');
+    }
+
+    // Promote each household student into a real managed-child User document
+    if (accountType === AccountType.Adult && managedAccountsView.length > 0) {
+      await Promise.all(
+        managedAccountsView.map((managedAccount) =>
+          this.usersService.createManagedChild(updated._id, {
+            givenName: managedAccount.displayName,
+            currentGrade: managedAccount.currentGrade,
+            studentId: managedAccount.studentId,
+            lastPromotionYear: managedAccount.lastPromotionYear,
+            state: dto.state ?? null,
+          }),
+        ),
+      );
     }
 
     const ts = mongoDateOrNull(Reflect.get(updated, 'onboardingCompletedAt'));
@@ -535,7 +551,7 @@ export class ProfileService {
    */
   async promoteHouseholdStudentDraft(
     cognitoSub: string,
-    studentDraftId: string,
+    studentId: Types.ObjectId,
   ): Promise<HouseholdStudentMe> {
     const row = await this.usersService.findOneByCognitoSub(cognitoSub);
     if (!row || row.deleted) {
@@ -556,8 +572,10 @@ export class ProfileService {
     }
 
     const year = now.getUTCFullYear();
-    const drafts = row.householdStudentDrafts ?? [];
-    const idx = drafts.findIndex((d) => d.studentDraftId === studentDraftId);
+    const drafts = row.managedAccountsView ?? [];
+    const idx = drafts.findIndex((managedAccount) =>
+      managedAccount.studentId.equals(studentId),
+    );
     if (idx < 0) {
       throw new NotFoundException('Student draft not found');
     }
@@ -584,15 +602,15 @@ export class ProfileService {
     );
 
     const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
-      $set: { householdStudentDrafts: nextDrafts },
+      $set: { managedAccountsView: nextDrafts },
     });
 
     if (!updated) {
       throw new InternalServerErrorException('Failed to promote student');
     }
 
-    const promoted = (updated.householdStudentDrafts ?? [])[idx];
-    return mapStoredDraftToHouseholdStudentMe(promoted);
+    const promotedAccount = (updated.managedAccountsView ?? [])[idx];
+    return mapStoredDraftToHouseholdStudentMe(promotedAccount);
   }
 
   async addHouseholdStudent(
@@ -614,7 +632,7 @@ export class ProfileService {
     }
 
     const newDraft = {
-      studentDraftId: randomUUID(),
+      studentId: new Types.ObjectId(),
       displayName: dto.displayName.trim(),
       currentGrade: dto.currentGrade,
       lastPromotionYear: new Date().getFullYear(),
@@ -622,21 +640,35 @@ export class ProfileService {
     };
 
     const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
-      $push: { householdStudentDrafts: newDraft },
+      $push: { managedAccountsView: newDraft },
     });
 
     if (!updated) {
       throw new InternalServerErrorException('Failed to add household student');
     }
 
-    return (updated.householdStudentDrafts ?? []).map((d) =>
+    // Create a real managed-child User document for course enrollment
+    const parentId =
+      updated._id instanceof Types.ObjectId
+        ? updated._id
+        : new Types.ObjectId(updated._id as unknown as string);
+
+    await this.usersService.createManagedChild(parentId, {
+      givenName: dto.displayName.trim(),
+      currentGrade: dto.currentGrade,
+      studentId: newDraft.studentId,
+      lastPromotionYear: newDraft.lastPromotionYear,
+      state: updated.state ?? null,
+    });
+
+    return (updated.managedAccountsView ?? []).map((d) =>
       mapStoredDraftToHouseholdStudentMe(d),
     );
   }
 
   async archiveHouseholdStudent(
     cognitoSub: string,
-    studentDraftId: string,
+    studentId: Types.ObjectId,
   ): Promise<HouseholdStudentMe[]> {
     const row = await this.usersService.findOneByCognitoSub(cognitoSub);
     if (!row || row.deleted) {
@@ -652,8 +684,10 @@ export class ProfileService {
       );
     }
 
-    const drafts = [...(row.householdStudentDrafts ?? [])];
-    const idx = drafts.findIndex((d) => d.studentDraftId === studentDraftId);
+    const drafts = [...(row.managedAccountsView ?? [])];
+    const idx = drafts.findIndex((managedAccount) =>
+      managedAccount.studentId.equals(studentId),
+    );
     if (idx < 0) {
       throw new NotFoundException('Student draft not found');
     }
@@ -664,7 +698,7 @@ export class ProfileService {
     );
 
     const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
-      $set: { householdStudentDrafts: nextDrafts },
+      $set: { managedAccountsView: nextDrafts },
     });
 
     if (!updated) {
@@ -673,14 +707,14 @@ export class ProfileService {
       );
     }
 
-    return (updated.householdStudentDrafts ?? []).map((d) =>
+    return (updated.managedAccountsView ?? []).map((d) =>
       mapStoredDraftToHouseholdStudentMe(d),
     );
   }
 
   async restoreHouseholdStudent(
     cognitoSub: string,
-    studentDraftId: string,
+    studentId: Types.ObjectId,
   ): Promise<HouseholdStudentMe[]> {
     const row = await this.usersService.findOneByCognitoSub(cognitoSub);
     if (!row || row.deleted) {
@@ -696,8 +730,10 @@ export class ProfileService {
       );
     }
 
-    const drafts = [...(row.householdStudentDrafts ?? [])];
-    const idx = drafts.findIndex((d) => d.studentDraftId === studentDraftId);
+    const drafts = [...(row.managedAccountsView ?? [])];
+    const idx = drafts.findIndex((managedAccount) =>
+      managedAccount.studentId.equals(studentId),
+    );
     if (idx < 0) {
       throw new NotFoundException('Student draft not found');
     }
@@ -707,7 +743,7 @@ export class ProfileService {
     );
 
     const updated = await this.usersService.updateByCognitoSub(cognitoSub, {
-      $set: { householdStudentDrafts: nextDrafts },
+      $set: { managedAccountsView: nextDrafts },
     });
 
     if (!updated) {
@@ -716,8 +752,8 @@ export class ProfileService {
       );
     }
 
-    return (updated.householdStudentDrafts ?? []).map((d) =>
-      mapStoredDraftToHouseholdStudentMe(d),
+    return (updated.managedAccountsView ?? []).map((managedAccount) =>
+      mapStoredDraftToHouseholdStudentMe(managedAccount),
     );
   }
 
@@ -1391,5 +1427,62 @@ export class ProfileService {
     );
 
     return deviceData;
+  }
+
+  /**
+   * Returns the student's `addedClasses` array for the given `studentId`.
+   * Each entry includes `subjectId` as a string (or null).
+   * Validates that the authenticated user owns the student draft.
+   */
+  async getStudentClasses(
+    cognitoSub: string,
+    studentId: Types.ObjectId,
+  ): Promise<
+    {
+      subjectId: string | null;
+      curriculumId: string | null;
+      hoursCompleted: number;
+      createdAt: string | null;
+    }[]
+  > {
+    const row = await this.usersService.findOneByCognitoSub(cognitoSub);
+    if (!row || row.deleted) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (row.accountType !== AccountType.Adult) {
+      throw new ForbiddenException(
+        'Only household adults can view student classes',
+      );
+    }
+
+    // Validate that the studentId belongs to this user's household
+    const managedAccounts = row.managedAccountsView ?? [];
+    const match = managedAccounts.find((managedAccount) =>
+      managedAccount.studentId.equals(studentId),
+    );
+    if (!match) {
+      throw new NotFoundException('Student draft not found');
+    }
+
+    // Find the student User document
+    const studentUser = await this.usersService.findOneById(studentId);
+    if (!studentUser) {
+      return [];
+    }
+
+    const classes = (studentUser.addedClasses ?? []) as Array<{
+      subjectId?: Types.ObjectId | null;
+      curriculumId?: Types.ObjectId | null;
+      hoursCompleted?: number;
+      createdAt?: Date | null;
+    }>;
+
+    return classes.map((c) => ({
+      subjectId: c.subjectId ? c.subjectId.toString() : null,
+      curriculumId: c.curriculumId ? c.curriculumId.toString() : null,
+      hoursCompleted: c.hoursCompleted ?? 0,
+      createdAt: c.createdAt ? c.createdAt.toISOString() : null,
+    }));
   }
 }

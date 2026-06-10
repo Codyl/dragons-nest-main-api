@@ -4,12 +4,14 @@ import { UsersController } from './users.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './entities/user.schema';
 import { OptionalAuthGuard } from 'src/common/guards/optional-auth.guard';
+import { ComplianceModule } from 'src/compliance/compliance.module';
 
 @Module({
   controllers: [UsersController],
   providers: [UsersService, OptionalAuthGuard],
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    ComplianceModule,
   ],
   exports: [UsersService],
 })

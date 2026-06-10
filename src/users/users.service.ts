@@ -11,6 +11,7 @@ import { State } from './enums/state.enum';
 import { ageFromBirthDate, User } from './entities/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { DeleteResult, Model, UpdateQuery } from 'mongoose';
+import { StateComplianceLaws } from 'src/compliance/entities/state-compliance-laws.entity';
 
 export type AccountStatus = 'MANAGED' | 'INDEPENDENT' | 'ADULT';
 
@@ -100,6 +101,8 @@ export function eighteenthBirthdayStart(birthDate: Date): Date {
 export type EnrolledClassLean = {
   adult?: Types.ObjectId;
   course?: unknown;
+  subjectId?: Types.ObjectId | null;
+  curriculumId?: Types.ObjectId | null;
   hoursCompleted?: number;
   createdAt?: Date;
 };
@@ -169,12 +172,13 @@ export interface UserDoc {
   state?: State | null;
   zipCode?: string | null;
   parentId?: Types.ObjectId | null;
+  studentId?: string | null;
   canManageOthers?: boolean;
   linkedStudents?: Types.ObjectId[];
   addedClasses?: EnrolledClassLean[];
   ageBandAtRegistration?: AgeBandAtRegistration | null;
-  householdStudentDrafts?: {
-    studentDraftId: string;
+  managedAccountsView?: {
+    studentId: Types.ObjectId;
     displayName: string;
     currentGrade: number;
     lastPromotionYear: number;
@@ -209,7 +213,11 @@ export type CreateUserInput = {
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(StateComplianceLaws.name)
+    private complianceLawsModel: Model<StateComplianceLaws>,
+  ) {}
 
   createUser(input: CreateUserInput) {
     return this.userModel.create(input);
@@ -294,6 +302,29 @@ export class UsersService {
     return doc as UserDoc | null;
   }
 
+  /**
+   * Sets the `curriculumId` on the `addedClasses` entry matching the given
+   * `subjectId` for the specified student user.
+   */
+  async setCurriculumSelection(
+    studentUserId: Types.ObjectId,
+    subjectId: string,
+    curriculumId: string,
+  ) {
+    return this.userModel.findOneAndUpdate(
+      {
+        _id: studentUserId,
+        'addedClasses.subjectId': new Types.ObjectId(subjectId),
+      },
+      {
+        $set: {
+          'addedClasses.$.curriculumId': new Types.ObjectId(curriculumId),
+        },
+      },
+      { new: true },
+    );
+  }
+
   updateByCognitoSub(cognitoSub: string, update: UpdateQuery<User>) {
     return this.userModel.findOneAndUpdate({ cognitoSub }, update, {
       new: true,
@@ -346,6 +377,66 @@ export class UsersService {
       state: null,
       zipCode: null,
     });
+  }
+
+  /**
+   * Creates a managed child User document (no Cognito login) and links it
+   * to the parent by pushing into `linkedStudents`. Populates `addedClasses`
+   * with state-required subjects when a state is provided.
+   */
+  async createManagedChild(
+    parentId: Types.ObjectId,
+    data: {
+      givenName: string;
+      currentGrade?: number;
+      studentId?: Types.ObjectId;
+      lastPromotionYear: number;
+      state?: string | null;
+    },
+  ): Promise<User> {
+    // Query state-required subjects if a state is provided
+    let addedClasses: {
+      subjectId: Types.ObjectId;
+      hoursCompleted: number;
+      createdAt: Date;
+    }[] = [];
+    if (data.state) {
+      const complianceLaw = await this.complianceLawsModel
+        .findOne({ abbreviation: data.state.toUpperCase() })
+        .lean();
+
+      if (complianceLaw?.subjectsRequiredTopicIds?.length) {
+        const now = new Date();
+        addedClasses = complianceLaw.subjectsRequiredTopicIds.map(
+          (subjectId) => ({
+            subjectId: new Types.ObjectId(subjectId.toString()),
+            hoursCompleted: 0,
+            createdAt: now,
+          }),
+        );
+      }
+    }
+
+    const child = await this.userModel.create({
+      accountType: AccountType.Student,
+      ageBandAtRegistration: AgeBandAtRegistration.ChildUnder13Managed,
+      givenName: data.givenName,
+      parentId,
+      hasPassword: false,
+      addedClasses,
+    });
+
+    await this.userModel.findByIdAndUpdate(parentId, {
+      $addToSet: {
+        managedAccountsView: {
+          studentId: child._id,
+          displayName: child.givenName,
+          archivedAt: null, // or omit if you prefer
+        },
+      },
+    });
+
+    return child;
   }
 
   /**

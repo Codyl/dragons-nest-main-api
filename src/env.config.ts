@@ -23,6 +23,9 @@ export interface EnvironmentVariables {
 
   FRONTEND_URL: string;
 
+  /** S3 bucket for curriculum file uploads. */
+  CURRICULUM_S3_BUCKET: string;
+
   /** Required when NODE_ENV is test (see Joi in app.module). */
   PREEXISTING_USER_EMAIL?: string;
 

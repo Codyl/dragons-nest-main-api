@@ -1,5 +1,8 @@
+import { Types } from 'mongoose';
+
 /** Response data for GET /profile (current user info). */
 export class GetMeResponseDto {
+  _id: string;
   loginMethods!: string[];
   hasPassword!: boolean;
   hasPasskey!: boolean;
@@ -34,7 +37,7 @@ export class GetMeResponseDto {
 
   /** Household learner drafts (adults only). */
   householdStudents?: {
-    studentDraftId: string;
+    studentId: Types.ObjectId;
     displayName: string;
     currentGrade: number;
     lastPromotionYear: number;
@@ -42,8 +45,8 @@ export class GetMeResponseDto {
   }[];
 
   /** All drafts including archived (adults only); used by Child Accounts settings. */
-  householdStudentDraftsAll?: {
-    studentDraftId: string;
+  managedAccountsViewAll?: {
+    studentId: Types.ObjectId;
     displayName: string;
     currentGrade: number;
     lastPromotionYear: number;

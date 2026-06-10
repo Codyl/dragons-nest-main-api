@@ -101,6 +101,20 @@ export class EnrolledClass {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'TeachableCourse' })
   course: TeachableCourse;
 
+  @ApiProperty({ description: 'The subject this class belongs to' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Subject', default: null })
+  subjectId?: Types.ObjectId | null;
+
+  @ApiPropertyOptional({
+    description: 'The selected curriculum item for this class/subject',
+  })
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'CurriculumItem',
+    default: null,
+  })
+  curriculumId?: Types.ObjectId | null;
+
   @ApiProperty({ description: 'The number of hours completed' })
   @Prop({ type: Number, default: 0 })
   hoursCompleted: number;
@@ -183,7 +197,6 @@ export class User extends Document {
   @Prop({
     type: String,
     required: false,
-    default: null,
     unique: true,
     sparse: true,
   })
@@ -281,16 +294,6 @@ export class User extends Document {
   @Prop({ type: Boolean, default: false })
   canManageOthers?: boolean;
 
-  @ApiPropertyOptional({
-    description: 'Student user ids linked to this adult.',
-  })
-  @Prop({
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'User',
-    default: [],
-  })
-  linkedStudents?: Types.ObjectId[];
-
   @ApiProperty({
     description:
       'Grade, catalog subject id, and curriculum combinations this adult can teach.',
@@ -306,7 +309,7 @@ export class User extends Document {
   @Prop({
     type: [
       {
-        studentDraftId: { type: String, required: true },
+        studentId: { type: String, required: true },
         displayName: { type: String, required: true },
         currentGrade: { type: Number, required: true, min: 0, max: 13 },
         lastPromotionYear: { type: Number, required: true },
@@ -315,8 +318,8 @@ export class User extends Document {
     ],
     default: [],
   })
-  householdStudentDrafts?: {
-    studentDraftId: string;
+  managedAccountsView?: {
+    studentId: Types.ObjectId;
     displayName: string;
     currentGrade: number;
     lastPromotionYear: number;
@@ -352,6 +355,9 @@ export class User extends Document {
 
   @Prop({ type: [EnrolledClassSchema], default: [] })
   addedClasses?: EnrolledClass[];
+
+  @Prop({ type: Number })
+  lastPromotionYear: number;
 
   @Prop({
     type: [

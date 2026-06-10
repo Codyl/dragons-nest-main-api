@@ -99,6 +99,9 @@ describe('ProfileService', () => {
             updateByCognitoSub: jest.fn(),
             addLinkGoogle: jest.fn(),
             removeLinkGoogle: jest.fn(),
+            createManagedChild: jest
+              .fn()
+              .mockResolvedValue({ _id: new Types.ObjectId() }),
           },
         },
         {
@@ -1322,6 +1325,9 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
                   updateByCognitoSub: jest.fn(),
                   addLinkGoogle: jest.fn(),
                   removeLinkGoogle: jest.fn(),
+                  createManagedChild: jest
+                    .fn()
+                    .mockResolvedValue({ _id: new Types.ObjectId() }),
                 },
               },
               {
@@ -1331,7 +1337,9 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
                   getOrThrow: jest.fn((key: string) => {
                     const v = configGet(key);
                     if (v !== undefined && v !== null) return v;
+
                     if (key === MAXMIND_KEY) return '';
+
                     throw new Error(`Missing configuration key: ${key}`);
                   }),
                 },
@@ -1341,9 +1349,7 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
 
           const svc =
             module.get<InstanceType<typeof ProfileService>>(ProfileService);
-          const users = module.get(UsersService) as jest.Mocked<
-            InstanceType<typeof UsersService>
-          >;
+          const users = module.get(UsersService);
 
           const cognitoSub = 'test-sub';
 
@@ -1382,7 +1388,7 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
           expect(result).toHaveLength(existingCourses.length + 1);
 
           // Assert: last element matches the DTO input fields
-          const last = result[result.length - 1]!;
+          const last = result[result.length - 1];
           expect(last.className).toBe(dto.className.trim());
           expect(last.subjectId).toBe(validMongoId);
           expect(last.matchesAllGrades).toBe(dto.matchesAllGrades);
@@ -1497,6 +1503,9 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
             updateByCognitoSub: jest.fn(),
             addLinkGoogle: jest.fn(),
             removeLinkGoogle: jest.fn(),
+            createManagedChild: jest
+              .fn()
+              .mockResolvedValue({ _id: new Types.ObjectId() }),
           },
         },
         {
@@ -1506,7 +1515,9 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
             getOrThrow: jest.fn((key: string) => {
               const v = configGet(key);
               if (v !== undefined && v !== null) return v;
+
               if (key === MAXMIND_KEY) return '';
+
               throw new Error(`Missing configuration key: ${key}`);
             }),
           },
@@ -1516,9 +1527,7 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService) as jest.Mocked<
-        InstanceType<typeof UsersService>
-      >,
+      users: module.get(UsersService),
     };
   }
 
@@ -1563,8 +1572,8 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
           expect(result).toHaveLength(courses.length - 1);
 
           // Assert: the course originally at `index` is absent from the result
-          const removedSubjectId = courses[index]!.subjectId.toString();
-          const removedClassName = courses[index]!.className;
+          const removedSubjectId = courses[index].subjectId.toString();
+          const removedClassName = courses[index].className;
           // Check that the exact combination is not present (unless duplicates existed)
           const removedCount = courses.filter(
             (c, i) =>
@@ -1684,6 +1693,9 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
             updateByCognitoSub: jest.fn(),
             addLinkGoogle: jest.fn(),
             removeLinkGoogle: jest.fn(),
+            createManagedChild: jest
+              .fn()
+              .mockResolvedValue({ _id: new Types.ObjectId() }),
           },
         },
         {
@@ -1693,7 +1705,9 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
             getOrThrow: jest.fn((key: string) => {
               const v = configGet(key);
               if (v !== undefined && v !== null) return v;
+
               if (key === MAXMIND_KEY) return '';
+
               throw new Error(`Missing configuration key: ${key}`);
             }),
           },
@@ -1703,9 +1717,7 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService) as jest.Mocked<
-        InstanceType<typeof UsersService>
-      >,
+      users: module.get(UsersService),
     };
   }
 
@@ -1886,6 +1898,9 @@ describe('Property 13: DELETE with active enrollments produces notification even
             updateByCognitoSub: jest.fn(),
             addLinkGoogle: jest.fn(),
             removeLinkGoogle: jest.fn(),
+            createManagedChild: jest
+              .fn()
+              .mockResolvedValue({ _id: new Types.ObjectId() }),
           },
         },
         {
@@ -1895,7 +1910,9 @@ describe('Property 13: DELETE with active enrollments produces notification even
             getOrThrow: jest.fn((key: string) => {
               const v = configGet(key);
               if (v !== undefined && v !== null) return v;
+
               if (key === MAXMIND_KEY) return '';
+
               throw new Error(`Missing configuration key: ${key}`);
             }),
           },
@@ -1905,9 +1922,7 @@ describe('Property 13: DELETE with active enrollments produces notification even
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService) as jest.Mocked<
-        InstanceType<typeof UsersService>
-      >,
+      users: module.get(UsersService),
     };
   }
 
@@ -2110,6 +2125,9 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
             updateByCognitoSub: jest.fn(),
             addLinkGoogle: jest.fn(),
             removeLinkGoogle: jest.fn(),
+            createManagedChild: jest
+              .fn()
+              .mockResolvedValue({ _id: new Types.ObjectId() }),
           },
         },
         {
@@ -2119,7 +2137,9 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
             getOrThrow: jest.fn((key: string) => {
               const v = configGet(key);
               if (v !== undefined && v !== null) return v;
+
               if (key === MAXMIND_KEY) return '';
+
               throw new Error(`Missing configuration key: ${key}`);
             }),
           },
@@ -2129,12 +2149,8 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService) as jest.Mocked<
-        InstanceType<typeof UsersService>
-      >,
-      cognito: module.get(CognitoService) as jest.Mocked<
-        InstanceType<typeof CognitoService>
-      >,
+      users: module.get(UsersService),
+      cognito: module.get(CognitoService),
     };
   }
 
@@ -2181,11 +2197,11 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
             // whose addedClasses contain an entry", so one entry per student per course is sufficient)
             for (let i = 0; i < courses.length; i++) {
               const count = spec.enrollmentCounts[i] ?? 0;
-              if (count > 0 && courses[i]!._id) {
+              if (count > 0 && courses[i]._id) {
                 // Add one enrollment entry for this student+course combination
                 addedClasses.push({
                   adult: userId as never,
-                  course: courses[i]!._id as never,
+                  course: courses[i]._id as never,
                   hoursCompleted: 0,
                 });
                 expectedCounts[i]++;
@@ -2207,7 +2223,7 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
             deleted: false,
             teachableCourses: courses,
             linkedStudents: linkedStudentIds,
-            householdStudentDrafts: [],
+            managedAccountsView: [],
           };
 
           // Mock Cognito getUser
@@ -2242,7 +2258,7 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
 
           // Assert: each course's activeEnrollmentCount matches expected
           for (let i = 0; i < courses.length; i++) {
-            expect(resultCourses[i]!.activeEnrollmentCount).toBe(
+            expect(resultCourses[i].activeEnrollmentCount).toBe(
               expectedCounts[i],
             );
           }
@@ -2320,6 +2336,9 @@ describe('ProfileService household student drafts', () => {
             updateByCognitoSub: jest.fn(),
             addLinkGoogle: jest.fn(),
             removeLinkGoogle: jest.fn(),
+            createManagedChild: jest
+              .fn()
+              .mockResolvedValue({ _id: new Types.ObjectId() }),
           },
         },
         {
@@ -2334,7 +2353,7 @@ describe('ProfileService household student drafts', () => {
     cognitoService = module.get<jest.Mocked<CognitoService>>(CognitoService);
   });
 
-  it('getMe returns householdStudents active-only and householdStudentDraftsAll for adults', async () => {
+  it('getMe returns householdStudents active-only and managedAccountsViewAll for adults', async () => {
     const cognitoSub = 'sub-adult';
     cognitoService.getUser.mockResolvedValue({
       UserAttributes: [
@@ -2349,15 +2368,15 @@ describe('ProfileService household student drafts', () => {
       accountType: AccountType.Adult,
       ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
       deleted: false,
-      householdStudentDrafts: [
+      managedAccountsView: [
         {
-          studentDraftId: 'a',
+          studentId: 'a',
           displayName: 'Active',
           currentGrade: 3,
           lastPromotionYear: 2025,
         },
         {
-          studentDraftId: 'b',
+          studentId: 'b',
           displayName: 'Old',
           currentGrade: 5,
           lastPromotionYear: 2024,
@@ -2369,9 +2388,9 @@ describe('ProfileService household student drafts', () => {
     const profile = await service.getMe('tok', { sub: cognitoSub });
 
     expect(profile.householdStudents).toHaveLength(1);
-    expect(profile.householdStudents![0]!.studentDraftId).toBe('a');
-    expect(profile.householdStudentDraftsAll).toHaveLength(2);
-    expect(profile.householdStudentDraftsAll![1]!.archivedAt).toBe(
+    expect(profile.householdStudents![0].studentId).toBe('a');
+    expect(profile.managedAccountsViewAll).toHaveLength(2);
+    expect(profile.managedAccountsViewAll![1].archivedAt).toBe(
       archivedDate.toISOString(),
     );
   });
@@ -2400,14 +2419,14 @@ describe('ProfileService household student drafts', () => {
       accountType: AccountType.Adult,
       ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
       deleted: false,
-      householdStudentDrafts: [],
+      managedAccountsView: [],
     } as never);
 
     usersService.updateByCognitoSub.mockResolvedValue({
       cognitoSub,
-      householdStudentDrafts: [
+      managedAccountsView: [
         {
-          studentDraftId: '00000000-0000-4000-8000-000000000001',
+          studentId: '00000000-0000-4000-8000-000000000001',
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: new Date().getFullYear(),
@@ -2422,13 +2441,13 @@ describe('ProfileService household student drafts', () => {
     } as AddHouseholdStudentDto);
 
     expect(rows).toHaveLength(1);
-    expect(rows[0]!.displayName).toBe('Sam');
-    expect(rows[0]!.archivedAt).toBeNull();
+    expect(rows[0].displayName).toBe('Sam');
+    expect(rows[0].archivedAt).toBeNull();
     expect(usersService.updateByCognitoSub).toHaveBeenCalledWith(
       cognitoSub,
       expect.objectContaining({
         $push: {
-          householdStudentDrafts: expect.objectContaining({
+          managedAccountsView: expect.objectContaining({
             displayName: 'Sam',
             currentGrade: 2,
           }),
@@ -2445,9 +2464,9 @@ describe('ProfileService household student drafts', () => {
       accountType: AccountType.Adult,
       ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
       deleted: false,
-      householdStudentDrafts: [
+      managedAccountsView: [
         {
-          studentDraftId: 'x',
+          studentId: 'x',
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: 2025,
@@ -2457,9 +2476,9 @@ describe('ProfileService household student drafts', () => {
 
     usersService.updateByCognitoSub.mockResolvedValue({
       cognitoSub,
-      householdStudentDrafts: [
+      managedAccountsView: [
         {
-          studentDraftId: 'x',
+          studentId: 'x',
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: 2025,
@@ -2469,7 +2488,7 @@ describe('ProfileService household student drafts', () => {
     } as never);
 
     const rows = await service.archiveHouseholdStudent(cognitoSub, 'x');
-    expect(rows[0]!.archivedAt).not.toBeNull();
+    expect(rows[0].archivedAt).not.toBeNull();
   });
 
   it('restoreHouseholdStudent clears archivedAt', async () => {
@@ -2480,9 +2499,9 @@ describe('ProfileService household student drafts', () => {
       accountType: AccountType.Adult,
       ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
       deleted: false,
-      householdStudentDrafts: [
+      managedAccountsView: [
         {
-          studentDraftId: 'x',
+          studentId: 'x',
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: 2025,
@@ -2493,9 +2512,9 @@ describe('ProfileService household student drafts', () => {
 
     usersService.updateByCognitoSub.mockResolvedValue({
       cognitoSub,
-      householdStudentDrafts: [
+      managedAccountsView: [
         {
-          studentDraftId: 'x',
+          studentId: 'x',
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: 2025,
@@ -2505,6 +2524,6 @@ describe('ProfileService household student drafts', () => {
     } as never);
 
     const rows = await service.restoreHouseholdStudent(cognitoSub, 'x');
-    expect(rows[0]!.archivedAt).toBeNull();
+    expect(rows[0].archivedAt).toBeNull();
   });
 });

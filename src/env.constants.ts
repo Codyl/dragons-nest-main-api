@@ -24,3 +24,6 @@ export const FRONTEND_URL = 'FRONTEND_URL';
 
 /** Email for the seeded Cognito + Mongo user when NODE_ENV=test (E2E reset). */
 export const PREEXISTING_USER_EMAIL = 'PREEXISTING_USER_EMAIL';
+
+/** S3 bucket name for curriculum file uploads. */
+export const CURRICULUM_S3_BUCKET = 'CURRICULUM_S3_BUCKET';

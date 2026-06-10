@@ -12,6 +12,7 @@ import {
   resolveAccountStatusForUser,
   UsersService,
 } from './users.service';
+import { StateComplianceLaws } from 'src/compliance/entities/state-compliance-laws.entity';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -34,6 +35,10 @@ describe('UsersService', () => {
         {
           provide: getModelToken(User.name),
           useValue: userModel,
+        },
+        {
+          provide: getModelToken(StateComplianceLaws.name),
+          useValue: { findOne: jest.fn() },
         },
       ],
     }).compile();

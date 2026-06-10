@@ -15,6 +15,7 @@ import { TestSupportModule } from './test-support/test-support.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { ComplianceModule } from './compliance/compliance.module';
 import { DiscoveryModule } from './discovery/discovery.module';
+import { CurriculumModule } from './curriculum/curriculum.module';
 
 const testOnlyImports =
   process.env.NODE_ENV === 'test' ? [TestSupportModule] : [];
@@ -63,6 +64,8 @@ const testOnlyImports =
 
         FRONTEND_URL: Joi.string().uri().required(),
 
+        CURRICULUM_S3_BUCKET: Joi.string().required(),
+
         PREEXISTING_USER_EMAIL: Joi.string().email().when('NODE_ENV', {
           is: 'test',
           then: Joi.required(),
@@ -91,6 +94,7 @@ const testOnlyImports =
     SubjectsModule,
     ComplianceModule,
     DiscoveryModule,
+    CurriculumModule,
   ],
   controllers: [],
   providers: [],

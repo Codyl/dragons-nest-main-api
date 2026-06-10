@@ -7,11 +7,19 @@ import { ValidationPipe } from '@nestjs/common';
 import { COOKIE_SECRET, FRONTEND_URL, PORT } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
 import { LoggingInterceptor } from 'src/common/interceptors/logging.interceptor';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log', 'verbose', 'debug'],
+    bodyParser: false,
   });
+
+  // Manually register body parsers with explicit limits.
+  // Disabling the built-in body parser prevents interference with
+  // Multer's multipart/form-data handling on file upload routes.
+  app.use(json({ limit: '1mb' }));
+  app.use(urlencoded({ extended: true, limit: '1mb' }));
 
   app.useGlobalInterceptors(new LoggingInterceptor());
 
