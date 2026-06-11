@@ -53,6 +53,7 @@ describe('ProfileController', () => {
 
   it('should get the profile of the user', async () => {
     const mockProfile = {
+      _id: '507f1f77bcf86cd799439011',
       email: 'test@example.com',
       sub: '123',
       given_name: 'John',

@@ -1349,7 +1349,7 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
 
           const svc =
             module.get<InstanceType<typeof ProfileService>>(ProfileService);
-          const users = module.get(UsersService);
+          const users = module.get(UsersService) as jest.Mocked<UsersService>;
 
           const cognitoSub = 'test-sub';
 
@@ -1527,7 +1527,7 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService),
+      users: module.get(UsersService) as jest.Mocked<UsersService>,
     };
   }
 
@@ -1717,7 +1717,7 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService),
+      users: module.get(UsersService) as jest.Mocked<UsersService>,
     };
   }
 
@@ -1922,7 +1922,7 @@ describe('Property 13: DELETE with active enrollments produces notification even
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService),
+      users: module.get(UsersService) as jest.Mocked<UsersService>,
     };
   }
 
@@ -2149,8 +2149,8 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService),
-      cognito: module.get(CognitoService),
+      users: module.get(UsersService) as jest.Mocked<UsersService>,
+      cognito: module.get(CognitoService) as jest.Mocked<CognitoService>,
     };
   }
 
@@ -2355,6 +2355,8 @@ describe('ProfileService household student drafts', () => {
 
   it('getMe returns householdStudents active-only and managedAccountsViewAll for adults', async () => {
     const cognitoSub = 'sub-adult';
+    const activeStudentId = new Types.ObjectId();
+    const archivedStudentId = new Types.ObjectId();
     cognitoService.getUser.mockResolvedValue({
       UserAttributes: [
         { Name: 'email', Value: 'a@ex.com' },
@@ -2370,13 +2372,13 @@ describe('ProfileService household student drafts', () => {
       deleted: false,
       managedAccountsView: [
         {
-          studentId: 'a',
+          studentId: activeStudentId,
           displayName: 'Active',
           currentGrade: 3,
           lastPromotionYear: 2025,
         },
         {
-          studentId: 'b',
+          studentId: archivedStudentId,
           displayName: 'Old',
           currentGrade: 5,
           lastPromotionYear: 2024,
@@ -2388,7 +2390,7 @@ describe('ProfileService household student drafts', () => {
     const profile = await service.getMe('tok', { sub: cognitoSub });
 
     expect(profile.householdStudents).toHaveLength(1);
-    expect(profile.householdStudents![0].studentId).toBe('a');
+    expect(profile.householdStudents![0].studentId).toEqual(activeStudentId);
     expect(profile.managedAccountsViewAll).toHaveLength(2);
     expect(profile.managedAccountsViewAll![1].archivedAt).toBe(
       archivedDate.toISOString(),
@@ -2458,6 +2460,7 @@ describe('ProfileService household student drafts', () => {
 
   it('archiveHouseholdStudent sets archivedAt', async () => {
     const cognitoSub = 'adult';
+    const studentId = new Types.ObjectId();
     usersService.findOneByCognitoSub.mockResolvedValue({
       _id: new Types.ObjectId(),
       cognitoSub,
@@ -2466,7 +2469,7 @@ describe('ProfileService household student drafts', () => {
       deleted: false,
       managedAccountsView: [
         {
-          studentId: 'x',
+          studentId,
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: 2025,
@@ -2478,7 +2481,7 @@ describe('ProfileService household student drafts', () => {
       cognitoSub,
       managedAccountsView: [
         {
-          studentId: 'x',
+          studentId,
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: 2025,
@@ -2487,12 +2490,13 @@ describe('ProfileService household student drafts', () => {
       ],
     } as never);
 
-    const rows = await service.archiveHouseholdStudent(cognitoSub, 'x');
+    const rows = await service.archiveHouseholdStudent(cognitoSub, studentId);
     expect(rows[0].archivedAt).not.toBeNull();
   });
 
   it('restoreHouseholdStudent clears archivedAt', async () => {
     const cognitoSub = 'adult';
+    const studentId = new Types.ObjectId();
     usersService.findOneByCognitoSub.mockResolvedValue({
       _id: new Types.ObjectId(),
       cognitoSub,
@@ -2501,7 +2505,7 @@ describe('ProfileService household student drafts', () => {
       deleted: false,
       managedAccountsView: [
         {
-          studentId: 'x',
+          studentId,
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: 2025,
@@ -2514,7 +2518,7 @@ describe('ProfileService household student drafts', () => {
       cognitoSub,
       managedAccountsView: [
         {
-          studentId: 'x',
+          studentId,
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: 2025,
@@ -2523,7 +2527,7 @@ describe('ProfileService household student drafts', () => {
       ],
     } as never);
 
-    const rows = await service.restoreHouseholdStudent(cognitoSub, 'x');
+    const rows = await service.restoreHouseholdStudent(cognitoSub, studentId);
     expect(rows[0].archivedAt).toBeNull();
   });
 });

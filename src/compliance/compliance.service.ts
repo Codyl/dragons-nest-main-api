@@ -12,7 +12,7 @@ export class ComplianceService {
 
   async findByState(state: string): Promise<StateComplianceLaws> {
     const complianceLaw = await this.complianceLawsModel
-      .findOne({ abbreviation: state.toLocaleUpperCase() })
+      .findOne({ abbreviation: state.toUpperCase() })
       .exec();
 
     if (!complianceLaw) {
