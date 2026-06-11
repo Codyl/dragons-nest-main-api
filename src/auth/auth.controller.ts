@@ -5,6 +5,7 @@ import {
   NotFoundException,
   Post,
   Res,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
@@ -571,6 +572,12 @@ export class AuthController {
     @Cookies('REFRESH_TOKEN') refreshToken: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponseDto<EmptyDataDto>> {
+    if (!refreshToken) {
+      throw new UnauthorizedException(
+        'Missing refresh token cookie. Re-authenticate to start a new session.',
+      );
+    }
+
     const result = await this.authService.refreshToken(refreshToken);
 
     if (result?.AuthenticationResult) {
