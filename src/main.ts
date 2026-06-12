@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+// import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
@@ -41,14 +41,14 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const options = new DocumentBuilder()
-    .setTitle('Passkey API')
-    .setDescription('API for the Passkey project')
-    .setVersion('1.0')
-    .addCookieAuth('ACCESS_TOKEN')
-    .build();
-  const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('api', app, document);
+  // const options = new DocumentBuilder()
+  //   .setTitle('Passkey API')
+  //   .setDescription('API for the Passkey project')
+  //   .setVersion('1.0')
+  //   .addCookieAuth('ACCESS_TOKEN')
+  //   .build();
+  // const document = SwaggerModule.createDocument(app, options);
+  // SwaggerModule.setup('api', app, document);
 
   const port = config.getOrThrow(PORT, { infer: true });
   await app.listen(port ? Number(port) : 8080, '0.0.0.0').then(() => {
