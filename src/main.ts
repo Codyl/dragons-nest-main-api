@@ -51,7 +51,7 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   const port = config.getOrThrow(PORT, { infer: true });
-  await app.listen(port ? Number(port) : 8080).then(() => {
+  await app.listen(port ? Number(port) : 8080, '0.0.0.0').then(() => {
     console.log(
       `Server is running on port ${port} in ${process.env.NODE_ENV} mode`,
     );
