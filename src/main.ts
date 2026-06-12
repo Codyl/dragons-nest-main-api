@@ -2,16 +2,17 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 // import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import cookieParser from 'cookie-parser';
-import { ValidationPipe } from '@nestjs/common';
-import { COOKIE_SECRET, FRONTEND_URL, PORT } from 'src/env.constants';
+// import cookieParser from 'cookie-parser';
+// import { ValidationPipe } from '@nestjs/common';
+// import { COOKIE_SECRET, FRONTEND_URL, PORT } from 'src/env.constants';
+import { PORT } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
-import { LoggingInterceptor } from 'src/common/interceptors/logging.interceptor';
+// import { LoggingInterceptor } from 'src/common/interceptors/logging.interceptor';
 import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log', 'verbose', 'debug'],
+    // logger: ['error', 'warn', 'log', 'verbose', 'debug'],
     bodyParser: false,
   });
 
@@ -21,25 +22,25 @@ async function bootstrap() {
   app.use(json({ limit: '1mb' }));
   app.use(urlencoded({ extended: true, limit: '1mb' }));
 
-  app.useGlobalInterceptors(new LoggingInterceptor());
+  // app.useGlobalInterceptors(new LoggingInterceptor());
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
-  );
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     whitelist: true,
+  //     forbidNonWhitelisted: true,
+  //     transform: true,
+  //     transformOptions: {
+  //       enableImplicitConversion: true,
+  //     },
+  //   }),
+  // );
 
   const config = app.get(ConfigService<EnvironmentVariables>);
-  app.use(cookieParser(config.getOrThrow(COOKIE_SECRET, { infer: true })));
-  app.enableCors({
-    origin: config.getOrThrow(FRONTEND_URL, { infer: true }),
-    credentials: true,
-  });
+  // app.use(cookieParser(config.getOrThrow(COOKIE_SECRET, { infer: true })));
+  // app.enableCors({
+  //   origin: config.getOrThrow(FRONTEND_URL, { infer: true }),
+  //   credentials: true,
+  // });
 
   // const options = new DocumentBuilder()
   //   .setTitle('Passkey API')
