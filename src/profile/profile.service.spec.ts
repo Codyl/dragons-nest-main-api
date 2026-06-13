@@ -1349,7 +1349,7 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
 
           const svc =
             module.get<InstanceType<typeof ProfileService>>(ProfileService);
-          const users = module.get(UsersService) as jest.Mocked<UsersService>;
+          const users = module.get(UsersService);
 
           const cognitoSub = 'test-sub';
 
@@ -1527,7 +1527,7 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService) as jest.Mocked<UsersService>,
+      users: module.get(UsersService),
     };
   }
 
@@ -1717,7 +1717,7 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService) as jest.Mocked<UsersService>,
+      users: module.get(UsersService),
     };
   }
 
@@ -1922,7 +1922,7 @@ describe('Property 13: DELETE with active enrollments produces notification even
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService) as jest.Mocked<UsersService>,
+      users: module.get(UsersService),
     };
   }
 
@@ -2149,8 +2149,8 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService) as jest.Mocked<UsersService>,
-      cognito: module.get(CognitoService) as jest.Mocked<CognitoService>,
+      users: module.get(UsersService),
+      cognito: module.get(CognitoService),
     };
   }
 

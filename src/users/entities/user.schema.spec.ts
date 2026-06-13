@@ -62,6 +62,7 @@ describe('user.schema', () => {
         if (mongoose.models[name]) {
           delete mongoose.models[name];
         }
+
         const M = mongoose.model(name, UserSchema);
         const u = new M({
           accountType: AccountType.Student,
@@ -80,6 +81,7 @@ describe('user.schema', () => {
       if (mongoose.models[name]) {
         delete mongoose.models[name];
       }
+
       const M = mongoose.model(name, UserSchema);
       const u = new M({ accountType: AccountType.Student });
       expect((u.toJSON() as { age?: number }).age).toBeUndefined();

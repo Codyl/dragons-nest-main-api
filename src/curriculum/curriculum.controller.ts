@@ -33,7 +33,6 @@ import { CurriculumService } from './curriculum.service';
 import { GetCurriculumQueryDto } from './dto/get-curriculum-query.dto';
 import { UploadCurriculumDto } from './dto/upload-curriculum.dto';
 import { SetSelectionDto } from './dto/set-selection.dto';
-import { GetSelectionQueryDto } from './dto/get-selection-query.dto';
 import type { ApiResponseDto } from 'src/common/dto/api-response.dto';
 import { MongoIdPipe } from 'src/common/pipes/mongo-id.pipe';
 import { Types } from 'mongoose';
@@ -201,7 +200,8 @@ export class CurriculumController {
     description: 'Student does not belong to the authenticated user household.',
   })
   @ApiBadRequestResponse({
-    description: 'Invalid curriculum item ID or student not enrolled in subject.',
+    description:
+      'Invalid curriculum item ID or student not enrolled in subject.',
   })
   @Put('selection')
   async setSelection(

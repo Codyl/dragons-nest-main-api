@@ -431,9 +431,7 @@ export class AuthController {
       data: {
         session: result.Session,
         challengeName: result.ChallengeName,
-        challengeParameters: result.ChallengeParameters as
-          | Record<string, string>
-          | undefined,
+        challengeParameters: result.ChallengeParameters,
         availableChallenges: result.AvailableChallenges,
         authenticationResult: result.AuthenticationResult ? {} : undefined,
       },

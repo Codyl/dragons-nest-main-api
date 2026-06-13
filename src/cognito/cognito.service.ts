@@ -32,6 +32,7 @@ import {
   UpdateDeviceStatusCommand,
   UpdateUserAttributesCommand,
   VerifySoftwareTokenCommand,
+  InitiateAuthCommandOutput,
 } from '@aws-sdk/client-cognito-identity-provider';
 import {
   BadRequestException,
@@ -857,7 +858,7 @@ export class CognitoService {
    */
   async beginWebAuthnSignIn(username: string, session: string) {
     const clientId = this.configService.get<string>(COGNITO_CLIENT_ID)!;
-    let response;
+    let response: InitiateAuthCommandOutput;
     try {
       response = await this.cognitoClient.send(
         new InitiateAuthCommand({

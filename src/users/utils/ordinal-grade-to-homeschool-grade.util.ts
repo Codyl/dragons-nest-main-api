@@ -11,7 +11,7 @@ export function ordinalToHomeschoolGrade(ordinal: number): HomeschoolGrade {
     throw new RangeError(`Grade ordinal out of range: ${ordinal}`);
   }
 
-  return HOMESCHOOL_GRADE_ORDINALS[o]!;
+  return HOMESCHOOL_GRADE_ORDINALS[o];
 }
 
 export function ordinalGradesToHomeschoolGrades(

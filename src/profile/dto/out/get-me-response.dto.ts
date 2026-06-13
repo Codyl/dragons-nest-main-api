@@ -52,17 +52,4 @@ export class GetMeResponseDto {
     lastPromotionYear: number;
     archivedAt?: string | null;
   }[];
-
-  // Allow arbitrary string keys for additional Cognito attributes.
-  [key: string]:
-    | string
-    | string[]
-    | boolean
-    | number
-    | null
-    | undefined
-    | 'MANAGED'
-    | 'INDEPENDENT'
-    | 'ADULT'
-    | unknown;
 }

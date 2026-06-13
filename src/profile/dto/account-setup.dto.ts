@@ -175,32 +175,50 @@ export class AccountSetupDto {
   @Type(() => DayAvailabilityOnboardingDto)
   weeklyAvailability!: DayAvailabilityOnboardingDto[];
 
-  @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'adult')
+  @ValidateIf(
+    (o: AccountSetupDto) =>
+      o.onboardingExpectedBand === OnboardingExpectedBand.Adult,
+  )
   @IsOptional()
   @IsBoolean()
   adultAgeConfirmed?: boolean;
 
-  @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'adult')
+  @ValidateIf(
+    (o: AccountSetupDto) =>
+      o.onboardingExpectedBand === OnboardingExpectedBand.Adult,
+  )
   @IsOptional()
   @IsBoolean()
   adultGuardianDutyConfirmed?: boolean;
 
-  @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'teen13to17')
+  @ValidateIf(
+    (o: AccountSetupDto) =>
+      o.onboardingExpectedBand === OnboardingExpectedBand.Teen13to17,
+  )
   @IsOptional()
   @IsBoolean()
   teenAgeConfirmed?: boolean;
 
-  @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'teen13to17')
+  @ValidateIf(
+    (o: AccountSetupDto) =>
+      o.onboardingExpectedBand === OnboardingExpectedBand.Teen13to17,
+  )
   @IsOptional()
   @IsBoolean()
   teenPermissionConfirmed?: boolean;
 
-  @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'under13')
+  @ValidateIf(
+    (o: AccountSetupDto) =>
+      o.onboardingExpectedBand === OnboardingExpectedBand.Under13,
+  )
   @IsOptional()
   @IsBoolean()
   under13ChildConfirmed?: boolean;
 
-  @ValidateIf((o: AccountSetupDto) => o.onboardingExpectedBand === 'under13')
+  @ValidateIf(
+    (o: AccountSetupDto) =>
+      o.onboardingExpectedBand === OnboardingExpectedBand.Under13,
+  )
   @IsOptional()
   @IsBoolean()
   under13GuardianPermissionConfirmed?: boolean;

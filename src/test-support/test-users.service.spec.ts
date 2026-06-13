@@ -35,9 +35,11 @@ describe('TestUsersService', () => {
               if (key === COGNITO_USER_POOL_ID) {
                 return 'pool-id';
               }
+
               if (key === PREEXISTING_USER_EMAIL) {
                 return 'seed@example.com';
               }
+
               throw new Error(`unexpected key ${key}`);
             }),
           },

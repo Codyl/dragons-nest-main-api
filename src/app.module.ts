@@ -1,9 +1,6 @@
 import { Module } from '@nestjs/common';
-import {
-  ConfigModule,
-  // ConfigService
-} from '@nestjs/config';
-// import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CognitoModule } from './cognito/cognito.module';
@@ -11,8 +8,8 @@ import Joi from 'joi';
 import { ProfileModule } from './profile/profile.module';
 import { GoogleModule } from './google/google.module';
 import { MaxmindModule } from './maxmind/maxmind.module';
-// import { MONGODB_URI } from 'src/env.constants';
-// import { EnvironmentVariables } from 'src/env.config';
+import { MONGODB_URI } from 'src/env.constants';
+import { EnvironmentVariables } from 'src/env.config';
 import { HealthModule } from './health/health.module';
 import { TestSupportModule } from './test-support/test-support.module';
 import { SubjectsModule } from './subjects/subjects.module';
@@ -80,12 +77,12 @@ const testOnlyImports =
         MAILSLURP_EMAIL: Joi.string().email().optional(),
       }),
     }),
-    // MongooseModule.forRootAsync({
-    //   inject: [ConfigService],
-    //   useFactory: (config: ConfigService<EnvironmentVariables>) => ({
-    //     uri: config.getOrThrow(MONGODB_URI, { infer: true }),
-    //   }),
-    // }),
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<EnvironmentVariables>) => ({
+        uri: config.getOrThrow(MONGODB_URI, { infer: true }),
+      }),
+    }),
     AuthModule,
     UsersModule,
     CognitoModule,
