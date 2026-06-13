@@ -50,7 +50,7 @@ async function bootstrap() {
   //   .build();
   // const document = SwaggerModule.createDocument(app, options);
   // SwaggerModule.setup('api', app, document);
-
+  app.enableShutdownHooks();
   const port = config.getOrThrow(PORT, { infer: true });
   await app.listen(port ? Number(port) : 8080, '0.0.0.0').then(() => {
     console.log(
