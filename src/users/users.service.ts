@@ -426,15 +426,26 @@ export class UsersService {
       addedClasses,
     });
 
-    await this.userModel.findByIdAndUpdate(parentId, {
-      $addToSet: {
-        managedAccountsView: {
-          studentId: child._id,
-          displayName: child.givenName,
-          archivedAt: null, // or omit if you prefer
+    // ponytail: callers already push managedAccountsView entry with a placeholder
+    // studentId. Patch that entry to reference the real child._id instead of
+    // adding a duplicate. Falls back to $addToSet only if no placeholder exists
+    // (defensive; shouldn't happen in normal flow).
+    if (data.studentId) {
+      await this.userModel.findOneAndUpdate(
+        { _id: parentId, 'managedAccountsView.studentId': data.studentId },
+        { $set: { 'managedAccountsView.$.studentId': child._id } },
+      );
+    } else {
+      await this.userModel.findByIdAndUpdate(parentId, {
+        $addToSet: {
+          managedAccountsView: {
+            studentId: child._id,
+            displayName: child.givenName,
+            archivedAt: null,
+          },
         },
-      },
-    });
+      });
+    }
 
     return child;
   }

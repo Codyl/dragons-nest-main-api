@@ -173,7 +173,6 @@ export class User extends Document {
     type: String,
     required: false,
     default: null,
-    unique: true,
     sparse: true,
   })
   cognitoSub?: string | null;

@@ -684,16 +684,16 @@ export class ProfileService {
       );
     }
 
-    const drafts = [...(row.managedAccountsView ?? [])];
-    const idx = drafts.findIndex((managedAccount) =>
-      managedAccount.studentId.equals(studentId),
+    const managedAccounts = [...(row.managedAccountsView ?? [])];
+    const idx = managedAccounts.findIndex((managedAccount) =>
+      new Types.ObjectId(managedAccount.studentId).equals(studentId),
     );
     if (idx < 0) {
       throw new NotFoundException('Student draft not found');
     }
 
     const archivedAt = new Date();
-    const nextDrafts = drafts.map((d, i) =>
+    const nextDrafts = managedAccounts.map((d, i) =>
       i === idx ? { ...d, archivedAt } : d,
     );
 
