@@ -16,7 +16,7 @@ function getAuthCookieOptions(secure: boolean) {
   return {
     httpOnly: true,
     secure,
-    sameSite: 'strict' as const,
+    sameSite: secure ? ('none' as const) : ('strict' as const),
     signed: true,
     maxAge: 3600000, // 1 hour for Access/Id
   };
