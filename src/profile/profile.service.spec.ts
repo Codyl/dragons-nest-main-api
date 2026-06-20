@@ -22,6 +22,12 @@ import { AgeBandAtRegistration } from 'src/users/enums/age-band-at-registration.
 import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
 import { State } from 'src/users/enums/state.enum';
 import { AddHouseholdStudentDto } from './dto/add-household-student.dto';
+import { validate } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
+import * as fc from 'fast-check';
+import { AddTeachableCourseDto } from './dto/add-teachable-course.dto';
+import { HomeschoolCurriculum } from 'src/users/enums/homeschool-curriculum.enum';
+import { HomeschoolGrade } from 'src/users/enums/homeschool-grade.enum';
 
 /* eslint-disable @typescript-eslint/unbound-method */
 describe('ProfileService', () => {
@@ -1004,18 +1010,6 @@ describe('Property 10: AddTeachableCourseDto rejects invalid payloads', () => {
   // which mirrors what NestJS ValidationPipe does before the service is called.
   // Invalid payloads must produce validation errors (HTTP 400 in the real endpoint).
 
-  const { validate } =
-    require('class-validator') as typeof import('class-validator');
-  const { plainToInstance } =
-    require('class-transformer') as typeof import('class-transformer');
-  const fc = require('fast-check') as typeof import('fast-check');
-  const { AddTeachableCourseDto } =
-    require('./dto/add-teachable-course.dto') as typeof import('./dto/add-teachable-course.dto');
-  const { HomeschoolCurriculum } =
-    require('src/users/enums/homeschool-curriculum.enum') as typeof import('src/users/enums/homeschool-curriculum.enum');
-  const { HomeschoolGrade } =
-    require('src/users/enums/homeschool-grade.enum') as typeof import('src/users/enums/homeschool-grade.enum');
-
   const validCurriculumValues = Object.values(HomeschoolCurriculum);
   const validGradeValues = Object.values(HomeschoolGrade);
   const validMongoId = '507f1f77bcf86cd799439011';
@@ -1203,33 +1197,6 @@ describe('Property 10: AddTeachableCourseDto rejects invalid payloads', () => {
 // Feature: manage-teachable-subjects, Property 9: PATCH endpoint appends course (round-trip)
 // Validates: Requirements 7.1, 7.8
 describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
-  const fc = require('fast-check') as typeof import('fast-check');
-  const { HomeschoolCurriculum } =
-    require('src/users/enums/homeschool-curriculum.enum') as typeof import('src/users/enums/homeschool-curriculum.enum');
-  const { HomeschoolGrade } =
-    require('src/users/enums/homeschool-grade.enum') as typeof import('src/users/enums/homeschool-grade.enum');
-  const { Test } =
-    require('@nestjs/testing') as typeof import('@nestjs/testing');
-  const { ProfileService } =
-    require('./profile.service') as typeof import('./profile.service');
-  const { CognitoService } =
-    require('src/cognito/cognito.service') as typeof import('src/cognito/cognito.service');
-  const { UsersService } =
-    require('src/users/users.service') as typeof import('src/users/users.service');
-  const { GoogleService } =
-    require('src/google/google.service') as typeof import('src/google/google.service');
-  const { MaxmindService } =
-    require('src/maxmind/maxmind.service') as typeof import('src/maxmind/maxmind.service');
-  const { ConfigService } =
-    require('@nestjs/config') as typeof import('@nestjs/config');
-  const { Types } = require('mongoose') as typeof import('mongoose');
-  const { AccountType } =
-    require('src/users/enums/account-type.enum') as typeof import('src/users/enums/account-type.enum');
-  const { AgeBandAtRegistration } =
-    require('src/users/enums/age-band-at-registration.enum') as typeof import('src/users/enums/age-band-at-registration.enum');
-  const { MAXMIND_KEY } =
-    require('src/env.constants') as typeof import('src/env.constants');
-
   const validCurriculumValues = Object.values(HomeschoolCurriculum);
   const validGradeValues = Object.values(HomeschoolGrade);
   const validMongoId = '507f1f77bcf86cd799439011';
@@ -1349,7 +1316,7 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
 
           const svc =
             module.get<InstanceType<typeof ProfileService>>(ProfileService);
-          const users = module.get(UsersService);
+          const users = module.get<jest.Mocked<UsersService>>(UsersService);
 
           const cognitoSub = 'test-sub';
 
@@ -1409,33 +1376,6 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
 // Feature: manage-teachable-subjects, Property 11: DELETE endpoint removes course at index (round-trip)
 // Validates: Requirements 7.4, 7.8
 describe('Property 11: DELETE endpoint removes course at index (round-trip)', () => {
-  const fc = require('fast-check') as typeof import('fast-check');
-  const { HomeschoolCurriculum } =
-    require('src/users/enums/homeschool-curriculum.enum') as typeof import('src/users/enums/homeschool-curriculum.enum');
-  const { HomeschoolGrade } =
-    require('src/users/enums/homeschool-grade.enum') as typeof import('src/users/enums/homeschool-grade.enum');
-  const { Test } =
-    require('@nestjs/testing') as typeof import('@nestjs/testing');
-  const { ProfileService } =
-    require('./profile.service') as typeof import('./profile.service');
-  const { CognitoService } =
-    require('src/cognito/cognito.service') as typeof import('src/cognito/cognito.service');
-  const { UsersService } =
-    require('src/users/users.service') as typeof import('src/users/users.service');
-  const { GoogleService } =
-    require('src/google/google.service') as typeof import('src/google/google.service');
-  const { MaxmindService } =
-    require('src/maxmind/maxmind.service') as typeof import('src/maxmind/maxmind.service');
-  const { ConfigService } =
-    require('@nestjs/config') as typeof import('@nestjs/config');
-  const { Types } = require('mongoose') as typeof import('mongoose');
-  const { AccountType } =
-    require('src/users/enums/account-type.enum') as typeof import('src/users/enums/account-type.enum');
-  const { AgeBandAtRegistration } =
-    require('src/users/enums/age-band-at-registration.enum') as typeof import('src/users/enums/age-band-at-registration.enum');
-  const { MAXMIND_KEY } =
-    require('src/env.constants') as typeof import('src/env.constants');
-
   const validCurriculumValues = Object.values(HomeschoolCurriculum);
   const validGradeValues = Object.values(HomeschoolGrade);
   const validMongoId = '507f1f77bcf86cd799439011';
@@ -1527,7 +1467,7 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService),
+      users: module.get<jest.Mocked<UsersService>>(UsersService),
     };
   }
 
@@ -1597,35 +1537,6 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
 // Feature: manage-teachable-subjects, Property 12: DELETE endpoint rejects invalid indices
 // Validates: Requirements 7.5
 describe('Property 12: DELETE endpoint rejects invalid indices', () => {
-  const fc = require('fast-check') as typeof import('fast-check');
-  const { HomeschoolCurriculum } =
-    require('src/users/enums/homeschool-curriculum.enum') as typeof import('src/users/enums/homeschool-curriculum.enum');
-  const { HomeschoolGrade } =
-    require('src/users/enums/homeschool-grade.enum') as typeof import('src/users/enums/homeschool-grade.enum');
-  const { Test } =
-    require('@nestjs/testing') as typeof import('@nestjs/testing');
-  const { ProfileService } =
-    require('./profile.service') as typeof import('./profile.service');
-  const { CognitoService } =
-    require('src/cognito/cognito.service') as typeof import('src/cognito/cognito.service');
-  const { UsersService } =
-    require('src/users/users.service') as typeof import('src/users/users.service');
-  const { GoogleService } =
-    require('src/google/google.service') as typeof import('src/google/google.service');
-  const { MaxmindService } =
-    require('src/maxmind/maxmind.service') as typeof import('src/maxmind/maxmind.service');
-  const { ConfigService } =
-    require('@nestjs/config') as typeof import('@nestjs/config');
-  const { BadRequestException } =
-    require('@nestjs/common') as typeof import('@nestjs/common');
-  const { Types } = require('mongoose') as typeof import('mongoose');
-  const { AccountType } =
-    require('src/users/enums/account-type.enum') as typeof import('src/users/enums/account-type.enum');
-  const { AgeBandAtRegistration } =
-    require('src/users/enums/age-band-at-registration.enum') as typeof import('src/users/enums/age-band-at-registration.enum');
-  const { MAXMIND_KEY } =
-    require('src/env.constants') as typeof import('src/env.constants');
-
   const validCurriculumValues = Object.values(HomeschoolCurriculum);
   const validGradeValues = Object.values(HomeschoolGrade);
   const validMongoId = '507f1f77bcf86cd799439011';
@@ -1717,7 +1628,7 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService),
+      users: module.get<jest.Mocked<UsersService>>(UsersService),
     };
   }
 
@@ -1825,31 +1736,6 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
 // Feature: manage-teachable-subjects, Property 13: DELETE with active enrollments produces notification events
 // Validates: Requirements 7.7
 describe('Property 13: DELETE with active enrollments produces notification events', () => {
-  const fc = require('fast-check') as typeof import('fast-check');
-  const { HomeschoolCurriculum } =
-    require('src/users/enums/homeschool-curriculum.enum') as typeof import('src/users/enums/homeschool-curriculum.enum');
-  const { Test } =
-    require('@nestjs/testing') as typeof import('@nestjs/testing');
-  const { ProfileService } =
-    require('./profile.service') as typeof import('./profile.service');
-  const { CognitoService } =
-    require('src/cognito/cognito.service') as typeof import('src/cognito/cognito.service');
-  const { UsersService } =
-    require('src/users/users.service') as typeof import('src/users/users.service');
-  const { GoogleService } =
-    require('src/google/google.service') as typeof import('src/google/google.service');
-  const { MaxmindService } =
-    require('src/maxmind/maxmind.service') as typeof import('src/maxmind/maxmind.service');
-  const { ConfigService } =
-    require('@nestjs/config') as typeof import('@nestjs/config');
-  const { Types } = require('mongoose') as typeof import('mongoose');
-  const { AccountType } =
-    require('src/users/enums/account-type.enum') as typeof import('src/users/enums/account-type.enum');
-  const { AgeBandAtRegistration } =
-    require('src/users/enums/age-band-at-registration.enum') as typeof import('src/users/enums/age-band-at-registration.enum');
-  const { MAXMIND_KEY } =
-    require('src/env.constants') as typeof import('src/env.constants');
-
   const validCurriculumValues = Object.values(HomeschoolCurriculum);
   const validMongoId = '507f1f77bcf86cd799439011';
 
@@ -1922,7 +1808,7 @@ describe('Property 13: DELETE with active enrollments produces notification even
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService),
+      users: module.get<jest.Mocked<UsersService>>(UsersService),
     };
   }
 
@@ -2031,33 +1917,6 @@ describe('Property 13: DELETE with active enrollments produces notification even
 // Feature: manage-teachable-subjects, Property 14: GET /profile includes activeEnrollmentCount for every course
 // Validates: Requirements 8.2
 describe('Property 14: GET /profile includes activeEnrollmentCount for every course', () => {
-  const fc = require('fast-check') as typeof import('fast-check');
-  const { HomeschoolCurriculum } =
-    require('src/users/enums/homeschool-curriculum.enum') as typeof import('src/users/enums/homeschool-curriculum.enum');
-  const { HomeschoolGrade } =
-    require('src/users/enums/homeschool-grade.enum') as typeof import('src/users/enums/homeschool-grade.enum');
-  const { Test } =
-    require('@nestjs/testing') as typeof import('@nestjs/testing');
-  const { ProfileService } =
-    require('./profile.service') as typeof import('./profile.service');
-  const { CognitoService } =
-    require('src/cognito/cognito.service') as typeof import('src/cognito/cognito.service');
-  const { UsersService } =
-    require('src/users/users.service') as typeof import('src/users/users.service');
-  const { GoogleService } =
-    require('src/google/google.service') as typeof import('src/google/google.service');
-  const { MaxmindService } =
-    require('src/maxmind/maxmind.service') as typeof import('src/maxmind/maxmind.service');
-  const { ConfigService } =
-    require('@nestjs/config') as typeof import('@nestjs/config');
-  const { Types } = require('mongoose') as typeof import('mongoose');
-  const { AccountType } =
-    require('src/users/enums/account-type.enum') as typeof import('src/users/enums/account-type.enum');
-  const { AgeBandAtRegistration } =
-    require('src/users/enums/age-band-at-registration.enum') as typeof import('src/users/enums/age-band-at-registration.enum');
-  const { MAXMIND_KEY } =
-    require('src/env.constants') as typeof import('src/env.constants');
-
   const validCurriculumValues = Object.values(HomeschoolCurriculum);
   const validGradeValues = Object.values(HomeschoolGrade);
   const validMongoId = '507f1f77bcf86cd799439011';
@@ -2149,8 +2008,8 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
 
     return {
       svc: module.get<InstanceType<typeof ProfileService>>(ProfileService),
-      users: module.get(UsersService),
-      cognito: module.get(CognitoService),
+      users: module.get<jest.Mocked<UsersService>>(UsersService),
+      cognito: module.get<jest.Mocked<CognitoService>>(CognitoService),
     };
   }
 
