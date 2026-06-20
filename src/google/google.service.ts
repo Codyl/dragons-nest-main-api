@@ -304,10 +304,17 @@ export class GoogleService {
     const existingUser = listResult.Users?.[0];
 
     if (existingUser) {
-      const user = await this.userModel.findOne({
-        email,
-        linkedProviders: { $elemMatch: { $eq: 'GOOGLE' } },
-      });
+      const cognitoSub = existingUser.Attributes?.find(
+        (a) => a.Name === 'sub',
+      )?.Value;
+
+      const user = cognitoSub
+        ? await this.userModel.findOne({
+            cognitoSub,
+            linkedProviders: { $elemMatch: { $eq: 'GOOGLE' } },
+          })
+        : null;
+
       if (!user) {
         throw new ConflictException(
           'An account with this email already exists. Please sign in.',
