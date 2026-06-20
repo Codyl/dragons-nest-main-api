@@ -41,14 +41,17 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const options = new DocumentBuilder()
-    .setTitle('Passkey API')
-    .setDescription('API for the Passkey project')
-    .setVersion('1.0')
-    .addCookieAuth('ACCESS_TOKEN')
-    .build();
-  const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('api', app, document);
+  if (process.env.NODE_ENV !== 'production') {
+    const options = new DocumentBuilder()
+      .setTitle('Passkey API')
+      .setDescription('API for the Passkey project')
+      .setVersion('1.0')
+      .addCookieAuth('ACCESS_TOKEN')
+      .build();
+    const document = SwaggerModule.createDocument(app, options);
+    SwaggerModule.setup('api', app, document);
+  }
+
   app.enableShutdownHooks();
   const port = config.getOrThrow(PORT, { infer: true });
   await app.listen(port ? Number(port) : 8080, '0.0.0.0').then(() => {
