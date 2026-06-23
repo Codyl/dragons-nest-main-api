@@ -1,7 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 
 import { CognitoService } from './cognito.service';
@@ -15,7 +14,6 @@ import { CognitoService } from './cognito.service';
       useFactory: (config: ConfigService) => {
         return new CognitoIdentityProviderClient({
           region: config.get<string>('AWS_REGION'),
-          credentials: defaultProvider({ profile: 'member' }),
         });
       },
     },
