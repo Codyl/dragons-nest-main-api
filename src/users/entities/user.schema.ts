@@ -308,7 +308,7 @@ export class User extends Document {
   @Prop({
     type: [
       {
-        studentId: { type: String, required: true },
+        studentId: { type: Types.ObjectId, required: true, ref: 'User' },
         displayName: { type: String, required: true },
         currentGrade: { type: Number, required: true, min: 0, max: 13 },
         lastPromotionYear: { type: Number, required: true },
@@ -362,7 +362,7 @@ export class User extends Document {
     type: [
       {
         type: { type: String, enum: ['COURSE_REMOVED'], required: true },
-        recipientUserId: { type: String, required: true },
+        recipientUserId: { type: Types.ObjectId, required: true, ref: 'User' },
         payload: { type: mongoose.Schema.Types.Mixed, required: true },
         createdAt: { type: Date, required: true },
       },
@@ -371,7 +371,7 @@ export class User extends Document {
   })
   notificationEvents?: {
     type: 'COURSE_REMOVED';
-    recipientUserId: string;
+    recipientUserId: Types.ObjectId;
     payload: unknown;
     createdAt: Date;
   }[];
