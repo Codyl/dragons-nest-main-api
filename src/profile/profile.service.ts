@@ -229,7 +229,6 @@ export class ProfileService {
             }))
         : undefined;
 
-    // Compute activeEnrollmentCount for each teachable course when user is an adult
     let teachableCourses: TeachableCourseResponseItem[] | undefined;
     if (user.accountType === AccountType.Adult) {
       const rawCourses = (user.teachableCourses ?? []) as Array<{
@@ -240,66 +239,18 @@ export class ProfileService {
         grades?: string[];
         curriculum?: string;
         maxStudents?: number;
+        activeEnrollmentCount?: number;
       }>;
 
-      const linkedStudentIds = user.linkedStudents ?? [];
-
-      // Fetch all linked students once
-      const studentDocs = await Promise.all(
-        linkedStudentIds.map((id) => this.usersService.findOneById(id)),
-      );
-
-      teachableCourses = rawCourses.map((course) => {
-        const courseId = course._id;
-        let activeEnrollmentCount = 0;
-
-        if (courseId) {
-          for (const student of studentDocs) {
-            if (!student || student.deleted) {
-              continue;
-            }
-
-            const addedClasses = (student.addedClasses ?? []) as Array<{
-              adult?: Types.ObjectId;
-              course?: Types.ObjectId | { _id?: Types.ObjectId };
-            }>;
-
-            const hasEnrollment = addedClasses.some((cls) => {
-              const adultMatches =
-                cls.adult && user._id && cls.adult.equals(user._id);
-              if (!adultMatches) {
-                return false;
-              }
-
-              const courseRef = cls.course;
-              if (!courseRef) {
-                return false;
-              }
-
-              if (courseRef instanceof Types.ObjectId) {
-                return courseRef.equals(courseId);
-              }
-
-              const refId = (courseRef as { _id?: Types.ObjectId })._id;
-              return refId ? refId.equals(courseId) : false;
-            });
-
-            if (hasEnrollment) {
-              activeEnrollmentCount++;
-            }
-          }
-        }
-
-        return {
-          className: course.className ?? '',
-          subjectId: course.subjectId ? course.subjectId.toString() : '',
-          matchesAllGrades: course.matchesAllGrades ?? false,
-          grades: course.grades ?? [],
-          curriculum: course.curriculum ?? '',
-          maxStudents: course.maxStudents ?? 0,
-          activeEnrollmentCount,
-        };
-      });
+      teachableCourses = rawCourses.map((course) => ({
+        className: course.className ?? '',
+        subjectId: course.subjectId ? course.subjectId.toString() : '',
+        matchesAllGrades: course.matchesAllGrades ?? false,
+        grades: course.grades ?? [],
+        curriculum: course.curriculum ?? '',
+        maxStudents: course.maxStudents ?? 0,
+        activeEnrollmentCount: course.activeEnrollmentCount ?? 0,
+      }));
     }
 
     return {
@@ -807,6 +758,7 @@ export class ProfileService {
       grades?: string[];
       curriculum?: string;
       maxStudents?: number;
+      activeEnrollmentCount?: number;
     }>;
 
     return courses.map((c) => ({
@@ -816,7 +768,7 @@ export class ProfileService {
       grades: c.grades ?? [],
       curriculum: c.curriculum ?? '',
       maxStudents: c.maxStudents ?? 0,
-      activeEnrollmentCount: 0,
+      activeEnrollmentCount: c.activeEnrollmentCount ?? 0,
     }));
   }
 
@@ -971,6 +923,7 @@ export class ProfileService {
       grades?: string[];
       curriculum?: string;
       maxStudents?: number;
+      activeEnrollmentCount?: number;
     }>;
 
     return updatedCourses.map((c) => ({
@@ -980,7 +933,7 @@ export class ProfileService {
       grades: c.grades ?? [],
       curriculum: c.curriculum ?? '',
       maxStudents: c.maxStudents ?? 0,
-      activeEnrollmentCount: 0,
+      activeEnrollmentCount: c.activeEnrollmentCount ?? 0,
     }));
   }
 

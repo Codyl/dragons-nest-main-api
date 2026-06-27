@@ -505,6 +505,53 @@ export class UsersService {
     }
   }
 
+  // ponytail: recount-on-write for denormalized activeEnrollmentCount.
+  // One countDocuments query per course — always consistent with addedClasses.
+
+  /**
+   * Recounts students enrolled in the given teachable course and persists
+   * the result on the adult's `teachableCourses.$.activeEnrollmentCount`.
+   *
+   * Call after any mutation to a student's `addedClasses` that references
+   * this adult + course pair.
+   */
+  async recountCourseEnrollment(
+    adultUserId: Types.ObjectId,
+    courseId: Types.ObjectId,
+  ) {
+    const count = await this.userModel.countDocuments({
+      deleted: { $ne: true },
+      'addedClasses.adult': adultUserId,
+      'addedClasses.course': courseId,
+    } as any); // ponytail: raw filter — Mongoose types can't express nested subdoc ID match cleanly
+
+    return this.userModel.updateOne(
+      { _id: adultUserId, 'teachableCourses._id': courseId },
+      { $set: { 'teachableCourses.$.activeEnrollmentCount': count } },
+    );
+  }
+
+  /**
+   * Recounts all teachable courses for the given adult in one pass.
+   * Useful after bulk mutations (onboarding, account deletion, etc.).
+   */
+  async recountAllCourseEnrollments(adultUserId: Types.ObjectId) {
+    const adult = await this.userModel
+      .findById(adultUserId)
+      .select('teachableCourses')
+      .lean();
+
+    const courses = adult?.teachableCourses ?? [];
+    if (courses.length === 0) return;
+
+    for (const course of courses) {
+      const cid = (course as { _id?: Types.ObjectId })._id;
+      if (cid) {
+        await this.recountCourseEnrollment(adultUserId, cid);
+      }
+    }
+  }
+
   /**
    * True when `childId` lists `parentId` as guardian and the child is under 18.
    */

@@ -174,6 +174,7 @@ export class User extends Document {
     required: false,
     default: null,
     sparse: true,
+    index: true,
   })
   cognitoSub?: string | null;
 

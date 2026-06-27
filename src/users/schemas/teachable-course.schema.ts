@@ -68,6 +68,16 @@ export class TeachableCourse {
   })
   @Prop({ type: Number, required: false, min: 1, max: 20 })
   maxStudents?: number;
+
+  // ponytail: denormalized counter — maintained at enroll/unenroll write time.
+  // Ceiling: can drift if a mutation path is missed; reconcile via admin script.
+  @ApiProperty({
+    description:
+      'Current number of students enrolled in this course (denormalized counter).',
+    default: 0,
+  })
+  @Prop({ type: Number, default: 0 })
+  activeEnrollmentCount?: number;
 }
 
 export const TeachableCourseSchema =
