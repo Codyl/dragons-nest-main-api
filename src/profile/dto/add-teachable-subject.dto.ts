@@ -16,7 +16,7 @@ import { HomeschoolCurriculum } from 'src/users/enums/homeschool-curriculum.enum
 import { HomeschoolGrade } from 'src/users/enums/homeschool-grade.enum';
 import { TeachableCourseGradesConstraint } from './account-setup.dto';
 
-export class AddTeachableCourseDto {
+export class AddTeachableSubjectDto {
   @IsString()
   @MinLength(1)
   @MaxLength(256)

@@ -22,11 +22,11 @@ import { AccountType } from 'src/users/enums/account-type.enum';
 import { AgeBandAtRegistration } from 'src/users/enums/age-band-at-registration.enum';
 import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
 import { State } from 'src/users/enums/state.enum';
-import { AddHouseholdStudentDto } from './dto/add-household-student.dto';
+import { AddManagedUserDto } from './dto/add-managed-user.dto';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import * as fc from 'fast-check';
-import { AddTeachableCourseDto } from './dto/add-teachable-course.dto';
+import { AddTeachableSubjectDto } from './dto/add-teachable-subject.dto';
 import { HomeschoolCurriculum } from 'src/users/enums/homeschool-curriculum.enum';
 import { HomeschoolGrade } from 'src/users/enums/homeschool-grade.enum';
 import { Subject } from 'src/subjects/subject.entity';
@@ -107,7 +107,7 @@ describe('ProfileService', () => {
             updateByCognitoSub: jest.fn(),
             addLinkGoogle: jest.fn(),
             removeLinkGoogle: jest.fn(),
-            createManagedChild: jest
+            createManagedUser: jest
               .fn()
               .mockResolvedValue({ _id: new Types.ObjectId() }),
           },
@@ -281,7 +281,7 @@ describe('ProfileService', () => {
     }));
 
     const dto = {
-      accountType: AccountType.Student,
+      accountType: AccountType.ManagedUser,
       onboardingExpectedBand: OnboardingExpectedBand.Teen13to17,
       teenAgeConfirmed: true,
       teenPermissionConfirmed: true,
@@ -1015,7 +1015,7 @@ describe('ProfileService', () => {
 });
 
 // Feature: manage-teachable-subjects, Property 10: PATCH endpoint rejects invalid payloads
-describe('Property 10: AddTeachableCourseDto rejects invalid payloads', () => {
+describe('Property 10: AddTeachableSubjectDto rejects invalid payloads', () => {
   // We test DTO validation directly using class-validator's validate() function,
   // which mirrors what NestJS ValidationPipe does before the service is called.
   // Invalid payloads must produce validation errors (HTTP 400 in the real endpoint).
@@ -1037,7 +1037,7 @@ describe('Property 10: AddTeachableCourseDto rejects invalid payloads', () => {
   }
 
   async function expectInvalid(plain: Record<string, unknown>): Promise<void> {
-    const dto = plainToInstance(AddTeachableCourseDto, plain);
+    const dto = plainToInstance(AddTeachableSubjectDto, plain);
     const errors = await validate(dto);
     expect(errors.length).toBeGreaterThan(0);
   }
@@ -1211,7 +1211,7 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
   const validGradeValues = Object.values(HomeschoolGrade);
   const validMongoId = '507f1f77bcf86cd799439011';
 
-  /** Arbitrary for a valid AddTeachableCourseDto plain object. */
+  /** Arbitrary for a valid AddTeachableSubjectDto plain object. */
   function arbitraryAddTeachableCourseDto() {
     return fc.boolean().chain((matchesAllGrades) => {
       const gradesArb = matchesAllGrades
@@ -1302,7 +1302,7 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
                   updateByCognitoSub: jest.fn(),
                   addLinkGoogle: jest.fn(),
                   removeLinkGoogle: jest.fn(),
-                  createManagedChild: jest
+                  createManagedUser: jest
                     .fn()
                     .mockResolvedValue({ _id: new Types.ObjectId() }),
                 },
@@ -1342,8 +1342,8 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
           const userDoc = {
             _id: new Types.ObjectId(),
             cognitoSub,
-            accountType: AccountType.Adult,
-            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            accountType: AccountType.Manager,
+            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
             deleted: false,
             teachableCourses: existingCourses,
           };
@@ -1367,7 +1367,7 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
             teachableCourses: updatedCourses,
           } as never);
 
-          const result = await svc.addTeachableCourse(cognitoSub, dto as never);
+          const result = await svc.addTeachableSubject(cognitoSub, dto as never);
 
           // Assert: returned array length = original length + 1
           expect(result).toHaveLength(existingCourses.length + 1);
@@ -1461,7 +1461,7 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
             updateByCognitoSub: jest.fn(),
             addLinkGoogle: jest.fn(),
             removeLinkGoogle: jest.fn(),
-            createManagedChild: jest
+            createManagedUser: jest
               .fn()
               .mockResolvedValue({ _id: new Types.ObjectId() }),
           },
@@ -1516,8 +1516,8 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
           const userDoc = {
             _id: userId,
             cognitoSub,
-            accountType: AccountType.Adult,
-            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            accountType: AccountType.Manager,
+            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
             deleted: false,
             teachableCourses: courses,
             linkedStudents: [],
@@ -1532,7 +1532,7 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
             teachableCourses: remainingCourses,
           } as never);
 
-          const result = await svc.removeTeachableCourse(cognitoSub, index);
+          const result = await svc.removeTeachableSubject(cognitoSub, index);
 
           // Assert: returned array length = original − 1
           expect(result).toHaveLength(courses.length - 1);
@@ -1630,7 +1630,7 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
             updateByCognitoSub: jest.fn(),
             addLinkGoogle: jest.fn(),
             removeLinkGoogle: jest.fn(),
-            createManagedChild: jest
+            createManagedUser: jest
               .fn()
               .mockResolvedValue({ _id: new Types.ObjectId() }),
           },
@@ -1678,15 +1678,15 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
           users.findOneByCognitoSub.mockResolvedValue({
             _id: new Types.ObjectId(),
             cognitoSub,
-            accountType: AccountType.Adult,
-            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            accountType: AccountType.Manager,
+            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
             deleted: false,
             teachableCourses: courses,
             linkedStudents: [],
           } as never);
 
           await expect(
-            svc.removeTeachableCourse(cognitoSub, negativeIndex),
+            svc.removeTeachableSubject(cognitoSub, negativeIndex),
           ).rejects.toThrow(BadRequestException);
         },
       ),
@@ -1712,15 +1712,15 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
           users.findOneByCognitoSub.mockResolvedValue({
             _id: new Types.ObjectId(),
             cognitoSub,
-            accountType: AccountType.Adult,
-            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            accountType: AccountType.Manager,
+            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
             deleted: false,
             teachableCourses: courses,
             linkedStudents: [],
           } as never);
 
           await expect(
-            svc.removeTeachableCourse(cognitoSub, nonIntIndex),
+            svc.removeTeachableSubject(cognitoSub, nonIntIndex),
           ).rejects.toThrow(BadRequestException);
         },
       ),
@@ -1750,15 +1750,15 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
           users.findOneByCognitoSub.mockResolvedValue({
             _id: new Types.ObjectId(),
             cognitoSub,
-            accountType: AccountType.Adult,
-            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            accountType: AccountType.Manager,
+            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
             deleted: false,
             teachableCourses: courses,
             linkedStudents: [],
           } as never);
 
           await expect(
-            svc.removeTeachableCourse(cognitoSub, index),
+            svc.removeTeachableSubject(cognitoSub, index),
           ).rejects.toThrow(BadRequestException);
         },
       ),
@@ -1818,7 +1818,7 @@ describe('Property 13: DELETE with active enrollments produces notification even
             updateByCognitoSub: jest.fn(),
             addLinkGoogle: jest.fn(),
             removeLinkGoogle: jest.fn(),
-            createManagedChild: jest
+            createManagedUser: jest
               .fn()
               .mockResolvedValue({ _id: new Types.ObjectId() }),
           },
@@ -1901,8 +1901,8 @@ describe('Property 13: DELETE with active enrollments produces notification even
           const userDoc = {
             _id: userId,
             cognitoSub,
-            accountType: AccountType.Adult,
-            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            accountType: AccountType.Manager,
+            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
             deleted: false,
             teachableCourses: [courseToRemove],
             linkedStudents: linkedStudentIds,
@@ -1935,7 +1935,7 @@ describe('Property 13: DELETE with active enrollments produces notification even
             }) as never;
           }) as never);
 
-          await svc.removeTeachableCourse(cognitoSub, 0);
+          await svc.removeTeachableSubject(cognitoSub, 0);
 
           // Assert: notificationEvents in the update equals M
           expect(capturedUpdate).not.toBeNull();
@@ -2026,7 +2026,7 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
             updateByCognitoSub: jest.fn(),
             addLinkGoogle: jest.fn(),
             removeLinkGoogle: jest.fn(),
-            createManagedChild: jest
+            createManagedUser: jest
               .fn()
               .mockResolvedValue({ _id: new Types.ObjectId() }),
           },
@@ -2127,8 +2127,8 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
           const userDoc = {
             _id: userId,
             cognitoSub,
-            accountType: AccountType.Adult,
-            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+            accountType: AccountType.Manager,
+            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
             deleted: false,
             teachableCourses: courses,
             linkedStudents: linkedStudentIds,
@@ -2245,7 +2245,7 @@ describe('ProfileService household student drafts', () => {
             updateByCognitoSub: jest.fn(),
             addLinkGoogle: jest.fn(),
             removeLinkGoogle: jest.fn(),
-            createManagedChild: jest
+            createManagedUser: jest
               .fn()
               .mockResolvedValue({ _id: new Types.ObjectId() }),
           },
@@ -2284,8 +2284,8 @@ describe('ProfileService household student drafts', () => {
     usersService.findOneByCognitoSub.mockResolvedValue({
       _id: new Types.ObjectId(),
       cognitoSub,
-      accountType: AccountType.Adult,
-      ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+      accountType: AccountType.Manager,
+      ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
       deleted: false,
       managedAccountsView: [
         {
@@ -2314,29 +2314,29 @@ describe('ProfileService household student drafts', () => {
     );
   });
 
-  it('addHouseholdStudent forbids non-adult', async () => {
+  it('addManagedUser forbids non-adult', async () => {
     usersService.findOneByCognitoSub.mockResolvedValue({
       _id: new Types.ObjectId(),
       cognitoSub: 's',
-      accountType: AccountType.Student,
+      accountType: AccountType.ManagedUser,
       deleted: false,
     } as UserDoc);
 
     await expect(
-      service.addHouseholdStudent('s', {
+      service.addManagedUser('s', {
         displayName: 'X',
         currentGrade: 1,
-      } as AddHouseholdStudentDto),
+      } as AddManagedUserDto),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
-  it('addHouseholdStudent appends and returns mapped drafts', async () => {
+  it('addManagedUser appends and returns mapped drafts', async () => {
     const cognitoSub = 'adult';
     usersService.findOneByCognitoSub.mockResolvedValue({
       _id: new Types.ObjectId(),
       cognitoSub,
-      accountType: AccountType.Adult,
-      ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+      accountType: AccountType.Manager,
+      ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
       deleted: false,
       managedAccountsView: [],
     } as never);
@@ -2354,10 +2354,10 @@ describe('ProfileService household student drafts', () => {
       ],
     } as never);
 
-    const rows = await service.addHouseholdStudent(cognitoSub, {
+    const rows = await service.addManagedUser(cognitoSub, {
       displayName: 'Sam',
       currentGrade: 2,
-    } as AddHouseholdStudentDto);
+    } as AddManagedUserDto);
 
     expect(rows).toHaveLength(1);
     expect(rows[0].displayName).toBe('Sam');
@@ -2375,14 +2375,14 @@ describe('ProfileService household student drafts', () => {
     );
   });
 
-  it('archiveHouseholdStudent sets archivedAt', async () => {
+  it('archiveManagedUser sets archivedAt', async () => {
     const cognitoSub = 'adult';
     const studentId = new Types.ObjectId();
     usersService.findOneByCognitoSub.mockResolvedValue({
       _id: new Types.ObjectId(),
       cognitoSub,
-      accountType: AccountType.Adult,
-      ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+      accountType: AccountType.Manager,
+      ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
       deleted: false,
       managedAccountsView: [
         {
@@ -2407,18 +2407,18 @@ describe('ProfileService household student drafts', () => {
       ],
     } as never);
 
-    const rows = await service.archiveHouseholdStudent(cognitoSub, studentId);
+    const rows = await service.archiveManagedUser(cognitoSub, studentId);
     expect(rows[0].archivedAt).not.toBeNull();
   });
 
-  it('restoreHouseholdStudent clears archivedAt', async () => {
+  it('restoreManagedUser clears archivedAt', async () => {
     const cognitoSub = 'adult';
     const studentId = new Types.ObjectId();
     usersService.findOneByCognitoSub.mockResolvedValue({
       _id: new Types.ObjectId(),
       cognitoSub,
-      accountType: AccountType.Adult,
-      ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
+      accountType: AccountType.Manager,
+      ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
       deleted: false,
       managedAccountsView: [
         {
@@ -2444,7 +2444,7 @@ describe('ProfileService household student drafts', () => {
       ],
     } as never);
 
-    const rows = await service.restoreHouseholdStudent(cognitoSub, studentId);
+    const rows = await service.restoreManagedUser(cognitoSub, studentId);
     expect(rows[0].archivedAt).toBeNull();
   });
 });

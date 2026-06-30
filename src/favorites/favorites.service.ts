@@ -27,6 +27,7 @@ export class FavoritesService {
     } catch (err: any) {
       // ponytail: duplicate key (E11000) means already favorited — idempotent no-op
       if (err?.code === 11000) return;
+
       throw err;
     }
 

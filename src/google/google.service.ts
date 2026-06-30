@@ -192,7 +192,7 @@ export class GoogleService {
           $setOnInsert: {
             hasPassword: false,
             email,
-            accountType: AccountType.Student,
+            accountType: AccountType.ManagedUser,
             state: null,
             zipCode: null,
           },
@@ -390,7 +390,7 @@ export class GoogleService {
         linkedProviderSubjects: { GOOGLE: googleSub },
         hasPassword: false,
         email,
-        accountType: AccountType.Student,
+        accountType: AccountType.ManagedUser,
         state: null,
         zipCode: null,
       });

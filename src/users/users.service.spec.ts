@@ -84,8 +84,8 @@ describe('UsersService', () => {
     it('uses attested adult band', () => {
       expect(
         resolveAccountStatusForUser({
-          ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
-          accountType: AccountType.Adult,
+          ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
+          accountType: AccountType.Manager,
         }),
       ).toBe('ADULT');
     });
@@ -97,7 +97,7 @@ describe('UsersService', () => {
         expect(
           resolveAccountStatusForUser({
             ageBandAtRegistration: null,
-            accountType: AccountType.Student,
+            accountType: AccountType.ManagedUser,
             birthDate: new Date(2010, 3, 8),
           }),
         ).toBe('INDEPENDENT');
@@ -290,7 +290,7 @@ describe('UsersService', () => {
     });
   });
 
-  describe('isParentOf', () => {
+  describe('isManagerOf', () => {
     const parentId = new Types.ObjectId();
     const childId = new Types.ObjectId();
     const refBirthFor11 = new Date(2014, 3, 8);
@@ -300,7 +300,7 @@ describe('UsersService', () => {
         select: jest.fn().mockReturnThis(),
         lean: jest.fn().mockResolvedValue(null),
       });
-      await expect(service.isParentOf(parentId, childId)).resolves.toBe(false);
+      await expect(service.isManagerOf(parentId, childId)).resolves.toBe(false);
     });
 
     it('returns false when child is deleted', async () => {
@@ -312,7 +312,7 @@ describe('UsersService', () => {
           birthDate: refBirthFor11,
         }),
       });
-      await expect(service.isParentOf(parentId, childId)).resolves.toBe(false);
+      await expect(service.isManagerOf(parentId, childId)).resolves.toBe(false);
     });
 
     it('returns false when child has no parentId', async () => {
@@ -324,7 +324,7 @@ describe('UsersService', () => {
           birthDate: refBirthFor11,
         }),
       });
-      await expect(service.isParentOf(parentId, childId)).resolves.toBe(false);
+      await expect(service.isManagerOf(parentId, childId)).resolves.toBe(false);
     });
 
     it('returns true for minor age band without birthDate', async () => {
@@ -336,7 +336,7 @@ describe('UsersService', () => {
           ageBandAtRegistration: AgeBandAtRegistration.Teen13To17,
         }),
       });
-      await expect(service.isParentOf(parentId, childId)).resolves.toBe(true);
+      await expect(service.isManagerOf(parentId, childId)).resolves.toBe(true);
     });
 
     it('returns false when birthDate and age band are both absent', async () => {
@@ -347,7 +347,7 @@ describe('UsersService', () => {
           parentId,
         }),
       });
-      await expect(service.isParentOf(parentId, childId)).resolves.toBe(false);
+      await expect(service.isManagerOf(parentId, childId)).resolves.toBe(false);
     });
 
     it('returns false when parentId does not match', async () => {
@@ -360,7 +360,7 @@ describe('UsersService', () => {
           birthDate: refBirthFor11,
         }),
       });
-      await expect(service.isParentOf(parentId, childId)).resolves.toBe(false);
+      await expect(service.isManagerOf(parentId, childId)).resolves.toBe(false);
     });
 
     it('returns false when child is 18 or older', async () => {
@@ -375,7 +375,7 @@ describe('UsersService', () => {
             birthDate: new Date(2008, 3, 8),
           }),
         });
-        await expect(service.isParentOf(parentId, childId)).resolves.toBe(
+        await expect(service.isManagerOf(parentId, childId)).resolves.toBe(
           false,
         );
       } finally {
@@ -395,7 +395,7 @@ describe('UsersService', () => {
             birthDate: new Date(2014, 3, 8),
           }),
         });
-        await expect(service.isParentOf(parentId, childId)).resolves.toBe(true);
+        await expect(service.isManagerOf(parentId, childId)).resolves.toBe(true);
       } finally {
         jest.useRealTimers();
       }
@@ -414,7 +414,7 @@ describe('UsersService', () => {
           }),
         });
         await expect(
-          service.isParentOf(parentId.toString(), childId.toString()),
+          service.isManagerOf(parentId.toString(), childId.toString()),
         ).resolves.toBe(true);
       } finally {
         jest.useRealTimers();

@@ -25,7 +25,7 @@ import type {
   ApiResponseDto,
   EmptyDataDto,
 } from 'src/common/dto/api-response.dto';
-import { ProfileService, type HouseholdStudentMe } from './profile.service';
+import { ProfileService, type ManagedUserSummary } from './profile.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AccessToken } from 'src/auth/decorators/access-token.decorator';
@@ -43,10 +43,10 @@ import type { KnownDeviceResponseDto } from './dto/out/known-device-response.dto
 import { WebAuthnRegisterCompleteDto } from './dto/webauthn-register-complete.dto';
 import { WebAuthnDeleteCredentialDto } from './dto/webauthn-delete-credential.dto';
 import type { WebAuthnCredentialListItemDto } from './dto/out/webauthn-credential-list-item.dto';
-import { AddTeachableCourseDto } from './dto/add-teachable-course.dto';
+import { AddTeachableSubjectDto } from './dto/add-teachable-subject.dto';
 import { AddSubjectDto } from './dto/add-subject.dto';
-import { AddHouseholdStudentDto } from './dto/add-household-student.dto';
-import type { TeachableCourseResponseItem } from './profile.service';
+import { AddManagedUserDto } from './dto/add-managed-user.dto';
+import type { TeachableSubjectResponseItem } from './profile.service';
 import { MongoIdPipe } from 'src/common/pipes/mongo-id.pipe';
 import { Types } from 'mongoose';
 
@@ -173,7 +173,7 @@ export class ProfileController {
 
   @ApiOperation({
     summary:
-      'Promote a household student draft to the next grade (August UTC only, once per calendar year).',
+      'Promote a managed user draft to the next grade (August UTC only, once per calendar year).',
   })
   @ApiUnauthorizedResponse({
     description: 'Not authenticated.',
@@ -185,134 +185,137 @@ export class ProfileController {
   async promoteHouseholdStudent(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Param('studentId', MongoIdPipe) studentId: Types.ObjectId,
-  ): Promise<ApiResponseDto<HouseholdStudentMe>> {
+  ): Promise<ApiResponseDto<ManagedUserSummary>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
     }
 
-    const data = await this.profileService.promoteHouseholdStudentDraft(
+    const data = await this.profileService.promoteManagedUserDraft(
       cognitoSub,
       studentId,
     );
     return {
-      message: 'Student grade updated',
+      message: 'Managed user grade updated',
       data,
     };
   }
 
   @ApiOperation({
-    summary:
-      'Adds a new household student draft for the authenticated adult user',
+    summary: 'Adds a new managed user for the authenticated manager',
   })
   @ApiBadRequestResponse({
     description: 'Validation failed (displayName or currentGrade).',
   })
   @ApiForbiddenResponse({
     description:
-      'User is not an adult (accountType or ageBandAtRegistration mismatch).',
+      'User is not a manager (accountType or ageBandAtRegistration mismatch).',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
   @Post('household-students')
-  async addHouseholdStudent(
+  async addManagedUser(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
-    @Body() dto: AddHouseholdStudentDto,
-  ): Promise<ApiResponseDto<{ managedAccountsView: HouseholdStudentMe[] }>> {
+    @Body() dto: AddManagedUserDto,
+  ): Promise<ApiResponseDto<{ managedAccountsView: ManagedUserSummary[] }>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
     }
 
-    const managedAccountsView = await this.profileService.addHouseholdStudent(
+    const managedAccountsView = await this.profileService.addManagedUser(
       cognitoSub,
       dto,
     );
     return {
-      message: 'Student added',
+      message: 'Managed user added',
       data: { managedAccountsView },
     };
   }
 
   @ApiOperation({
     summary:
-      'Archives a household student draft (soft-delete; retained for restore)',
+      'Archives a managed user draft (soft-delete; retained for restore)',
   })
   @ApiForbiddenResponse({
     description:
-      'User is not an adult (accountType or ageBandAtRegistration mismatch).',
+      'User is not a manager (accountType or ageBandAtRegistration mismatch).',
   })
   @ApiNotFoundResponse({
-    description: 'Student draft id not found on this user.',
+    description: 'Managed user draft id not found on this user.',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
   @Patch('household-students/:studentId/archive')
-  async archiveHouseholdStudent(
+  async archiveManagedUser(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Param('studentId') studentId: Types.ObjectId,
-  ): Promise<ApiResponseDto<{ managedAccountsView: HouseholdStudentMe[] }>> {
+  ): Promise<ApiResponseDto<{ managedAccountsView: ManagedUserSummary[] }>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
     }
 
-    const managedAccountsView =
-      await this.profileService.archiveHouseholdStudent(cognitoSub, studentId);
+    const managedAccountsView = await this.profileService.archiveManagedUser(
+      cognitoSub,
+      studentId,
+    );
     return {
-      message: 'Student archived',
+      message: 'Managed user archived',
       data: { managedAccountsView },
     };
   }
 
   @ApiOperation({
-    summary: 'Restores an archived household student draft',
+    summary: 'Restores an archived managed user draft',
   })
   @ApiForbiddenResponse({
     description:
-      'User is not an adult (accountType or ageBandAtRegistration mismatch).',
+      'User is not a manager (accountType or ageBandAtRegistration mismatch).',
   })
   @ApiNotFoundResponse({
-    description: 'Student draft id not found on this user.',
+    description: 'Managed user draft id not found on this user.',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
   @Patch('household-students/:studentId/restore')
-  async restoreHouseholdStudent(
+  async restoreManagedUser(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Param('studentId') studentId: Types.ObjectId,
-  ): Promise<ApiResponseDto<{ managedAccountsView: HouseholdStudentMe[] }>> {
+  ): Promise<ApiResponseDto<{ managedAccountsView: ManagedUserSummary[] }>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
     }
 
-    const managedAccountsView =
-      await this.profileService.restoreHouseholdStudent(cognitoSub, studentId);
+    const managedAccountsView = await this.profileService.restoreManagedUser(
+      cognitoSub,
+      studentId,
+    );
     return {
-      message: 'Student restored',
+      message: 'Managed user restored',
       data: { managedAccountsView },
     };
   }
 
   @ApiOperation({
     summary:
-      "Returns the student's enrolled classes (addedClasses) for the given draft ID",
+      "Returns the managed user's enrolled subjects for the given draft ID",
   })
   @ApiNotFoundResponse({
-    description: 'Student draft not found on this user.',
+    description: 'Managed user draft not found on this user.',
   })
   @ApiForbiddenResponse({
-    description: 'User is not an adult.',
+    description: 'User is not a manager.',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
   @Get('household-students/:studentId/classes')
-  async getStudentClasses(
+  async getManagedUserSubjects(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Param('studentId', MongoIdPipe) studentId: Types.ObjectId,
   ): Promise<
@@ -330,24 +333,24 @@ export class ProfileController {
       throw new Error('Not authenticated');
     }
 
-    const classes = await this.profileService.getStudentClasses(
+    const classes = await this.profileService.getManagedUserSubjects(
       cognitoSub,
       studentId,
     );
     return {
-      message: 'Student classes retrieved successfully',
+      message: 'Managed user subjects retrieved successfully',
       data: classes,
     };
   }
 
   @ApiOperation({
-    summary: "Adds a subject to a student's curriculum (addedClasses)",
+    summary: "Adds a subject to a managed user's curriculum",
   })
   @ApiBadRequestResponse({
     description: 'Invalid subjectId or subject not found.',
   })
   @ApiForbiddenResponse({
-    description: "Student not in user's managed accounts.",
+    description: "Managed user not in user's managed accounts.",
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
@@ -376,7 +379,7 @@ export class ProfileController {
       dto.subjectId,
     );
     return {
-      message: 'Subject added to student curriculum',
+      message: 'Subject added to managed user curriculum',
       data,
     };
   }
@@ -769,67 +772,67 @@ export class ProfileController {
   }
 
   @ApiOperation({
-    summary: 'Adds a new teachable course to the authenticated adult user',
+    summary: 'Adds a new teachable subject to the authenticated manager',
   })
   @ApiBadRequestResponse({
-    description: 'Request body failed validation or user is not an adult.',
+    description: 'Request body failed validation or user is not a manager.',
   })
   @ApiForbiddenResponse({
     description:
-      'User is not an adult (accountType or ageBandAtRegistration mismatch).',
+      'User is not a manager (accountType or ageBandAtRegistration mismatch).',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
   @Patch('teachable-courses')
-  async addTeachableCourse(
+  async addTeachableSubject(
     @CurrentUser() currentUser: Record<string, unknown> & { sub?: string },
-    @Body() dto: AddTeachableCourseDto,
+    @Body() dto: AddTeachableSubjectDto,
   ): Promise<
-    ApiResponseDto<{ teachableCourses: TeachableCourseResponseItem[] }>
+    ApiResponseDto<{ teachableCourses: TeachableSubjectResponseItem[] }>
   > {
     const cognitoSub = currentUser?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
     }
 
-    const result = await this.profileService.addTeachableCourse(
+    const result = await this.profileService.addTeachableSubject(
       cognitoSub,
       dto,
     );
     return {
-      message: 'Teachable course added',
+      message: 'Teachable subject added',
       data: { teachableCourses: result },
     };
   }
 
   @ApiOperation({
     summary:
-      'Removes a teachable course at the given index from the authenticated adult user',
+      'Removes a teachable subject at the given index from the authenticated manager',
   })
   @ApiBadRequestResponse({
     description: 'Index is invalid (negative, non-integer, or out of range).',
   })
   @ApiForbiddenResponse({
     description:
-      'User is not an adult (accountType or ageBandAtRegistration mismatch).',
+      'User is not a manager (accountType or ageBandAtRegistration mismatch).',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
   @Delete('teachable-courses/:index')
-  async removeTeachableCourse(
+  async removeTeachableSubject(
     @CurrentUser() currentUser: Record<string, unknown> & { sub?: string },
     @Param('index') index: string,
   ): Promise<
-    ApiResponseDto<{ teachableCourses: TeachableCourseResponseItem[] }>
+    ApiResponseDto<{ teachableCourses: TeachableSubjectResponseItem[] }>
   > {
     const cognitoSub = currentUser?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
       throw new Error('Not authenticated');
     }
 
-    const result = await this.profileService.removeTeachableCourse(
+    const result = await this.profileService.removeTeachableSubject(
       cognitoSub,
       parseInt(index, 10),
     );

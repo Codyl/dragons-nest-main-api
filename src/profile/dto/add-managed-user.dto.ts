@@ -8,7 +8,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class AddHouseholdStudentDto {
+export class AddManagedUserDto {
   @IsString()
   @MinLength(1)
   @MaxLength(100)

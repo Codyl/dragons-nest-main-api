@@ -65,7 +65,7 @@ describe('user.schema', () => {
 
         const M = mongoose.model(name, UserSchema);
         const u = new M({
-          accountType: AccountType.Student,
+          accountType: AccountType.ManagedUser,
           birthDate: new Date(Date.UTC(2014, 6, 4)),
         });
         const j = u.toJSON() as { age?: number };
@@ -83,7 +83,7 @@ describe('user.schema', () => {
       }
 
       const M = mongoose.model(name, UserSchema);
-      const u = new M({ accountType: AccountType.Student });
+      const u = new M({ accountType: AccountType.ManagedUser });
       expect((u.toJSON() as { age?: number }).age).toBeUndefined();
     });
   });

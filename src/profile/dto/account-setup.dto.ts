@@ -177,7 +177,7 @@ export class AccountSetupDto {
 
   @ValidateIf(
     (o: AccountSetupDto) =>
-      o.onboardingExpectedBand === OnboardingExpectedBand.Adult,
+      o.onboardingExpectedBand === OnboardingExpectedBand.Manager,
   )
   @IsOptional()
   @IsBoolean()
@@ -185,7 +185,7 @@ export class AccountSetupDto {
 
   @ValidateIf(
     (o: AccountSetupDto) =>
-      o.onboardingExpectedBand === OnboardingExpectedBand.Adult,
+      o.onboardingExpectedBand === OnboardingExpectedBand.Manager,
   )
   @IsOptional()
   @IsBoolean()
@@ -223,14 +223,14 @@ export class AccountSetupDto {
   @IsBoolean()
   under13GuardianPermissionConfirmed?: boolean;
 
-  @ValidateIf((o: AccountSetupDto) => o.accountType === AccountType.Adult)
+  @ValidateIf((o: AccountSetupDto) => o.accountType === AccountType.Manager)
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => PendingStudentOnboardingDto)
   pendingStudents?: PendingStudentOnboardingDto[];
 
-  @ValidateIf((o: AccountSetupDto) => o.accountType === AccountType.Adult)
+  @ValidateIf((o: AccountSetupDto) => o.accountType === AccountType.Manager)
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })

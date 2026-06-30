@@ -122,11 +122,11 @@ export class AuthService {
     await this.usersService.createUser({
       cognitoSub: sub,
       hasPassword: true,
-      accountType: account?.accountType ?? AccountType.Student,
+      accountType: account?.accountType ?? AccountType.ManagedUser,
       givenName: account?.givenName ?? null,
       familyName: account?.familyName ?? null,
       coppaConsentAt:
-        account?.accountType === AccountType.Adult && account?.coppaConsent
+        account?.accountType === AccountType.Manager && account?.coppaConsent
           ? new Date()
           : null,
     });

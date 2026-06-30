@@ -245,7 +245,7 @@ describe('ProfileController', () => {
     }));
 
     const dto = {
-      accountType: AccountType.Student,
+      accountType: AccountType.ManagedUser,
       onboardingExpectedBand: OnboardingExpectedBand.Teen13to17,
       teenAgeConfirmed: true,
       teenPermissionConfirmed: true,
@@ -343,7 +343,7 @@ describe('ProfileController', () => {
           'token',
           {},
           {
-            accountType: AccountType.Student,
+            accountType: AccountType.ManagedUser,
             onboardingExpectedBand: OnboardingExpectedBand.Under13,
             under13ChildConfirmed: true,
             under13GuardianPermissionConfirmed: true,

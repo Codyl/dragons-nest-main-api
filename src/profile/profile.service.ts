@@ -29,14 +29,14 @@ import { MAXMIND_KEY } from 'src/env.constants';
 import { EnvironmentVariables } from 'src/env.config';
 import { DeleteMeDto } from './dto/delete-me.dto';
 import { AccountSetupDto } from './dto/account-setup.dto';
-import { AddTeachableCourseDto } from './dto/add-teachable-course.dto';
+import { AddTeachableSubjectDto } from './dto/add-teachable-subject.dto';
 import { AccountType } from 'src/users/enums/account-type.enum';
 import { AgeBandAtRegistration } from 'src/users/enums/age-band-at-registration.enum';
 import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
 import { Subject } from 'src/subjects/subject.entity';
-import { AddHouseholdStudentDto } from './dto/add-household-student.dto';
+import { AddManagedUserDto } from './dto/add-managed-user.dto';
 
-export type TeachableCourseResponseItem = {
+export type TeachableSubjectResponseItem = {
   className: string;
   subjectId: string;
   matchesAllGrades: boolean;
@@ -46,7 +46,7 @@ export type TeachableCourseResponseItem = {
   activeEnrollmentCount: number;
 };
 
-export type HouseholdStudentMe = {
+export type ManagedUserSummary = {
   studentId: Types.ObjectId;
   displayName: string;
   currentGrade: number;
@@ -71,10 +71,10 @@ export interface GetMeData {
   linkedStudentIds?: string[];
   accountStatus?: AccountStatus | null;
   ageBandAtRegistration?: string | null;
-  householdStudents?: HouseholdStudentMe[];
+  householdStudents?: ManagedUserSummary[];
   /** Full list including archived drafts (adults only). */
-  managedAccountsViewAll?: HouseholdStudentMe[];
-  teachableCourses?: TeachableCourseResponseItem[];
+  managedAccountsViewAll?: ManagedUserSummary[];
+  teachableCourses?: TeachableSubjectResponseItem[];
   address?: { state?: string | null };
 }
 
@@ -111,13 +111,13 @@ function householdDraftArchivedIso(d: { archivedAt?: unknown }): string | null {
   return at ? at.toISOString() : null;
 }
 
-function mapStoredDraftToHouseholdStudentMe(managedAccount: {
+function mapStoredDraftToManagedUserSummary(managedAccount: {
   studentId: Types.ObjectId;
   displayName: string;
   currentGrade: number;
   lastPromotionYear: number;
   archivedAt?: unknown;
-}): HouseholdStudentMe {
+}): ManagedUserSummary {
   return {
     studentId: managedAccount.studentId,
     displayName: managedAccount.displayName,
@@ -218,13 +218,13 @@ export class ProfileService {
 
     const managedAccounts = user.managedAccountsView ?? [];
 
-    const managedAccountsViewAll: HouseholdStudentMe[] | undefined =
-      user.accountType === AccountType.Adult
-        ? managedAccounts.map((d) => mapStoredDraftToHouseholdStudentMe(d))
+    const managedAccountsViewAll: ManagedUserSummary[] | undefined =
+      user.accountType === AccountType.Manager
+        ? managedAccounts.map((d) => mapStoredDraftToManagedUserSummary(d))
         : undefined;
 
-    const householdStudents: HouseholdStudentMe[] | undefined =
-      user.accountType === AccountType.Adult
+    const householdStudents: ManagedUserSummary[] | undefined =
+      user.accountType === AccountType.Manager
         ? managedAccounts
             .filter((d) => householdDraftArchivedIso(d) === null)
             .map((d) => ({
@@ -236,8 +236,8 @@ export class ProfileService {
             }))
         : undefined;
 
-    let teachableCourses: TeachableCourseResponseItem[] | undefined;
-    if (user.accountType === AccountType.Adult) {
+    let teachableCourses: TeachableSubjectResponseItem[] | undefined;
+    if (user.accountType === AccountType.Manager) {
       const rawCourses = (user.teachableCourses ?? []) as Array<{
         _id?: Types.ObjectId;
         className?: string;
@@ -377,13 +377,13 @@ export class ProfileService {
 
     const accountType = dto.accountType;
     if (
-      accountType === AccountType.Student &&
+      accountType === AccountType.ManagedUser &&
       (!dto.interests || dto.interests.length < 1)
     ) {
       throw new BadRequestException('Select at least one interest');
     }
 
-    if (accountType === AccountType.Adult) {
+    if (accountType === AccountType.Manager) {
       if (!dto.pendingStudents?.length) {
         throw new BadRequestException('Add at least one student');
       }
@@ -467,7 +467,7 @@ export class ProfileService {
       onboardingCompletedAt: new Date(),
     };
 
-    if (accountType === AccountType.Adult) {
+    if (accountType === AccountType.Manager) {
       baseUpdate.teachableCourses = teachableCourses;
       baseUpdate.managedAccountsView = managedAccountsView;
     }
@@ -482,10 +482,10 @@ export class ProfileService {
     }
 
     // Promote each household student into a real managed-child User document
-    if (accountType === AccountType.Adult && managedAccountsView.length > 0) {
+    if (accountType === AccountType.Manager && managedAccountsView.length > 0) {
       await Promise.all(
         managedAccountsView.map((managedAccount) =>
-          this.usersService.createManagedChild(updated._id, {
+          this.usersService.createManagedUser(updated._id, {
             givenName: managedAccount.displayName,
             currentGrade: managedAccount.currentGrade,
             studentId: managedAccount.studentId,
@@ -507,18 +507,18 @@ export class ProfileService {
   /**
    * August (UTC): increment household student grade and set lastPromotionYear.
    */
-  async promoteHouseholdStudentDraft(
+  async promoteManagedUserDraft(
     cognitoSub: string,
     studentId: Types.ObjectId,
-  ): Promise<HouseholdStudentMe> {
+  ): Promise<ManagedUserSummary> {
     const row = await this.usersService.findOneByCognitoSub(cognitoSub);
     if (!row || row.deleted) {
       throw new NotFoundException('User not found');
     }
 
-    if (row.accountType !== AccountType.Adult) {
+    if (row.accountType !== AccountType.Manager) {
       throw new BadRequestException(
-        'Only household adults can update student grades',
+        'Only managers can update managed user grades',
       );
     }
 
@@ -535,7 +535,7 @@ export class ProfileService {
       managedAccount.studentId.equals(studentId),
     );
     if (idx < 0) {
-      throw new NotFoundException('Student draft not found');
+      throw new NotFoundException('Managed user draft not found');
     }
 
     const current = drafts[idx];
@@ -564,28 +564,28 @@ export class ProfileService {
     });
 
     if (!updated) {
-      throw new InternalServerErrorException('Failed to promote student');
+      throw new InternalServerErrorException('Failed to promote managed user');
     }
 
     const promotedAccount = (updated.managedAccountsView ?? [])[idx];
-    return mapStoredDraftToHouseholdStudentMe(promotedAccount);
+    return mapStoredDraftToManagedUserSummary(promotedAccount);
   }
 
-  async addHouseholdStudent(
+  async addManagedUser(
     cognitoSub: string,
-    dto: AddHouseholdStudentDto,
-  ): Promise<HouseholdStudentMe[]> {
+    dto: AddManagedUserDto,
+  ): Promise<ManagedUserSummary[]> {
     const row = await this.usersService.findOneByCognitoSub(cognitoSub);
     if (!row || row.deleted) {
       throw new NotFoundException('User not found');
     }
 
     if (
-      row.accountType !== AccountType.Adult ||
-      row.ageBandAtRegistration !== AgeBandAtRegistration.Adult18Plus
+      row.accountType !== AccountType.Manager ||
+      row.ageBandAtRegistration !== AgeBandAtRegistration.Manager18Plus
     ) {
       throw new ForbiddenException(
-        'Only adult users may manage household students',
+        'Only managers may manage managed users',
       );
     }
 
@@ -602,7 +602,7 @@ export class ProfileService {
     });
 
     if (!updated) {
-      throw new InternalServerErrorException('Failed to add household student');
+      throw new InternalServerErrorException('Failed to add managed user');
     }
 
     // Create a real managed-child User document for course enrollment
@@ -611,7 +611,7 @@ export class ProfileService {
         ? updated._id
         : new Types.ObjectId(updated._id as unknown as string);
 
-    await this.usersService.createManagedChild(parentId, {
+    await this.usersService.createManagedUser(parentId, {
       givenName: dto.displayName.trim(),
       currentGrade: dto.currentGrade,
       studentId: newDraft.studentId,
@@ -620,25 +620,25 @@ export class ProfileService {
     });
 
     return (updated.managedAccountsView ?? []).map((d) =>
-      mapStoredDraftToHouseholdStudentMe(d),
+      mapStoredDraftToManagedUserSummary(d),
     );
   }
 
-  async archiveHouseholdStudent(
+  async archiveManagedUser(
     cognitoSub: string,
     studentId: Types.ObjectId,
-  ): Promise<HouseholdStudentMe[]> {
+  ): Promise<ManagedUserSummary[]> {
     const row = await this.usersService.findOneByCognitoSub(cognitoSub);
     if (!row || row.deleted) {
       throw new NotFoundException('User not found');
     }
 
     if (
-      row.accountType !== AccountType.Adult ||
-      row.ageBandAtRegistration !== AgeBandAtRegistration.Adult18Plus
+      row.accountType !== AccountType.Manager ||
+      row.ageBandAtRegistration !== AgeBandAtRegistration.Manager18Plus
     ) {
       throw new ForbiddenException(
-        'Only adult users may manage household students',
+        'Only managers may manage managed users',
       );
     }
 
@@ -647,7 +647,7 @@ export class ProfileService {
       new Types.ObjectId(managedAccount.studentId).equals(studentId),
     );
     if (idx < 0) {
-      throw new NotFoundException('Student draft not found');
+      throw new NotFoundException('Managed user draft not found');
     }
 
     const archivedAt = new Date();
@@ -661,30 +661,30 @@ export class ProfileService {
 
     if (!updated) {
       throw new InternalServerErrorException(
-        'Failed to archive household student',
+        'Failed to archive managed user',
       );
     }
 
     return (updated.managedAccountsView ?? []).map((d) =>
-      mapStoredDraftToHouseholdStudentMe(d),
+      mapStoredDraftToManagedUserSummary(d),
     );
   }
 
-  async restoreHouseholdStudent(
+  async restoreManagedUser(
     cognitoSub: string,
     studentId: Types.ObjectId,
-  ): Promise<HouseholdStudentMe[]> {
+  ): Promise<ManagedUserSummary[]> {
     const row = await this.usersService.findOneByCognitoSub(cognitoSub);
     if (!row || row.deleted) {
       throw new NotFoundException('User not found');
     }
 
     if (
-      row.accountType !== AccountType.Adult ||
-      row.ageBandAtRegistration !== AgeBandAtRegistration.Adult18Plus
+      row.accountType !== AccountType.Manager ||
+      row.ageBandAtRegistration !== AgeBandAtRegistration.Manager18Plus
     ) {
       throw new ForbiddenException(
-        'Only adult users may manage household students',
+        'Only managers may manage managed users',
       );
     }
 
@@ -693,7 +693,7 @@ export class ProfileService {
       managedAccount.studentId.equals(studentId),
     );
     if (idx < 0) {
-      throw new NotFoundException('Student draft not found');
+      throw new NotFoundException('Managed user draft not found');
     }
 
     const nextDrafts = drafts.map((d, i) =>
@@ -706,12 +706,12 @@ export class ProfileService {
 
     if (!updated) {
       throw new InternalServerErrorException(
-        'Failed to restore household student',
+        'Failed to restore managed user',
       );
     }
 
     return (updated.managedAccountsView ?? []).map((managedAccount) =>
-      mapStoredDraftToHouseholdStudentMe(managedAccount),
+      mapStoredDraftToManagedUserSummary(managedAccount),
     );
   }
 
@@ -723,21 +723,21 @@ export class ProfileService {
    * Throws `ForbiddenException` if the user is not an adult (accountType !== 'adult'
    * or ageBandAtRegistration !== 'ADULT_18_PLUS').
    */
-  async addTeachableCourse(
+  async addTeachableSubject(
     cognitoSub: string,
-    dto: AddTeachableCourseDto,
-  ): Promise<TeachableCourseResponseItem[]> {
+    dto: AddTeachableSubjectDto,
+  ): Promise<TeachableSubjectResponseItem[]> {
     const row = await this.usersService.findOneByCognitoSub(cognitoSub);
     if (!row || row.deleted) {
       throw new NotFoundException('User not found');
     }
 
     if (
-      row.accountType !== AccountType.Adult ||
-      row.ageBandAtRegistration !== AgeBandAtRegistration.Adult18Plus
+      row.accountType !== AccountType.Manager ||
+      row.ageBandAtRegistration !== AgeBandAtRegistration.Manager18Plus
     ) {
       throw new ForbiddenException(
-        'Only adult users may manage teachable courses',
+        'Only managers may manage teachable subjects',
       );
     }
 
@@ -755,7 +755,7 @@ export class ProfileService {
     });
 
     if (!updated) {
-      throw new InternalServerErrorException('Failed to add teachable course');
+      throw new InternalServerErrorException('Failed to add teachable subject');
     }
 
     const courses = (updated.teachableCourses ?? []) as Array<{
@@ -792,21 +792,21 @@ export class ProfileService {
    * - Returns the updated `teachableCourses` array with `activeEnrollmentCount`
    *   set to 0 for all remaining courses (full computation deferred to Task 5).
    */
-  async removeTeachableCourse(
+  async removeTeachableSubject(
     cognitoSub: string,
     index: number,
-  ): Promise<TeachableCourseResponseItem[]> {
+  ): Promise<TeachableSubjectResponseItem[]> {
     const row = await this.usersService.findOneByCognitoSub(cognitoSub);
     if (!row || row.deleted) {
       throw new NotFoundException('User not found');
     }
 
     if (
-      row.accountType !== AccountType.Adult ||
-      row.ageBandAtRegistration !== AgeBandAtRegistration.Adult18Plus
+      row.accountType !== AccountType.Manager ||
+      row.ageBandAtRegistration !== AgeBandAtRegistration.Manager18Plus
     ) {
       throw new ForbiddenException(
-        'Only adult users may manage teachable courses',
+        'Only managers may manage teachable subjects',
       );
     }
 
@@ -919,7 +919,7 @@ export class ProfileService {
 
     if (!updated) {
       throw new InternalServerErrorException(
-        'Failed to remove teachable course',
+        'Failed to remove teachable subject',
       );
     }
 
@@ -949,8 +949,8 @@ export class ProfileService {
   ): AgeBandAtRegistration {
     const path = dto.onboardingExpectedBand;
 
-    if (dto.accountType === AccountType.Adult) {
-      if (path !== OnboardingExpectedBand.Adult) {
+    if (dto.accountType === AccountType.Manager) {
+      if (path !== OnboardingExpectedBand.Manager) {
         throw new BadRequestException(
           'Adult accounts must use the adult onboarding confirmation path',
         );
@@ -962,7 +962,7 @@ export class ProfileService {
         );
       }
 
-      return AgeBandAtRegistration.Adult18Plus;
+      return AgeBandAtRegistration.Manager18Plus;
     }
 
     if (path === OnboardingExpectedBand.Teen13to17) {
@@ -985,7 +985,7 @@ export class ProfileService {
         );
       }
 
-      return AgeBandAtRegistration.ChildUnder13Managed;
+      return AgeBandAtRegistration.ManagedUserUnder13;
     }
 
     throw new BadRequestException('Invalid onboarding path');
@@ -1412,7 +1412,7 @@ export class ProfileService {
     );
     if (!match) {
       throw new ForbiddenException(
-        'Student not found in your managed accounts',
+        'Managed user not found in your managed accounts',
       );
     }
 
@@ -1465,7 +1465,7 @@ export class ProfileService {
    * Each entry includes `subjectId` as a string (or null).
    * Validates that the authenticated user owns the student draft.
    */
-  async getStudentClasses(
+  async getManagedUserSubjects(
     cognitoSub: string,
     studentId: Types.ObjectId,
   ): Promise<
@@ -1481,9 +1481,9 @@ export class ProfileService {
       throw new NotFoundException('User not found');
     }
 
-    if (row.accountType !== AccountType.Adult) {
+    if (row.accountType !== AccountType.Manager) {
       throw new ForbiddenException(
-        'Only household adults can view student classes',
+        'Only managers can view managed user subjects',
       );
     }
 
@@ -1493,7 +1493,7 @@ export class ProfileService {
       managedAccount.studentId.equals(studentId),
     );
     if (!match) {
-      throw new NotFoundException('Student draft not found');
+      throw new NotFoundException('Managed user draft not found');
     }
 
     // Find the student User document

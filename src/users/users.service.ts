@@ -15,7 +15,7 @@ import { StateComplianceLaws } from 'src/compliance/entities/state-compliance-la
 
 export type AccountStatus = 'MANAGED' | 'INDEPENDENT' | 'ADULT';
 
-/** COPPA-style bands: under 13 managed, 13–17 independent login, 18+ adult. */
+/** COPPA-style bands: under 13 managed, 13–17 independent login, 18+ manager. */
 export function accountStatusFromBirthDate(
   birthDate: Date | null | undefined,
   refDate?: Date,
@@ -41,7 +41,7 @@ export function isMinorAgeBand(
 ): boolean {
   return (
     ageBand === AgeBandAtRegistration.Teen13To17 ||
-    ageBand === AgeBandAtRegistration.ChildUnder13Managed
+    ageBand === AgeBandAtRegistration.ManagedUserUnder13
   );
 }
 
@@ -54,18 +54,18 @@ export function accountStatusFromAgeBandAndAccountType(
   }
 
   if (
-    ageBand === AgeBandAtRegistration.Adult18Plus &&
-    accountType === AccountType.Adult
+    ageBand === AgeBandAtRegistration.Manager18Plus &&
+    accountType === AccountType.Manager
   ) {
     return 'ADULT';
   }
 
-  if (accountType === AccountType.Student) {
+  if (accountType === AccountType.ManagedUser) {
     if (ageBand === AgeBandAtRegistration.Teen13To17) {
       return 'INDEPENDENT';
     }
 
-    if (ageBand === AgeBandAtRegistration.ChildUnder13Managed) {
+    if (ageBand === AgeBandAtRegistration.ManagedUserUnder13) {
       return 'MANAGED';
     }
   }
@@ -107,7 +107,7 @@ export type EnrolledClassLean = {
   createdAt?: Date;
 };
 
-function filterAddedClassesForParentView(
+function filterEnrolledSubjectsForManagerView(
   classes: EnrolledClassLean[] | undefined,
   birthDate: Date | null | undefined,
   ageBandAtRegistration: AgeBandAtRegistration | null | undefined,
@@ -251,9 +251,9 @@ export class UsersService {
   }
 
   /**
-   * Loads a user for API responses. When the viewer is the child's guardian,
+   * Loads a user for API responses. When the viewer is the managed user's manager,
    * {@link User.addedClasses} is limited to enrollments with `createdAt` strictly
-   * before the child's 18th birthday (undated rows are omitted).
+   * before the managed user's 18th birthday (undated rows are omitted).
    */
   async findOneByIdForViewer(
     viewerCognitoSub: string | undefined,
@@ -274,11 +274,11 @@ export class UsersService {
         const tId = plain._id;
         if (vId.equals(tId)) {
           discloseEnrollments = 'self';
-        } else if (await this.isParentOf(vId, tId)) {
+        } else if (await this.isManagerOf(vId, tId)) {
           discloseEnrollments = 'parent';
           plain = {
             ...plain,
-            addedClasses: filterAddedClassesForParentView(
+            addedClasses: filterEnrolledSubjectsForManagerView(
               plain.addedClasses,
               plain.birthDate ? new Date(plain.birthDate) : null,
               plain.ageBandAtRegistration ?? null,
@@ -373,18 +373,18 @@ export class UsersService {
       email,
       hasPassword: true,
       firstLoggedInAt: new Date(),
-      accountType: AccountType.Student,
+      accountType: AccountType.ManagedUser,
       state: null,
       zipCode: null,
     });
   }
 
   /**
-   * Creates a managed child User document (no Cognito login) and links it
-   * to the parent by pushing into `linkedStudents`. Populates `addedClasses`
+   * Creates a managed user document (no Cognito login) and links it
+   * to the manager by pushing into `linkedStudents`. Populates `addedClasses`
    * with state-required subjects when a state is provided.
    */
-  async createManagedChild(
+  async createManagedUser(
     parentId: Types.ObjectId,
     data: {
       givenName: string;
@@ -418,8 +418,8 @@ export class UsersService {
     }
 
     const child = await this.userModel.create({
-      accountType: AccountType.Student,
-      ageBandAtRegistration: AgeBandAtRegistration.ChildUnder13Managed,
+      accountType: AccountType.ManagedUser,
+      ageBandAtRegistration: AgeBandAtRegistration.ManagedUserUnder13,
       givenName: data.givenName,
       parentId,
       hasPassword: false,
@@ -451,7 +451,7 @@ export class UsersService {
   }
 
   /**
-   * Grants a managed child profile (no Cognito login) its own credentials
+   * Grants a managed user profile (no Cognito login) its own credentials
    * while preserving `_id` and existing fields.
    */
   async upgradeToIndependent(
@@ -509,11 +509,11 @@ export class UsersService {
   // One countDocuments query per course — always consistent with addedClasses.
 
   /**
-   * Recounts students enrolled in the given teachable course and persists
-   * the result on the adult's `teachableCourses.$.activeEnrollmentCount`.
+   * Recounts managed users enrolled in the given teachable subject and persists
+   * the result on the manager's `teachableCourses.$.activeEnrollmentCount`.
    *
-   * Call after any mutation to a student's `addedClasses` that references
-   * this adult + course pair.
+   * Call after any mutation to a managed user's `addedClasses` that references
+   * this manager + course pair.
    */
   async recountCourseEnrollment(
     adultUserId: Types.ObjectId,
@@ -532,7 +532,7 @@ export class UsersService {
   }
 
   /**
-   * Recounts all teachable courses for the given adult in one pass.
+   * Recounts all teachable subjects for the given manager in one pass.
    * Useful after bulk mutations (onboarding, account deletion, etc.).
    */
   async recountAllCourseEnrollments(adultUserId: Types.ObjectId) {
@@ -553,9 +553,9 @@ export class UsersService {
   }
 
   /**
-   * True when `childId` lists `parentId` as guardian and the child is under 18.
+   * True when `childId` lists `parentId` as manager and the managed user is under 18.
    */
-  async isParentOf(
+  async isManagerOf(
     parentId: Types.ObjectId | string,
     childId: Types.ObjectId | string,
   ): Promise<boolean> {
