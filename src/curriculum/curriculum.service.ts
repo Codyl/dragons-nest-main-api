@@ -22,7 +22,6 @@ import { AWS_REGION, CURRICULUM_S3_BUCKET } from 'src/env.constants';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
 import { Readable } from 'stream';
-import { fromSSO } from '@aws-sdk/credential-providers';
 
 const ALLOWED_MIME_TYPES = new Set([
   'application/pdf',
@@ -53,9 +52,6 @@ export class CurriculumService {
 
     this.s3 = new S3Client({
       region: this.configService.getOrThrow(AWS_REGION, { infer: true }),
-      credentials: fromSSO({
-        profile: 'member',
-      }),
     });
   }
 
@@ -249,15 +245,14 @@ export class CurriculumService {
     await this.curriculumModel.findByIdAndDelete(params.id);
 
     // Clear any curriculum selections referencing this item
-    await this.clearSelectionsForItem(params.id);
+    this.clearSelectionsForItem(params.id);
   }
 
   /**
    * Removes curriculumId references to a deleted item from any student's addedClasses.
    */
-  private async clearSelectionsForItem(
-    curriculumItemId: string,
-  ): Promise<void> {
+  private clearSelectionsForItem(curriculumItemId: string): void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const itemObjectId = new Types.ObjectId(curriculumItemId);
     // Use the User model via usersService's underlying model isn't directly accessible,
     // so we'll use usersService. For now, we rely on the fact that selections
