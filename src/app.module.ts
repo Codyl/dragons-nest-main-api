@@ -16,6 +16,10 @@ import { SubjectsModule } from './subjects/subjects.module';
 import { ComplianceModule } from './compliance/compliance.module';
 import { DiscoveryModule } from './discovery/discovery.module';
 import { CurriculumModule } from './curriculum/curriculum.module';
+import { FavoritesModule } from './favorites/favorites.module';
+import { ResourcesModule } from './resources/resources.module';
+import { ActivitiesModule } from './activities/activities.module';
+import { ConceptsModule } from './concepts/concepts.module';
 
 const testOnlyImports =
   process.env.NODE_ENV === 'test' ? [TestSupportModule] : [];
@@ -95,6 +99,10 @@ const testOnlyImports =
     ComplianceModule,
     DiscoveryModule,
     CurriculumModule,
+    ActivitiesModule,
+    ResourcesModule,
+    FavoritesModule,
+    ConceptsModule,
   ],
   controllers: [],
   providers: [],
