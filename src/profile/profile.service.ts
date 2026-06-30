@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
@@ -7,6 +8,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 import { CognitoService } from 'src/cognito/cognito.service';
 import {
   UsersService,
@@ -30,7 +33,7 @@ import { AddTeachableCourseDto } from './dto/add-teachable-course.dto';
 import { AccountType } from 'src/users/enums/account-type.enum';
 import { AgeBandAtRegistration } from 'src/users/enums/age-band-at-registration.enum';
 import { OnboardingExpectedBand } from 'src/users/enums/onboarding-expected-band.enum';
-import { Types } from 'mongoose';
+import { Subject } from 'src/subjects/subject.entity';
 import { AddHouseholdStudentDto } from './dto/add-household-student.dto';
 
 export type TeachableCourseResponseItem = {
@@ -149,6 +152,10 @@ export class ProfileService {
     private readonly googleService: GoogleService,
     private readonly maxmindService: MaxmindService,
     private readonly configService: ConfigService<EnvironmentVariables>,
+    @InjectModel(Subject.name)
+    private readonly subjectModel: Model<Subject>,
+    @InjectModel('User')
+    private readonly userModel: Model<any>,
   ) {}
 
   async getMe(
@@ -1380,6 +1387,77 @@ export class ProfileService {
     );
 
     return deviceData;
+  }
+
+  /**
+   * Adds a subject to a student's addedClasses array.
+   * Validates ownership, subject existence, and duplicate prevention.
+   */
+  async addSubjectToStudent(
+    cognitoSub: string,
+    studentId: Types.ObjectId,
+    subjectId: string,
+  ): Promise<{ subjectId: string; hoursCompleted: number; createdAt: string }> {
+    const row = await this.usersService.findOneByCognitoSub(cognitoSub);
+    if (!row || row.deleted) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify studentId in managedAccountsView and not archived → 403
+    const managedAccounts = row.managedAccountsView ?? [];
+    const match = managedAccounts.find(
+      (m) =>
+        m.studentId.equals(studentId) &&
+        householdDraftArchivedIso(m) === null,
+    );
+    if (!match) {
+      throw new ForbiddenException(
+        'Student not found in your managed accounts',
+      );
+    }
+
+    // Validate subjectId exists in topics collection → 400
+    const subjectExists = await this.subjectModel.exists({
+      _id: new Types.ObjectId(subjectId),
+    });
+    if (!subjectExists) {
+      throw new BadRequestException('Subject not found');
+    }
+
+    // Find the student User document
+    const studentUser = await this.usersService.findOneById(studentId);
+    if (!studentUser) {
+      throw new BadRequestException('Student user not found');
+    }
+
+    // Check duplicate in addedClasses → 409
+    const classes = (studentUser.addedClasses ?? []) as Array<{
+      subjectId?: Types.ObjectId | null;
+    }>;
+    const duplicate = classes.some(
+      (c) => c.subjectId && c.subjectId.toString() === subjectId,
+    );
+    if (duplicate) {
+      throw new ConflictException('Subject is already enrolled');
+    }
+
+    // Push new entry
+    const createdAt = new Date();
+    const newEntry = {
+      subjectId: new Types.ObjectId(subjectId),
+      hoursCompleted: 0,
+      createdAt,
+    };
+
+    await this.userModel.findByIdAndUpdate(studentId, {
+      $push: { addedClasses: newEntry },
+    });
+
+    return {
+      subjectId,
+      hoursCompleted: 0,
+      createdAt: createdAt.toISOString(),
+    };
   }
 
   /**

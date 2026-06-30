@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
   ForbiddenException,
 } from '@nestjs/common';
+import { getModelToken } from '@nestjs/mongoose';
 import { ProfileService } from './profile.service';
 import { CognitoService, GetUserResult } from 'src/cognito/cognito.service';
 import { MaxmindService } from 'src/maxmind/maxmind.service';
@@ -28,6 +29,7 @@ import * as fc from 'fast-check';
 import { AddTeachableCourseDto } from './dto/add-teachable-course.dto';
 import { HomeschoolCurriculum } from 'src/users/enums/homeschool-curriculum.enum';
 import { HomeschoolGrade } from 'src/users/enums/homeschool-grade.enum';
+import { Subject } from 'src/subjects/subject.entity';
 
 /* eslint-disable @typescript-eslint/unbound-method */
 describe('ProfileService', () => {
@@ -113,6 +115,14 @@ describe('ProfileService', () => {
         {
           provide: ConfigService,
           useValue: configServiceImpl,
+        },
+        {
+          provide: getModelToken(Subject.name),
+          useValue: { exists: jest.fn() },
+        },
+        {
+          provide: getModelToken('User'),
+          useValue: { findByIdAndUpdate: jest.fn() },
         },
       ],
     }).compile();
@@ -1311,6 +1321,14 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
                   }),
                 },
               },
+              {
+                provide: getModelToken(Subject.name),
+                useValue: { exists: jest.fn() },
+              },
+              {
+                provide: getModelToken('User'),
+                useValue: { findByIdAndUpdate: jest.fn() },
+              },
             ],
           }).compile();
 
@@ -1461,6 +1479,14 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
               throw new Error(`Missing configuration key: ${key}`);
             }),
           },
+        },
+        {
+          provide: getModelToken(Subject.name),
+          useValue: { exists: jest.fn() },
+        },
+        {
+          provide: getModelToken('User'),
+          useValue: { findByIdAndUpdate: jest.fn() },
         },
       ],
     }).compile();
@@ -1622,6 +1648,14 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
               throw new Error(`Missing configuration key: ${key}`);
             }),
           },
+        },
+        {
+          provide: getModelToken(Subject.name),
+          useValue: { exists: jest.fn() },
+        },
+        {
+          provide: getModelToken('User'),
+          useValue: { findByIdAndUpdate: jest.fn() },
         },
       ],
     }).compile();
@@ -1802,6 +1836,14 @@ describe('Property 13: DELETE with active enrollments produces notification even
               throw new Error(`Missing configuration key: ${key}`);
             }),
           },
+        },
+        {
+          provide: getModelToken(Subject.name),
+          useValue: { exists: jest.fn() },
+        },
+        {
+          provide: getModelToken('User'),
+          useValue: { findByIdAndUpdate: jest.fn() },
         },
       ],
     }).compile();
@@ -2003,6 +2045,14 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
             }),
           },
         },
+        {
+          provide: getModelToken(Subject.name),
+          useValue: { exists: jest.fn() },
+        },
+        {
+          provide: getModelToken('User'),
+          useValue: { findByIdAndUpdate: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -2203,6 +2253,14 @@ describe('ProfileService household student drafts', () => {
         {
           provide: ConfigService,
           useValue: configServiceImpl,
+        },
+        {
+          provide: getModelToken(Subject.name),
+          useValue: { exists: jest.fn() },
+        },
+        {
+          provide: getModelToken('User'),
+          useValue: { findByIdAndUpdate: jest.fn() },
         },
       ],
     }).compile();

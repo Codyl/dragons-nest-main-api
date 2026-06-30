@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Put,
   Post,
   Patch,
@@ -42,6 +44,7 @@ import { WebAuthnRegisterCompleteDto } from './dto/webauthn-register-complete.dt
 import { WebAuthnDeleteCredentialDto } from './dto/webauthn-delete-credential.dto';
 import type { WebAuthnCredentialListItemDto } from './dto/out/webauthn-credential-list-item.dto';
 import { AddTeachableCourseDto } from './dto/add-teachable-course.dto';
+import { AddSubjectDto } from './dto/add-subject.dto';
 import { AddHouseholdStudentDto } from './dto/add-household-student.dto';
 import type { TeachableCourseResponseItem } from './profile.service';
 import { MongoIdPipe } from 'src/common/pipes/mongo-id.pipe';
@@ -334,6 +337,47 @@ export class ProfileController {
     return {
       message: 'Student classes retrieved successfully',
       data: classes,
+    };
+  }
+
+  @ApiOperation({
+    summary: "Adds a subject to a student's curriculum (addedClasses)",
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid subjectId or subject not found.',
+  })
+  @ApiForbiddenResponse({
+    description: "Student not in user's managed accounts.",
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
+  @Post('students/:studentId/subjects')
+  @HttpCode(HttpStatus.CREATED)
+  async addSubjectToStudent(
+    @CurrentUser() user: Record<string, unknown> & { sub?: string },
+    @Param('studentId', MongoIdPipe) studentId: Types.ObjectId,
+    @Body() dto: AddSubjectDto,
+  ): Promise<
+    ApiResponseDto<{
+      subjectId: string;
+      hoursCompleted: number;
+      createdAt: string;
+    }>
+  > {
+    const cognitoSub = user?.sub;
+    if (!cognitoSub || typeof cognitoSub !== 'string') {
+      throw new Error('Not authenticated');
+    }
+
+    const data = await this.profileService.addSubjectToStudent(
+      cognitoSub,
+      studentId,
+      dto.subjectId,
+    );
+    return {
+      message: 'Subject added to student curriculum',
+      data,
     };
   }
 
