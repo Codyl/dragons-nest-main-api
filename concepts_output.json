@@ -1,0 +1,3522 @@
+[
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "K",
+    "name": "Count to 20"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "K",
+    "name": "recognize shapes"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "K",
+    "name": "add within 10"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "1",
+    "name": "Add/subtract within 20"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "1",
+    "name": "place value to 100"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "1",
+    "name": "word problems"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "2",
+    "name": "Multi-digit addition/subtraction"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "2",
+    "name": "intro multiplication/division"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "2",
+    "name": "measurement"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "3",
+    "name": "Multiplication tables"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "3",
+    "name": "division facts"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "3",
+    "name": "fractions intro"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "3",
+    "name": "perimeter/area"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "4",
+    "name": "Fractions equivalence"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "4",
+    "name": "decimals intro"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "4",
+    "name": "multi-step word problems"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "5",
+    "name": "Fraction operations"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "5",
+    "name": "decimals operations"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "5",
+    "name": "volume"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "5",
+    "name": "coordinate plane intro"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "6",
+    "name": "Ratios/proportions"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "6",
+    "name": "integers"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "6",
+    "name": "expressions"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "6",
+    "name": "equations basics"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "7",
+    "name": "Linear equations"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "7",
+    "name": "inequalities"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "7",
+    "name": "functions intro"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "7",
+    "name": "geometry transformations"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "8",
+    "name": "Pythagorean theorem"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "8",
+    "name": "linear systems"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "8",
+    "name": "functions"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "8",
+    "name": "probability basics"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "9",
+    "name": "Algebra 1: equations, functions, graphing"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "9",
+    "name": "data analysis"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "10",
+    "name": "Geometry: proofs"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "10",
+    "name": "trigonometry intro"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "10",
+    "name": "exponential functions"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "11",
+    "name": "Algebra 2: complex functions"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "11",
+    "name": "logs"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "11",
+    "name": "statistics"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "11",
+    "name": "sequences"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "12",
+    "name": "Pre-calc: limits intro"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "12",
+    "name": "advanced functions"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "12",
+    "name": "vectors intro"
+  },
+  {
+    "subject": "69cd8d3af25d5f9fc7d339da",
+    "grade": "C",
+    "name": "Calculus, linear algebra, statistics, discrete math foundations"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "K",
+    "name": "Observe living vs nonliving"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "K",
+    "name": "weather patterns"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "K",
+    "name": "senses"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "1",
+    "name": "Plants/animals needs"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "1",
+    "name": "life cycles"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "1",
+    "name": "simple experiments"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "2",
+    "name": "Ecosystems"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "2",
+    "name": "states of matter"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "2",
+    "name": "basic forces"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "3",
+    "name": "Earth systems"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "3",
+    "name": "energy types"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "3",
+    "name": "rocks/minerals"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "3",
+    "name": "solar system"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "4",
+    "name": "Matter states"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "4",
+    "name": "simple machines"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "4",
+    "name": "electricity basics"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "5",
+    "name": "Cells"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "5",
+    "name": "ecosystems"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "5",
+    "name": "human body systems intro"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "6",
+    "name": "Plate tectonics"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "6",
+    "name": "chemical reactions intro"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "6",
+    "name": "ecosystems interactions"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "7",
+    "name": "Newton laws intro"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "7",
+    "name": "chemistry basics"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "7",
+    "name": "genetics intro"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "8",
+    "name": "Scientific method"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "8",
+    "name": "atoms"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "8",
+    "name": "chemical reactions"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "8",
+    "name": "ecology"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "9",
+    "name": "Biology (cells/genetics)"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "9",
+    "name": "chemistry (reactions)"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "9",
+    "name": "physics (motion)"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "10",
+    "name": "Genetics"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "10",
+    "name": "evolution"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "10",
+    "name": "electricity"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "10",
+    "name": "waves"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "10",
+    "name": "lab experiments"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "11",
+    "name": "Organic chemistry intro"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "11",
+    "name": "physics mechanics"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "11",
+    "name": "biology systems"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "12",
+    "name": "Advanced biology/physics/chemistry"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "12",
+    "name": "research methods"
+  },
+  {
+    "subject": "69cd8d50f25d5f9fc7d339de",
+    "grade": "C",
+    "name": "Specialized STEM: engineering, medicine, physics, CS, research"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "K",
+    "name": "Phonics"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "K",
+    "name": "letter sounds"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "K",
+    "name": "sight words"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "K",
+    "name": "simple sentences"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "1",
+    "name": "Reading fluency"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "1",
+    "name": "spelling patterns"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "1",
+    "name": "paragraph basics"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "2",
+    "name": "Reading comprehension"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "2",
+    "name": "grammar basics"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "2",
+    "name": "paragraph writing"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "3",
+    "name": "Essay structure intro"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "3",
+    "name": "vocabulary expansion"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "3",
+    "name": "story writing"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "4",
+    "name": "Informational writing"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "4",
+    "name": "text evidence"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "4",
+    "name": "comprehension strategies"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "5",
+    "name": "Multi-paragraph essays"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "5",
+    "name": "narrative + argumentative writing"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "6",
+    "name": "Text analysis"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "6",
+    "name": "citations intro"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "6",
+    "name": "persuasive writing"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "7",
+    "name": "Literature analysis"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "7",
+    "name": "research writing"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "7",
+    "name": "rhetorical devices"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "8",
+    "name": "Critical reading"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "8",
+    "name": "argument analysis"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "8",
+    "name": "research papers"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "9",
+    "name": "Academic writing"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "9",
+    "name": "MLA/APA basics"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "9",
+    "name": "synthesis essays"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "10",
+    "name": "Advanced literature analysis"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "10",
+    "name": "rhetorical writing"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "10",
+    "name": "research depth"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "11",
+    "name": "AP-level essays"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "11",
+    "name": "critical theory intro"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "11",
+    "name": "synthesis writing"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "12",
+    "name": "College composition"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "12",
+    "name": "research methods"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "12",
+    "name": "argumentation"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "C",
+    "name": "Professional writing"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "C",
+    "name": "academic publishing"
+  },
+  {
+    "subject": "69cd8d2ff25d5f9fc7d339d8",
+    "grade": "C",
+    "name": "research specialization"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "K",
+    "name": "Family/community roles"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "K",
+    "name": "maps basics"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "K",
+    "name": "rules"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "1",
+    "name": "Community helpers"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "1",
+    "name": "basic geography"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "1",
+    "name": "traditions"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "2",
+    "name": "US geography"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "2",
+    "name": "state symbols"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "2",
+    "name": "civics basics"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "3",
+    "name": "Early US history"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "3",
+    "name": "government basics"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "3",
+    "name": "economics intro"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "4",
+    "name": "State history"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "4",
+    "name": "economic systems basics"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "4",
+    "name": "regions"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "5",
+    "name": "US history foundations"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "5",
+    "name": "civics structure"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "5",
+    "name": "trade basics"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "6",
+    "name": "Ancient civilizations"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "6",
+    "name": "world geography"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "6",
+    "name": "cultural systems"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "7",
+    "name": "Medieval/early modern history"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "7",
+    "name": "exploration"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "7",
+    "name": "governance"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "8",
+    "name": "US history expansion"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "8",
+    "name": "Constitution"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "8",
+    "name": "civic participation"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "9",
+    "name": "Modern world history"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "9",
+    "name": "global conflicts"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "9",
+    "name": "government systems"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "10",
+    "name": "Economics (supply/demand)"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "10",
+    "name": "political systems"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "10",
+    "name": "globalization"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "11",
+    "name": "AP US/world history"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "11",
+    "name": "macroeconomics"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "11",
+    "name": "comparative gov"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "12",
+    "name": "Advanced civics"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "12",
+    "name": "political theory"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "12",
+    "name": "sociology intro"
+  },
+  {
+    "subject": "69cd8d44f25d5f9fc7d339dc",
+    "grade": "C",
+    "name": "College history, political science, economics, anthropology"
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "1.2.1 Identify strengths and assets that support health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "1.2.2 Identify dimensions of wellness."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "1.2.3 Identify ways to prevent or reduce risks for illnesses and injuries."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "1.2.4 Describe health-promoting behaviors."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "1.2.5 Explain the importance of health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "1.2.6 Identify how the environment affects personal and community health."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "1.2.7 Explain when it is important to seek health care."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "1.5.1 Explain how to build upon strengths and assets to support health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "1.5.2 Describe health-promoting behaviors for the dimensions of wellness."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "1.5.3 Explain ways to prevent or reduce risks for illnesses and injuries."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "1.5.4 Explain ways to engage in health-promoting behaviors, including how to manage health conditions."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "1.5.5 Examine how health literacy supports health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "1.5.6 Examine how the environment affects personal and community health."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "1.5.7 Explain when and why it is important to seek health care."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "1.8.1 Analyze ways to build upon strengths and assets to support individual and collective health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "1.8.2 Analyze how practices and behaviors support a variety of dimensions of wellness."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "1.8.3 Analyze behaviors that reduce or prevent illnesses and injuries."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "1.8.4 Analyze practices and behaviors that support health and well-being, including how to manage health conditions."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "1.8.5 Analyze connections between health literacy and health outcomes."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "1.8.6 Analyze how individual, interpersonal, community, and environmental factors impact health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "1.8.7 Explain how health care promotes personal health."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "1.12.1 Apply ways to build upon strengths and assets to support individual and collective health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "1.12.2 Analyze the relationships between various dimensions of wellness as related to health outcomes."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "1.12.3 Evaluate behaviors that reduce or prevent illnesses and injuries."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "1.12.4 Evaluate practices and behaviors that support health and well-being, including how to manage health conditions."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "1.12.5 Examine connections between individual health literacy, organizational health literacy, and health outcomes."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "1.12.6 Analyze how individual, interpersonal, community, societal, and environmental factors are interrelated and impact health outcomes."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "1.12.7 Analyze the benefits of and barriers to practicing a variety of health behaviors."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "1.12.8 Examine how self-efficacy, perceived susceptibility, and perceived severity affect health behaviors."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "1.12.9 Analyze the relationship between access to health care and overall health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "2.2.1 Identify various influences that affect health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "2.2.2 Determine the ways various influences affect personal health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "2.2.3 Explain how various influences affect the health and well-being of others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "2.5.1 Explain how various influences affect health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "2.5.2 Determine the ways various influences affect the health and well-being of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "2.5.3 Explain how influences affect the health and well-being of people and communities in different ways."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "2.5.4 Use strategies and resources to manage influences that impact health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "2.8.1 Analyze the interrelationships between various influences on health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "2.8.2 Analyze individual, interpersonal, community, societal, and environmental factors that influence health behaviors, health outcomes, and health equity."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "2.8.3 Analyze how various influences affect the health and well-being of people and communities in different ways."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "2.8.4 Apply strategies and resources to manage influences that impact health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "2.12.1 Evaluate the interrelationships and impacts of various influences and health behaviors on health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "2.12.2 Evaluate how social determinants of health influence health behaviors, health outcomes, and health equity."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "2.12.3 Evaluate how individual, interpersonal, community, societal, and environmental influences and factors affect health equity."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "2.12.4 Formulate strategies to manage influences that impact health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "2.12.5 Use resources to manage influences that impact health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "3.2.1 Identify characteristics of trusted adults and other individuals who support health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "3.2.2 Demonstrate when and how to seek help from others at home, at school, or in the community."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "3.2.3 Locate school and community health helpers."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "3.5.1 Determine which trusted adults, other individuals, and other health resources are appropriate in various situations."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "3.5.2 Locate home, school, and community resources to support health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "3.5.3 Determine the validity and reliability of health information, products, services, and other resources."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "3.5.4 Explain how misinformation and disinformation affect health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "3.8.1 Describe situations that may require support from trusted adults, other individuals, and health professionals."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "3.8.2 Identify supports and barriers to accessing valid and reliable health information, products, services, and other resources."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "3.8.3 Access valid and reliable sources of health information, products, services, and other resources."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "3.8.4 Analyze the validity, reliability, and accessibility of health information, products, services, and other resources."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "3.8.5 Use strategies to manage misinformation and disinformation"
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "3.12.1 Analyze the accessibility of trusted adults, other individuals, health professionals, and other resources to promote health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "3.12.2 Analyze supports and barriers to accessing valid and reliable health information, products, services, and other resources."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "3.12.3 Evaluate the validity, reliability, and accessibility of health information, products, services, and other resources."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "3.12.4 Use valid and reliable sources of health information, products, services, and other resources."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "3.12.5 Apply strategies to manage misinformation and disinformation."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "4.2.1 Express thoughts, feelings, wants, and needs to support health and well-being of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "4.2.2 Use active listening skills in a variety of situations."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "4.2.3 Demonstrate communication skills and strategies to use if uncomfortable, unsafe, or harmed."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "4.2.4 Recognize ways to communicate and respect the boundaries of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "4.2.5 Demonstrate ways to show kindness and compassion."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "4.5.1 Use effective communication skills to express thoughts, feelings, wants, and needs to support health and well-being of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "4.5.2 Use active listening skills and strategies in a variety of situations."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "4.5.3 Demonstrate how to ask for and offer assistance to support the health of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "4.5.4 Demonstrate boundary-setting skills to communicate and respect the boundaries of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "4.5.5 Demonstrate refusal skills to use in a variety of situations."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "4.5.6 Demonstrate strategies to prevent, manage, or resolve conflict."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "4.5.7 Demonstrate effective ways to communicate with kindness and compassion."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "4.8.1 Use effective communication skills across various modes of communication to support health and well-being of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "4.8.2 Apply active listening skills and strategies in a variety of interpersonal contexts."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "4.8.3 Use various communication strategies to seek and offer support and assistance."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "4.8.4 Demonstrate ways to communicate boundaries and consent for a variety of situations."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "4.8.5 Use refusal skills and strategies in a variety of situations."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "4.8.6 Use skills and strategies to prevent, manage, or resolve conflict."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "4.8.7 Use collaboration skills in a variety of situations."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "4.8.8 Use negotiation skills in a variety of situations."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "4.8.9 Demonstrate strategies to communicate with others with different perspectives and values."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "4.8.10 Demonstrate ways to communicate empathy and compassion."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "4.12.1 Apply effective communication skills across multiple modes of communication and media formats to support health and well-being of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "4.12.2 Apply communication skills and strategies within a variety of interpersonal contexts."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "4.12.3 Demonstrate how to ask for and offer assistance to support the health of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "4.12.4 Use communication skills related to communicating boundaries, expressing consent, and removing consent in a variety of situations."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "4.12.5 Apply refusal skills and strategies in a variety of situations."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "4.12.6 Apply skills and strategies to prevent, manage, or resolve conflict."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "4.12.7 Demonstrate collaboration skills in a variety of situations."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "4.12.8 Demonstrate negotiation skills in a variety of situations."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "4.12.9 Adapt strategies to communicate with others with different perspectives and values in various contexts."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "4.12.10 Communicate with empathy and compassion."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "5.2.1 Identify when a health-related decision is needed to maintain or improve health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "5.2.2 Recognize when help is needed for a health-related decision."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "5.2.3 Describe options and potential outcomes for a health-related decision."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "5.2.4 Choose an option that supports health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "5.5.1 Determine situations that require a thoughtful decision-making process to maintain or improve health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "5.5.2 Determine whether assistance or collaboration is needed in making a health-related decision."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "5.5.3 Compare and contrast options and potential outcomes for a health-related decision."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "5.5.4 Choose a health-promoting option when making a decision."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "5.5.5 Reflect on the results of a health-related decision on self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "5.8.1 Explain how the use of a decision-making process affects health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "5.8.2 Determine when health-related situations require the application of a thoughtful decision-making process."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "5.8.3 Use an individual, supported, or collaborative decision-making process to maintain or improve health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "5.8.4 Evaluate how various options may affect health-related outcomes at individual, interpersonal, community, societal, and environmental levels."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "5.8.5 Identify supports and barriers that affect decision making at individual, interpersonal, community, societal, and environmental levels."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "5.8.6 Evaluate the results of a health-related decision on self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "5.12.1 Analyze how health-related decisions may affect personal and community health and well-being from a variety of perspectives."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "5.12.2 Determine when and why health-related situations require the application of a thoughtful decision-making process."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "5.12.3 Apply an individual, supported, or collaborative decision-making process to maintain or improve health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "5.12.4 Analyze a variety of options based on priorities and potential outcomes when making a health-related decision."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "5.12.5 Analyze the potential impact of a decision on the health and well-being at individual, interpersonal, community, societal, and environmental levels."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "5.12.6 Develop a plan of action to implement a health-related decision."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "5.12.7 Evaluate the impact of supports and barriers that affect decision making at individual, interpersonal, community, societal, and environmental levels."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "5.12.8 Evaluate the effectiveness of health-related decisions."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "6.2.1 Determine a health behavior to change or reinforce."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "6.2.2 Identify a goal that supports health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "6.2.3 Determine who can help when assistance is needed to achieve a health-related goal."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "6.2.4 Describe actions that support reaching a health-related goal."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "6.2.5 Take action to achieve a health-related goal."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "6.2.6 Reflect on the results of goal-setting."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "6.5.1 Set a goal and explain how the goal supports health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "6.5.2 Determine whether assistance or collaboration is needed in setting a goal that supports health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "6.5.3 Develop a plan that includes actions, resources, and progress-tracking toward attaining a health-related goal."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "6.5.4 Identify supports and barriers that affect progress toward attaining a health-related goal."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "6.5.5 Track progress toward attaining a health-related goal."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "6.5.6 Reflect on the goal-setting process and outcomes."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "6.8.1 Assess personal health and well-being to identify focus areas for goal-setting."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "6.8.2 Analyze when individual, supported, or collaborative goal-setting is appropriate."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "6.8.3 Develop a goal and explain how it supports health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "6.8.4 Develop a plan that addresses supports and barriers to attaining a health-related goal."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "6.8.5 Monitor progress to determine whether a health-related goal or plan should be maintained or adjusted."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "6.8.6 Examine the goal-setting process and outcomes on health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "6.12.1 Assess personal health, well-being, and factors for engaging in a goal-setting process."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "6.12.2 Use an individual, supported, or collaborative goal-setting process as appropriate."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "6.12.3 Develop a goal and analyze how it supports health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "6.12.4 Implement a plan that addresses supports and barriers to attaining a health-related goal."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "6.12.5 Monitor progress and adjust the goal or plan as appropriate."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "6.12.6 Evaluate the goal-setting process and outcomes on health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "7.2.1 Identify practices and behaviors that support health and well-being of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "7.2.2 Demonstrate practices and behaviors that support health and well-being of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "7.5.1 Examine practices and behaviors that support health and well-being of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "7.5.2 Demonstrate practices and behaviors that support health and well-being of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "7.8.1 Examine supports and barriers to health-related practices and behaviors."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "7.8.2 Analyze practices and behaviors that support personal and community health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "7.8.3 Demonstrate practices and behaviors that support personal and community health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "7.12.1 Analyze supports and barriers to engaging in health-related practices and behaviors."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "7.12.2 Evaluate practices, behaviors, and other factors supporting individual and collective health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "7.12.3 Adapt practices and behaviors to support individual and collective health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "7.12.4 Demonstrate a variety of practices and behaviors supporting individual and collective health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "8.2.1 Make requests to support personal health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "8.2.2 Identify a variety of ways to support others in making health-promoting choices."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "K",
+    "name": "8.2.3 Encourage others to make health-promoting choices."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "8.5.1 Recognize situations in which advocacy supports the health and well-being of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "8.5.2 Explain how collaboration and communication support advocacy."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "8.5.3 Identify advocacy skills and strategies to support health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "3",
+    "name": "8.5.4 Demonstrate how to advocate for health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "8.8.1 Analyze opportunities to advocate for the health and well-being of individuals, families, and communities."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "8.8.2 Determine when individual or collaborative advocacy is appropriate to promote health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "8.8.3 Adapt advocacy skills and strategies for a variety of audiences and contexts."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "8.8.4 Demonstrate advocacy skills and strategies to promote the health and well-being of self and others."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "6",
+    "name": "8.8.5 Evaluate the effectiveness of advocacy efforts for promoting health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "8.12.1 Examine a variety of factors that affect advocacy at individual, interpersonal, community, societal, and environmental levels."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "8.12.2 Advocate for health issues either collaboratively or individually to promote health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "8.12.3 Customize advocacy skills and strategies for varying audiences and contexts."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "8.12.4 Demonstrate self-advocacy skills and strategies to promote health and well-being."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "8.12.5 Demonstrate advocacy skills and strategies to promote health and well-being at interpersonal, community, societal, and environmental levels."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "8.12.6 Evaluate the process, outcomes, and impact of advocacy efforts at the individual, interpersonal, community, societal, and environmental levels."
+  },
+  {
+    "subject": "6a42ee548652db7047a34e37",
+    "grade": "9",
+    "name": "8.12.7 Analyze the role of collaboration among different people in a community to prevent and solve community health issues."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.1 Demonstrates a variety of locomotor skills with the concepts of space, effort, and relationship awareness."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.2 Demonstrates jumping and landing in a non-dynamic environment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.3 Demonstrates transferring weight on multiple body parts."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.4 Demonstrates non-locomotor skills with the concepts of space, effort, and relationship awareness."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.5 Demonstrates balancing on different body parts in a non-dynamic environment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.6 Demonstrates bouncing a ball in a variety of non-dynamic practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.7 Demonstrates rolling a ball in a variety of non-dynamic practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.8 Demonstrates catching in a variety of non-dynamic practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.9 Demonstrates throwing in a variety of non-dynamic practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.10 Demonstrates kicking a ball in a variety of non-dynamic practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.11 Demonstrate dribbling with feet in a variety of non-dynamic practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.12 Demonstrates striking with hands in a variety of non-dynamic practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.13 Demonstrates striking with a short-handled implement in a variety of non- dynamic practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.14 Demonstrates striking with a long-handled implement in a variety of non-dynamic practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.15 Demonstrates locomotor, non-locomotor, and manipulative movements based on a variety of dance forms."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.16 Demonstrates jumping rope in a non-dynamic environment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "1.2.17 Demonstrates water safety skills. If a pool facility is available demonstrates water safety and basic swimming skills."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.1 Combines varied locomotor skills in a variety of practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.2 Demonstrates transferring weight from feet to hands and hands to feet in a non-dynamic environment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.3 Demonstrates rolling with the body in a non-dynamic environment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.4 Combines jumping/landing, rolling, balancing and transfer of weight from feet to hands in a non-dynamic environment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.5 Combines locomotor, non- locomotor, and manipulative movements based on a variety of dance forms."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.6 Demonstrates jumping rope in a variety of practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.7 Demonstrates jumping and landing in a non-dynamic environment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.8 Demonstrates balancing on different body parts in a non-dynamic environment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.9 Demonstrates rolling a ball in a non-dynamic environment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.10 Demonstrates throwing in a variety of practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.11 Demonstrates striking with a long-handled implement in a variety of practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.12 Demonstrates catching in a variety of practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.13 Demonstrates striking with hands above waist in a variety of practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.14 Demonstrates striking with hands below waist in a variety of practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.15 Demonstrates serving an object in a non-dynamic environment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.16 Demonstrates striking an object with a short-handled implement in a variety of practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.17 Demonstrates sending and receiving an object in a variety of practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.18 Demonstrates kicking a ball using the instep in a variety of practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.19 Demonstrates dribbling with hands in non-dynamic and dynamic practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.20 Demonstrates dribbling with feet in a variety of practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.21 Combines manipulative skills and traveling for execution to a target in a variety of practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "1.5.22 Demonstrates water safety skills. If a pool facility is available, demonstrates water safety and basic swimming skills."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.1 Demonstrates correct technique in a variety of outdoor activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.2 Demonstrates movement sequences within varied dance forms."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.3 Demonstrates appropriate form in a variety of health-related fitness activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.4 Demonstrates appropriate form in a variety of skill-related fitness activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.5 Demonstrates a striking motion with a long-handled implement."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.6 Demonstrates a correct rolling and throwing (underhand, sidearm, overhand) technique in a variety of practice tasks and modified target games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.7 Demonstrates striking a self-tossed/pitched ball with an implement to open space in a variety of practice tasks and small-sided games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.8 Demonstrates a proper catch with or without an implement in a variety of practice tasks and small-sided games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.9 Demonstrates throwing for accuracy, distance, and power in a variety of practice tasks and small-sided games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.10 Demonstrates a proper underhand and overhand serve using the hand in a variety of practice tasks and modified small-sided games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.11 Demonstrates a proper underhand and overhand serve using a short or long-handled implement in a variety of practice tasks and modified small-sided games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.12 Demonstrates the correct form of a forehand and backhand stroke with a short-handled and long-handled implement in a variety of practice tasks and modified small-sided games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.13 Demonstrates a volley using a short-handled and long-handled implement in a variety of practice tasks and modified net and wall games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.14 Demonstrates sending and receiving in combination with locomotor skills in a variety of small-sided games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.15 Demonstrates a dribbling skill in a variety of practice tasks and small-sided games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.16 Demonstrates dribbling an object with an implement in a variety of practice tasks and small-sided games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.17 Demonstrates a shot on goal with and without an implement in a variety of practice tasks and small-sided games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.18 Demonstrates multiple techniques to create open space during a variety of practice tasks and small-sided games (offense)."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.19 Demonstrates a defensive ready position in a variety of practice tasks and small-sided games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "1.8.20 Demonstrates water safety skills. If a pool facility, is available demonstrates water safety and basic swimming skills."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "1.12.1 Demonstrates activity-specific movement skills in a variety of lifetime sports and activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "1.12.2 Demonstrates activity-specific movement skills in a variety of recreational and backyard games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "1.12.3 Demonstrates activity-specific movement skills in a variety of outdoor pursuits."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "1.12.4 Demonstrates and creates movement sequences based on one or more forms of dance."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "1.12.5 Demonstrates appropriate technique in cardiovascular training."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "1.12.6 Demonstrates appropriate technique in muscular strength and endurance training."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "1.12.7 Demonstrates appropriate technique in flexibility training."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "1.12.8 Demonstrates appropriate technique in skill-related fitness training."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "1.12.9 Demonstrates water safety skills. If a pool facility is available, demonstrates water safety and basic swimming skills."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "2.2.1 Recognizes personal space and where to move in general space."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "2.2.2 Identifies simple strategies in chasing and fleeing activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "2.2.3 Identifies movement concepts related to locomotor, non-locomotor, and manipulative skills."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "2.2.4 Demonstrates knowledge of locomotor, non-locomotor, and manipulative skills in movement settings."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "2.2.5 Demonstrates knowledge of non-locomotor, locomotor and movement concepts used in dance and rhythms."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "2.2.6 Identifies physical activities that contribute to fitness."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "2.2.7 Recognizes the importance of stretching before and after physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "2.2.8 Identifies the heart as a muscle that gets stronger with physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "2.2.9 Recognizes that regular physical activity is good for their health."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "2.2.10 Recognizes physiological changes in their body during physical activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "2.2.11 Recognizes food and hydration choices that provide energy for physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "2.2.12 Demonstrates knowledge of water safety skills. Demonstrates knowledge of basic swimming skills."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.1 Applies movement concepts and strategies for safe movement within dynamic environments."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.2 Demonstrates knowledge of offensive strategies in small-sided invasion practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.3 Demonstrates knowledge of defensive strategies in small-sided invasion practice tasks."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.4 Demonstrates knowledge of appropriate movement concepts for efficient performance of manipulative skills."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.5 Demonstrates problem solving strategies in a variety of games/activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.6 Applies movement concepts to different types of dances, gymnastics, rhythms, and individual performance activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.7 Defines and provides examples of movement activities for developing the health-related fitness components."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.8 Establishes goals related to enhancing fitness development"
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.9 Defines and explains how to implement the FITT Principle for skill or fitness development."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.10 Defines and provides examples of movement activities for developing the skill-related fitness components."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.11 Identifies the need for warm-up & cool-down relative to various physical activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.12 Identifies location of pulse and provides examples of activities that increase heart rate."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.13 Explains the benefits of physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.14 Recognizes and explains how physical activity influences physiological changes in their body."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.15 Recognizes the critical elements that contribute to proper execution of a skill."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.16 Identifies technology tools that support physical activity goals."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.17 Describes the impact of food and hydration choices on physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "2.5.18 Demonstrates knowledge of water safety skills. Demonstrates knowledge of basic swimming skills."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.1 Identifies the effective use of movement concepts within multiple dynamic environments."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.2 Demonstrates knowledge of offensive tactics to create space with movement in invasion games"
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.3 Demonstrates knowledge of reducing open space with movement and denial in invasion games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.4 Selects and applies the appropriate shot and technique in net and wall games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.5 Demonstrates knowledge of offensive tactics in striking and fielding games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.6 Demonstrates knowledge of defensive positioning tactics in striking and fielding games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.7 Demonstrates problem-solving skills in a variety of games and activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.8 Applies knowledge of movement concepts for the purpose of varying different types of dances and rhythmic activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.9 Identifies and compares the components of health and skill-related fitness."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.10 Self-selects and monitors physical activity goals based on a self-selected health-related fitness assessment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.11 Implements the principles of exercise (FITT, progression, overload, and specificity) for different types of physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.12 Applies knowledge of skill-related fitness to different types of physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.13 Explains the relationship of aerobic fitness and RPE Scale to physical activity effort."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.14 Applies knowledge of dynamic and static stretching to exercise in warm-up, cool-down, flexibility, endurance, etc. physical activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.15 Demonstrates knowledge of heart rate and describes its relationship to aerobic fitness."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.16 Identifies ways to be physically active."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.17 Examines how rest impacts the body�s response to physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.18 Analyzes skill performance by identifying critical elements."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.19 Evaluates usefulness of technology tools to support physical activity and fitness goals."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.20 Explains the relationships among nutrition, physical activity, and health factors."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.21 Demonstrates knowledge of safety protocols in teacher-selected outdoor activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "2.8.22 Demonstrates knowledge of water safety skills. Demonstrates knowledge of basic swimming skills."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.1 Demonstrates knowledge of tactics and strategies within lifetime sports & activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.2 Demonstrates knowledge of tactics and strategies within recreational & backyard games."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.3 Demonstrates knowledge of tactics and strategies within outdoor pursuits."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.4 Applies knowledge of movement sequences to create or participate in one or more forms of dance."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.5 Analyzes how health and fitness will impact quality of life after high school."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.6 Establishes a goal and creates a practice plan to improve performance for a self-selected skill."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.7 Applies the principles of exercise in a variety of self-selected lifetime physical activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.8 Designs and implements a plan that applies knowledge of aerobic, strength and endurance, and flexibility training exercises."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.9 Evaluates perceived exertion during physical activity and adjusts effort."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.10 Applies heart rate concepts to ensure safety and maximize health-related fitness outcomes."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.11 Discusses the benefits of a physically active lifestyle as it relates to young adulthood."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.12 Applies knowledge of rest when planning regular physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.13 Applies movement concepts and principles (e.g., force, motion, rotation) to analyze and improve performance of self and/or others in a selected skill (e.g., overhand throw, back squat, archery)."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.14 Identifies and discusses the historical and cultural roles of games, sports and dance in a society."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.15 Analyzes and applies technology as tools to support a healthy, active lifestyle."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.16 Identifies snacks and food choices that help and hinder performance, recovery, and enjoyment during physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "2.12.17 Demonstrates knowledge of water safety skills. Demonstrates knowledge of basic swimming skills."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "3.2.1 Recognizes the feelings of others during a variety of physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "3.2.2 Demonstrates ability to encourage others."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "3.2.3 Uses communication skills to share space and equipment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "3.2.4 Responds appropriately to directions and feedback from the teacher."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "3.2.5 Demonstrates respectful behaviors that contribute to positive social interactions in movement."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "3.2.6 Describes why following rules are important for safety and fairness."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "3.2.7 Makes safe choices with physical education equipment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "3.2.8 Discusses problems and solutions with teacher support in a physical activity setting."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "3.2.9 Makes fair choices as directed by teacher."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "3.2.10 Identifies and participates in physical activities representing different cultures."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "3.5.1 Describes the perspective of others during a variety of activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "3.5.2 Uses communication skills to negotiate roles and responsibilities in a physical activity setting."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "3.5.3 Demonstrates respectful behaviors that contribute to positive social interaction in group activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "3.5.4 Demonstrates safe behaviors independently with limited reminders."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "3.5.5 Solves problems independently, with partners, and in small groups."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "3.5.6 Makes choices that are fair according to activity etiquette."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "3.5.7 Describes physical activities that represent a variety of cultures around the world."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "3.8.1 Understands and accepts others� differences during a variety of physical activities."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "3.8.2 Demonstrates consideration for others and contributes positively to the group or team."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "3.8.3 Uses communication skills to negotiate strategies and tactics in a physical activity setting."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "3.8.4 Implements and provides constructive feedback to and from others when prompted and supported by the teacher."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "3.8.5 Explains the value of a specific physical activity in culture."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "3.8.6 Demonstrates the ability to follow game rules in a variety of physical activity situations."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "3.8.7 Recognizes and implements safe and appropriate behaviors during physical activity and with exercise equipment."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "3.8.8 Solves problems amongst teammates and opponents."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "3.8.9 Applies and respects the importance of etiquette in a physical activity setting."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "3.8.10 Explains how communication, feedback, cooperation, and etiquette relate to leadership roles."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "3.12.1 Demonstrates awareness of other people�s emotions and perspectives in a physical activity setting."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "3.12.2 Exhibits proper etiquette, respect for others, and teamwork while engaging in physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "3.12.3 Encourages and supports others through their interactions in a physical activity setting."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "3.12.4 Implements and provides feedback to improve performance without prompting from teacher."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "3.12.5 Analyzes the value of a specific physical activity in a variety of cultures."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "3.12.6 Applies best practices for participating safely in physical activity (e.g., injury prevention, spacing, hydration, use of equipment, implementation of rules, sun protection)."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "3.12.7 Thinks critically and solves problems in physical activity settings, both as an individual and in groups."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "3.12.8 Evaluates the effectiveness of leadership skills when participating in a variety of physical activity settings."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "4.2.1 Identifies physical activities that can meet the need for self-expression."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "4.2.2 Identifies physical activities that can meet the need for social interaction."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "4.2.3 Lists ways that movement positively affects personal health."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "4.2.4 Identifies preferred physical activities based on personal interests."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "4.2.5 Recognizes individual challenges through movement."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "4.2.6 Sets observable short-term goals."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "4.2.7 Recognizes movement strengths and the need for practice for individual improvement."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "4.2.8 Recognizes the opportunity for physical activity within physical education class."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "4.2.9 Demonstrates techniques (e.g., breathing, counting) to assist with managing emotions and behaviors in a physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "K",
+    "name": "4.2.10 Reflects on movement experiences during physical education to develop understanding of how movement is personally meaningful."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "4.5.1 Explains how preferred physical activities meet the need for personal self-expression."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "4.5.2 Explains how preferred physical activities meet the need for social interaction."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "4.5.3 Describes how movement positively affects personal health."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "4.5.4 Explains the rationale for one�s choices related to physical activity based on personal interests."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "4.5.5 Recognizes group challenges through movement."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "4.5.6 Sets observable long-term goals."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "4.5.7 Identifies movement strengths and opportunities for practice for individual improvement."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "4.5.8 Identifies physical activity opportunities outside of physical education class."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "4.5.9 Recognizes personally effective techniques that assist with managing one�s emotions and behaviors in a physical activity setting."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "3",
+    "name": "4.5.10 Reflects on movement experiences during physical education to develop understanding of how movement is personally meaningful."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "4.8.1 Describes how self- expression impacts individual engagement in physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "4.8.2 Describes how social interaction impacts individual engagement in physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "4.8.3 Participates in a variety of physical activities that can positively affect personal health."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "4.8.4 Connects how choice and personal interests impact individual engagement in physical activity."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "4.8.5 Examines individual and group challenges through movement."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "4.8.6 Sets goals to participate in physical activities based on examining individual ability."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "4.8.7 Examines opportunities and barriers to participating in physical activity outside of physical education class."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "4.8.8 Utilizes a variety of techniques to manage one�s emotions and behaviors in a physical activity setting."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "6",
+    "name": "4.8.9 Reflects on movement experiences during physical education to develop understanding of how movement is personally meaningful."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "4.12.1 Selects and participates in physical activities (e.g., dance, yoga, aerobics) that meet the need for self-expression."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "4.12.2 Selects and participates in physical activities that meet the need for social interaction."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "4.12.3 Identifies and participates in physical activity that positively affects health."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "4.12.4 Chooses and participates in physical activity based on personal interests."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "4.12.5 Chooses and successfully participates in self-selected physical activity at a level that is appropriately challenging."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "4.12.6 Sets and develops movement goals related to personal interests."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "4.12.7 Analyzes factors on regular participation in physical activity after high school (e.g., life choices, economics, motivation, accessibility)."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "4.12.8 Analyzes and applies self-selected techniques to manage one�s emotions in a physical activity setting."
+  },
+  {
+    "subject": "69cd8d62f25d5f9fc7d339e0",
+    "grade": "9",
+    "name": "4.12.9 Reflects on movement experiences during physical education to develop understanding of how movement is personally meaningful."
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "K",
+    "name": "Dressing"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "K",
+    "name": "Hygiene routines"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "K",
+    "name": "Packing backpack"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "K",
+    "name": "Following multi step instructions"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "K",
+    "name": "Using scissors and glue safely"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "K",
+    "name": "Recognizing household objects"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "K",
+    "name": "Mouse control"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "K",
+    "name": "Keyboard familiarity"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "K",
+    "name": "Typing simple words"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "K",
+    "name": "Using apps safely"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "3",
+    "name": "Cleaning rooms"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "3",
+    "name": "Doing laundry"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "3",
+    "name": "Basic cooking"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "3",
+    "name": "Managing trash and recycling"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "3",
+    "name": "Typing practice"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "3",
+    "name": "Organizing files"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "3",
+    "name": "Internet safety basics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "3",
+    "name": "Using screwdriver and hammer"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "3",
+    "name": "Replacing batteries"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "3",
+    "name": "Basic bike maintenance"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "6",
+    "name": "Cooking simple meals"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "6",
+    "name": "Kitchen safety"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "6",
+    "name": "Meal planning basics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "6",
+    "name": "Using a plunger"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "6",
+    "name": "Understanding breakers"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "6",
+    "name": "Basic home systems knowledge"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "6",
+    "name": "Typing improvement"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "6",
+    "name": "Installing software"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "6",
+    "name": "Troubleshooting basic tech issues"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "6",
+    "name": "Bike repair basics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "6",
+    "name": "Tool familiarity"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "6",
+    "name": "Measurement basics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Fixing faucets basics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Hanging shelves"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Painting walls"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Understanding appliances"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Checking oil and fluids"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Tire pressure"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Jump starting a car"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Changing a tire"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Typing proficiency"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Basic coding concepts"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Managing files and backups"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Budgeting basics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Using banking apps"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "9",
+    "name": "Understanding receipts"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Cooking full meals"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Grocery planning"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Budgeting groceries"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Home maintenance routines"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Emergency response basics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Vehicle maintenance awareness"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Basic diagnostics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Typing mastery"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Troubleshooting systems"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Setting up a computer"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Building a computer"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Understanding hardware compatibility"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Taxes basics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Credit awareness"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "11",
+    "name": "Renting basics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Cooking full meals"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Grocery planning"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Budgeting groceries"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Home maintenance routines"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Emergency response basics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Vehicle maintenance awareness"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Basic diagnostics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Typing mastery"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Troubleshooting systems"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Setting up a computer"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Building a computer"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Understanding hardware compatibility"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Taxes basics"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Credit awareness"
+  },
+  {
+    "subject": "69cd8d6cf25d5f9fc7d339e2",
+    "grade": "12",
+    "name": "Renting basics"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "1",
+    "name": "Emotions & self-awareness"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "1",
+    "name": "Naming feelings (anger, sadness, joy, fear)"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "1",
+    "name": "Basic empathy (�how would they feel?�)"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "1",
+    "name": "Gratitude & kindness habits"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "1",
+    "name": "Thankfulness routines"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "1",
+    "name": "Helping others as behavior, not ideology"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "1",
+    "name": "Simple mindfulness (attention training)"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "1",
+    "name": "Breathing exercises"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "1",
+    "name": "Paying attention to senses Religious stories (not doctrine)"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "1",
+    "name": "Christianity stories (parables, moral lessons)"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "1",
+    "name": "Hinduism stories (Ramayana/Mahabharata simplified)"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "1",
+    "name": "Buddhism Jataka tales"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "3",
+    "name": "Basic behavior loops (habit ? reward)"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "3",
+    "name": "Responsibility and consequences"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "3",
+    "name": "Intro to Psychology"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "3",
+    "name": "Emotional regulation strategies"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "3",
+    "name": "Cultures"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "3",
+    "name": "Christianity, Islam, Judaism overview"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "3",
+    "name": "Buddhism/Hinduism basic ideas"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "Identity & meaning-making"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "Who am I vs what I do"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "Peer pressure and identity formation"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "Cognitive Behavioral awareness"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "Cognitive Behavioral Therapy"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "Thought distortion awareness (overthinking, catastrophizing)"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "Emotional regulation & stress"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "Nervous system responses (fight/flight/freeze)"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "How religions answer:"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "suffering"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "purpose"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "morality"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "8",
+    "name": "Stoic resilience ideas begin here"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "Ethics & life philosophy"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "What is �good� or �meaningful�?"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "Personal responsibility frameworks"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "Existential thinking"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "Existentialism"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "Meaning vs meaninglessness"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "Mortality and long-term thinking"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "Advanced self-regulation"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "Stress, discipline, habit mastery"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "Stoicism"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "Control vs acceptance"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "Deeper comparative religion analysis"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "11",
+    "name": "Meditation traditions"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "12",
+    "name": "What do I actually believe and why?"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "12",
+    "name": "Integration across systems:"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "12",
+    "name": "Abrahamic traditions"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "12",
+    "name": "Dharmic traditions"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "12",
+    "name": "secular philosophy"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "12",
+    "name": "Meditation depth practices"
+  },
+  {
+    "subject": "6a1dc77a97424aae8504f9cb",
+    "grade": "12",
+    "name": "Mysticism"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "1",
+    "name": "Pick up toys"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "1",
+    "name": "- Put clothes in hamper"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "1",
+    "name": "- Help wipe spills"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "1",
+    "name": "- Carry light items"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "2",
+    "name": "Make bed (basic)"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "2",
+    "name": "- Set/clear table"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "2",
+    "name": "- Feed pets"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "2",
+    "name": "- Put away laundry"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "2",
+    "name": "- Tidy room"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "7",
+    "name": "Load/unload dishwasher"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "7",
+    "name": "- Take out trash"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "7",
+    "name": "- Sweep/vacuum"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "7",
+    "name": "- Pack school items"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "7",
+    "name": "- Help with meals"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "9",
+    "name": "Do laundry start-to-finish"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "9",
+    "name": "- Cook simple meals"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "9",
+    "name": "- Clean bathroom"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "9",
+    "name": "- Yard work"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "9",
+    "name": "- Babysit (light supervision)"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "12",
+    "name": "Manage own schedule"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "12",
+    "name": "- Grocery shopping"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "12",
+    "name": "- Cook full meals"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "12",
+    "name": "- Deep cleaning tasks"
+  },
+  {
+    "subject": "6a2ad84986db670848b6adae",
+    "grade": "12",
+    "name": "- Help manage household logistics"
+  }
+]
