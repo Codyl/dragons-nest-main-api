@@ -209,16 +209,16 @@ export class ProfileService {
       birthDate: user.birthDate ?? null,
     });
 
-    const draftsRaw = user.managedAccountsView ?? [];
+    const managedAccounts = user.managedAccountsView ?? [];
 
     const managedAccountsViewAll: HouseholdStudentMe[] | undefined =
       user.accountType === AccountType.Adult
-        ? draftsRaw.map((d) => mapStoredDraftToHouseholdStudentMe(d))
+        ? managedAccounts.map((d) => mapStoredDraftToHouseholdStudentMe(d))
         : undefined;
 
     const householdStudents: HouseholdStudentMe[] | undefined =
       user.accountType === AccountType.Adult
-        ? draftsRaw
+        ? managedAccounts
             .filter((d) => householdDraftArchivedIso(d) === null)
             .map((d) => ({
               studentId: d.studentId,
