@@ -17,6 +17,7 @@ export interface CreateActivityDto {
   conceptId: string;
   difficulty: string;
   timeSpentMinutes: number;
+  notes?: string | undefined;
 }
 
 @Injectable()
@@ -77,6 +78,7 @@ export class ActivitiesService {
       conceptId: new Types.ObjectId(dto.conceptId),
       difficulty: dto.difficulty,
       timeSpentMinutes: dto.timeSpentMinutes,
+      notes: dto.notes,
     });
   }
 

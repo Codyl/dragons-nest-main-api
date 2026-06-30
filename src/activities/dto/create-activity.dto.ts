@@ -1,4 +1,13 @@
-import { IsDateString, IsIn, IsInt, IsMongoId, Max, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsInt,
+  IsMongoId,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class CreateActivityDto {
   @IsMongoId({ message: 'subjectId must be a valid MongoDB ObjectId' })
@@ -22,4 +31,8 @@ export class CreateActivityDto {
   @Min(1, { message: 'timeSpentMinutes must be at least 1' })
   @Max(1440, { message: 'timeSpentMinutes must be no greater than 1440' })
   timeSpentMinutes: number;
+
+  @IsOptional()
+  @IsString({ message: 'notes must be a string' })
+  notes?: string;
 }

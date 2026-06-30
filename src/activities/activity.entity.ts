@@ -35,6 +35,9 @@ export class Activity extends Document {
 
   @Prop({ required: true, min: 1, max: 1440 })
   timeSpentMinutes: number;
+
+  @Prop({ required: false })
+  notes?: string;
 }
 
 export const ActivitySchema = SchemaFactory.createForClass(Activity);
