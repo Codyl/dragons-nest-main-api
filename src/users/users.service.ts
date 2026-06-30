@@ -403,11 +403,11 @@ export class UsersService {
     if (data.state) {
       const complianceLaw = await this.complianceLawsModel
         .findOne({ abbreviation: data.state.toUpperCase() })
-        .lean();
+        .exec();
 
-      if (complianceLaw?.subjectsRequiredTopicIds?.length) {
+      if (complianceLaw?.requiredSubjectIds?.length) {
         const now = new Date();
-        addedClasses = complianceLaw.subjectsRequiredTopicIds.map(
+        addedClasses = complianceLaw.requiredSubjectIds.map(
           (subjectId) => ({
             subjectId: new Types.ObjectId(subjectId.toString()),
             hoursCompleted: 0,

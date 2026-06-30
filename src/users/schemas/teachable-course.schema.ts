@@ -23,7 +23,7 @@ export class TeachableCourse {
 
   @ApiProperty({
     description:
-      'Subject catalog id (references a Subject document in the subjects API / topics collection).',
+      'Subject catalog id (references a Subject document in the subjects API).',
     type: String,
     example: '507f1f77bcf86cd799439011',
   })

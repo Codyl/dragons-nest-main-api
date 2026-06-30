@@ -1416,7 +1416,7 @@ export class ProfileService {
       );
     }
 
-    // Validate subjectId exists in topics collection → 400
+    // Validate subjectId exists in subjects collection → 400
     const subjectExists = await this.subjectModel.exists({
       _id: new Types.ObjectId(subjectId),
     });

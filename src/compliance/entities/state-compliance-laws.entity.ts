@@ -316,7 +316,7 @@ export const ComplianceSourceSchema =
 
 /**
  * Per-state homeschool compliance: structured pathways plus app-oriented fields
- * (topic IDs for default required subjects, compulsory ages, immunization prompt flag).
+ * (subject IDs for default required subjects, compulsory ages, immunization prompt flag).
  */
 @Schema({ collection: 'state_compliance_laws' })
 export class StateComplianceLaws extends Document {
@@ -344,13 +344,13 @@ export class StateComplianceLaws extends Document {
   @ApiProperty({
     type: [String],
     description:
-      'Topic catalog ids (`topics` collection / Subject); clients add these subjects to students by default when required.',
+      'Subject catalog IDs (subjects collection); clients add these subjects to managed users by default when required.',
   })
   @Prop({
     type: [{ type: Types.ObjectId, ref: Subject.name }],
     default: [],
   })
-  subjectsRequiredTopicIds!: Types.ObjectId[];
+  requiredSubjectIds!: Types.ObjectId[];
 
   @ApiProperty({ type: [HomeschoolPathway] })
   @Prop({

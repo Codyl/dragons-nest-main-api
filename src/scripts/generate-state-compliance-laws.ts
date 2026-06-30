@@ -28,8 +28,8 @@ for (const name of ['.env.development.local', '.env']) {
   }
 }
 
-/** Synonym groups: one topic id per group (first DB match wins). */
-const COMMON_REQUIRED_TOPIC_NAME_GROUPS = [
+/** Synonym groups: one subject id per group (first DB match wins). */
+const COMMON_REQUIRED_SUBJECT_NAME_GROUPS = [
   ['Reading'],
   ['Language Arts', 'English Language Arts', 'English'],
   ['Mathematics', 'Math'],
@@ -37,8 +37,8 @@ const COMMON_REQUIRED_TOPIC_NAME_GROUPS = [
   ['Social Studies', 'History'],
 ];
 
-async function resolveTopicIdsByNameGroups(
-  topicModel: Model<Subject>,
+async function resolveSubjectIdsByNameGroups(
+  subjectModel: Model<Subject>,
   groups: string[][],
 ): Promise<{ ids: Types.ObjectId[]; unresolved: string[][] }> {
   const ids: Types.ObjectId[] = [];
@@ -48,7 +48,7 @@ async function resolveTopicIdsByNameGroups(
     let found: Types.ObjectId | null = null;
     for (const name of group) {
       const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const doc = await topicModel
+      const doc = await subjectModel
         .findOne({ name: new RegExp(`^${escaped}$`, 'i') })
         .select({ _id: 1 })
         .lean<{ _id: Types.ObjectId } | null>();
@@ -430,7 +430,7 @@ async function main(): Promise<void> {
 
   await mongoose.connect(uri);
 
-  const TopicModel = (mongoose.models[Subject.name] ??
+  const SubjectModel = (mongoose.models[Subject.name] ??
     mongoose.model(Subject.name, SubjectSchema)) as Model<Subject>;
 
   const ComplianceModel =
@@ -438,15 +438,15 @@ async function main(): Promise<void> {
     mongoose.model(StateComplianceLaws.name, StateComplianceLawsSchema);
 
   try {
-    const { ids: subjectsRequiredTopicIds, unresolved } =
-      await resolveTopicIdsByNameGroups(
-        TopicModel,
-        COMMON_REQUIRED_TOPIC_NAME_GROUPS,
+    const { ids: requiredSubjectIds, unresolved } =
+      await resolveSubjectIdsByNameGroups(
+        SubjectModel,
+        COMMON_REQUIRED_SUBJECT_NAME_GROUPS,
       );
 
     if (unresolved.length > 0) {
       console.warn(
-        'Warning: No topic documents matched these synonym groups — add/update `topics` or adjust synonyms in script:',
+        'Warning: No subject documents matched these synonym groups — add/update subjects or adjust synonyms in script:',
       );
       unresolved.forEach((g) => console.warn('  - ', g.join(' | ')));
     }
@@ -474,7 +474,7 @@ async function main(): Promise<void> {
             $set: {
               ...entry,
               pathways: [DEFAULT_PATHWAY_MAIN],
-              subjectsRequiredTopicIds,
+              requiredSubjectIds,
               immunizationRequired,
             },
           },
@@ -484,7 +484,7 @@ async function main(): Promise<void> {
     );
 
     console.log(
-      `Upserted ${entriesToUpsert.length} ${StateComplianceLaws.name} record(s) with ${subjectsRequiredTopicIds.length} resolved topic id(s).`,
+      `Upserted ${entriesToUpsert.length} ${StateComplianceLaws.name} record(s) with ${requiredSubjectIds.length} resolved subject id(s).`,
     );
   } finally {
     await mongoose.disconnect();

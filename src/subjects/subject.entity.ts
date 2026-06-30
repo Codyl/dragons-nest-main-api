@@ -1,8 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-/** Catalog of teachable subject lines; stored in Mongo as `topics` for backward compatibility. */
-@Schema({ collection: 'topics' })
+@Schema({ collection: 'subjects' })
 export class Subject extends Document {
   @Prop({ required: true })
   name: string;
