@@ -27,11 +27,11 @@ import { State } from 'src/users/enums/state.enum';
 import { HomeschoolCurriculum } from 'src/users/enums/homeschool-curriculum.enum';
 import { HomeschoolGrade } from 'src/users/enums/homeschool-grade.enum';
 
-export class PendingStudentOnboardingDto {
+export class PendingManagedUserOnboardingDto {
   @IsString()
   @MinLength(1)
   @MaxLength(256)
-  studentId!: string;
+  managedUserId!: string;
 
   @IsString()
   @MinLength(1)
@@ -96,7 +96,7 @@ export class TeachableCourseOnboardingDto {
   @IsInt()
   @Min(1)
   @Max(20)
-  maxStudents!: number;
+  maxManagedUsers!: number;
 }
 
 const WEEKDAY_RE =
@@ -177,7 +177,7 @@ export class AccountSetupDto {
 
   @ValidateIf(
     (o: AccountSetupDto) =>
-      o.onboardingExpectedBand === OnboardingExpectedBand.Manager,
+      o.onboardingExpectedBand === OnboardingExpectedBand.Adult,
   )
   @IsOptional()
   @IsBoolean()
@@ -185,7 +185,7 @@ export class AccountSetupDto {
 
   @ValidateIf(
     (o: AccountSetupDto) =>
-      o.onboardingExpectedBand === OnboardingExpectedBand.Manager,
+      o.onboardingExpectedBand === OnboardingExpectedBand.Adult,
   )
   @IsOptional()
   @IsBoolean()
@@ -223,14 +223,14 @@ export class AccountSetupDto {
   @IsBoolean()
   under13GuardianPermissionConfirmed?: boolean;
 
-  @ValidateIf((o: AccountSetupDto) => o.accountType === AccountType.Manager)
+  @ValidateIf((o: AccountSetupDto) => o.accountType === AccountType.Adult)
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  @Type(() => PendingStudentOnboardingDto)
-  pendingStudents?: PendingStudentOnboardingDto[];
+  @Type(() => PendingManagedUserOnboardingDto)
+  pendingManagedUsers?: PendingManagedUserOnboardingDto[];
 
-  @ValidateIf((o: AccountSetupDto) => o.accountType === AccountType.Manager)
+  @ValidateIf((o: AccountSetupDto) => o.accountType === AccountType.Adult)
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })

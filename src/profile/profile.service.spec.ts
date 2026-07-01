@@ -178,7 +178,7 @@ describe('ProfileService', () => {
       accountType: null,
       canManageOthers: false,
       parentId: null,
-      linkedStudentIds: [],
+      linkedmanagedUserIds: [],
       accountStatus: null,
       ageBandAtRegistration: null,
     });
@@ -1032,7 +1032,7 @@ describe('Property 10: AddTeachableSubjectDto rejects invalid payloads', () => {
       matchesAllGrades: true,
       grades: [],
       curriculum: HomeschoolCurriculum.Saxon,
-      maxStudents: 10,
+      maxManagedUsers: 10,
     };
   }
 
@@ -1050,7 +1050,7 @@ describe('Property 10: AddTeachableSubjectDto rejects invalid payloads', () => {
           matchesAllGrades: fc.boolean(),
           grades: fc.constant([]),
           curriculum: fc.constantFrom(...validCurriculumValues),
-          maxStudents: fc.integer({ min: 1, max: 20 }),
+          maxManagedUsers: fc.integer({ min: 1, max: 20 }),
         }),
         async (partial) => {
           // className is intentionally omitted
@@ -1069,7 +1069,7 @@ describe('Property 10: AddTeachableSubjectDto rejects invalid payloads', () => {
           matchesAllGrades: fc.boolean(),
           grades: fc.constant([]),
           curriculum: fc.constantFrom(...validCurriculumValues),
-          maxStudents: fc.integer({ min: 1, max: 20 }),
+          maxManagedUsers: fc.integer({ min: 1, max: 20 }),
         }),
         async (partial) => {
           // subjectId is intentionally omitted
@@ -1095,22 +1095,22 @@ describe('Property 10: AddTeachableSubjectDto rejects invalid payloads', () => {
     );
   });
 
-  it('property: maxStudents = 0 produces validation errors', async () => {
+  it('property: maxManagedUsers = 0 produces validation errors', async () => {
     await fc.assert(
-      fc.asyncProperty(fc.constant(0), async (maxStudents) => {
-        const plain = { ...validBase(), maxStudents };
+      fc.asyncProperty(fc.constant(0), async (maxManagedUsers) => {
+        const plain = { ...validBase(), maxManagedUsers };
         await expectInvalid(plain);
       }),
       { numRuns: 100 },
     );
   });
 
-  it('property: maxStudents negative produces validation errors', async () => {
+  it('property: maxManagedUsers negative produces validation errors', async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: -10000, max: -1 }),
-        async (maxStudents) => {
-          const plain = { ...validBase(), maxStudents };
+        async (maxManagedUsers) => {
+          const plain = { ...validBase(), maxManagedUsers };
           await expectInvalid(plain);
         },
       ),
@@ -1118,12 +1118,12 @@ describe('Property 10: AddTeachableSubjectDto rejects invalid payloads', () => {
     );
   });
 
-  it('property: maxStudents > 20 produces validation errors', async () => {
+  it('property: maxManagedUsers > 20 produces validation errors', async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 21, max: 10000 }),
-        async (maxStudents) => {
-          const plain = { ...validBase(), maxStudents };
+        async (maxManagedUsers) => {
+          const plain = { ...validBase(), maxManagedUsers };
           await expectInvalid(plain);
         },
       ),
@@ -1139,7 +1139,7 @@ describe('Property 10: AddTeachableSubjectDto rejects invalid payloads', () => {
           subjectId: fc.constant(validMongoId),
           grades: fc.constant([]),
           curriculum: fc.constantFrom(...validCurriculumValues),
-          maxStudents: fc.integer({ min: 1, max: 20 }),
+          maxManagedUsers: fc.integer({ min: 1, max: 20 }),
         }),
         async (partial) => {
           // matchesAllGrades is intentionally omitted
@@ -1224,7 +1224,7 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
         matchesAllGrades: fc.constant(matchesAllGrades),
         grades: gradesArb,
         curriculum: fc.constantFrom(...validCurriculumValues),
-        maxStudents: fc.integer({ min: 1, max: 20 }),
+        maxManagedUsers: fc.integer({ min: 1, max: 20 }),
       });
     });
   }
@@ -1242,7 +1242,7 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
         matchesAllGrades: fc.constant(matchesAllGrades),
         grades: gradesArb,
         curriculum: fc.constantFrom(...validCurriculumValues),
-        maxStudents: fc.integer({ min: 1, max: 20 }),
+        maxManagedUsers: fc.integer({ min: 1, max: 20 }),
         activeEnrollmentCount: fc.constant(0),
       });
     });
@@ -1342,8 +1342,8 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
           const userDoc = {
             _id: new Types.ObjectId(),
             cognitoSub,
-            accountType: AccountType.Manager,
-            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
             deleted: false,
             teachableCourses: existingCourses,
           };
@@ -1356,7 +1356,7 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
             matchesAllGrades: dto.matchesAllGrades,
             grades: dto.matchesAllGrades ? [] : [...dto.grades],
             curriculum: dto.curriculum,
-            maxStudents: dto.maxStudents,
+            maxManagedUsers: dto.maxManagedUsers,
             activeEnrollmentCount: 0,
           };
 
@@ -1378,7 +1378,7 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
           expect(last.subjectId).toBe(validMongoId);
           expect(last.matchesAllGrades).toBe(dto.matchesAllGrades);
           expect(last.curriculum).toBe(dto.curriculum);
-          expect(last.maxStudents).toBe(dto.maxStudents);
+          expect(last.maxManagedUsers).toBe(dto.maxManagedUsers);
           if (dto.matchesAllGrades) {
             expect(last.grades).toEqual([]);
           } else {
@@ -1411,7 +1411,7 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
         matchesAllGrades: fc.constant(matchesAllGrades),
         grades: gradesArb,
         curriculum: fc.constantFrom(...validCurriculumValues),
-        maxStudents: fc.integer({ min: 1, max: 20 }),
+        maxManagedUsers: fc.integer({ min: 1, max: 20 }),
       });
     });
   }
@@ -1516,11 +1516,11 @@ describe('Property 11: DELETE endpoint removes course at index (round-trip)', ()
           const userDoc = {
             _id: userId,
             cognitoSub,
-            accountType: AccountType.Manager,
-            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
             deleted: false,
             teachableCourses: courses,
-            linkedStudents: [],
+            linkedManagedUsers: [],
             notificationEvents: [],
           };
           users.findOneByCognitoSub.mockResolvedValue(userDoc as never);
@@ -1580,7 +1580,7 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
         matchesAllGrades: fc.constant(matchesAllGrades),
         grades: gradesArb,
         curriculum: fc.constantFrom(...validCurriculumValues),
-        maxStudents: fc.integer({ min: 1, max: 20 }),
+        maxManagedUsers: fc.integer({ min: 1, max: 20 }),
       });
     });
   }
@@ -1678,11 +1678,11 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
           users.findOneByCognitoSub.mockResolvedValue({
             _id: new Types.ObjectId(),
             cognitoSub,
-            accountType: AccountType.Manager,
-            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
             deleted: false,
             teachableCourses: courses,
-            linkedStudents: [],
+            linkedManagedUsers: [],
           } as never);
 
           await expect(
@@ -1712,11 +1712,11 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
           users.findOneByCognitoSub.mockResolvedValue({
             _id: new Types.ObjectId(),
             cognitoSub,
-            accountType: AccountType.Manager,
-            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
             deleted: false,
             teachableCourses: courses,
-            linkedStudents: [],
+            linkedManagedUsers: [],
           } as never);
 
           await expect(
@@ -1750,11 +1750,11 @@ describe('Property 12: DELETE endpoint rejects invalid indices', () => {
           users.findOneByCognitoSub.mockResolvedValue({
             _id: new Types.ObjectId(),
             cognitoSub,
-            accountType: AccountType.Manager,
-            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
             deleted: false,
             teachableCourses: courses,
-            linkedStudents: [],
+            linkedManagedUsers: [],
           } as never);
 
           await expect(
@@ -1872,20 +1872,20 @@ describe('Property 13: DELETE with active enrollments produces notification even
             matchesAllGrades: true,
             grades: [],
             curriculum: validCurriculumValues[0],
-            maxStudents: 5,
+            maxManagedUsers: 5,
           };
 
-          // Build M linked students, each with an addedClasses entry referencing
+          // Build M linked managedusers, each with an addedClasses entry referencing
           // the adult user and the course being removed
-          const linkedStudentIds: (typeof Types.ObjectId)[] = [];
-          const studentDocs: Record<string, unknown>[] = [];
+          const linkedmanagedUserIds: (typeof Types.ObjectId)[] = [];
+          const manageduserDocs: Record<string, unknown>[] = [];
 
           for (let i = 0; i < enrollmentCount; i++) {
-            const studentId = new Types.ObjectId();
+            const managedUserId = new Types.ObjectId();
             const parentId = new Types.ObjectId();
-            linkedStudentIds.push(studentId as never);
-            studentDocs.push({
-              _id: studentId,
+            linkedmanagedUserIds.push(managedUserId as never);
+            manageduserDocs.push({
+              _id: managedUserId,
               parentId,
               deleted: false,
               addedClasses: [
@@ -1901,20 +1901,20 @@ describe('Property 13: DELETE with active enrollments produces notification even
           const userDoc = {
             _id: userId,
             cognitoSub,
-            accountType: AccountType.Manager,
-            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
             deleted: false,
             teachableCourses: [courseToRemove],
-            linkedStudents: linkedStudentIds,
+            linkedManagedUsers: linkedmanagedUserIds,
             notificationEvents: [],
           };
 
           users.findOneByCognitoSub.mockResolvedValue(userDoc as never);
 
-          // findOneById returns each student in order
+          // findOneById returns each manageduser in order
           let callCount = 0;
           users.findOneById.mockImplementation((() => {
-            const doc = studentDocs[callCount++];
+            const doc = manageduserDocs[callCount++];
             return Promise.resolve(doc) as never;
           }) as never);
 
@@ -1976,7 +1976,7 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
         matchesAllGrades: fc.constant(matchesAllGrades),
         grades: gradesArb,
         curriculum: fc.constantFrom(...validCurriculumValues),
-        maxStudents: fc.integer({ min: 1, max: 20 }),
+        maxManagedUsers: fc.integer({ min: 1, max: 20 }),
       });
     });
   }
@@ -2068,10 +2068,10 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
       fc.asyncProperty(
         // Generate 0–5 courses
         fc.array(arbitraryStoredCourse(), { minLength: 0, maxLength: 5 }),
-        // Generate 0–5 linked students
+        // Generate 0–5 linked managedusers
         fc.array(
           fc.record({
-            // Each student has 0–3 addedClasses entries per course
+            // Each manageduser has 0–3 addedClasses entries per course
             enrollmentCounts: fc.array(fc.integer({ min: 0, max: 3 }), {
               minLength: 0,
               maxLength: 5,
@@ -2079,21 +2079,21 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
           }),
           { minLength: 0, maxLength: 5 },
         ),
-        async (courses, studentEnrollmentSpecs) => {
+        async (courses, manageduserEnrollmentSpecs) => {
           const { svc, users, cognito } = await buildModule();
           const cognitoSub = 'adult-sub';
           const userId = new Types.ObjectId();
 
-          // Build linked student docs with addedClasses referencing the adult + courses
-          const linkedStudentIds: (typeof Types.ObjectId)[] = [];
-          const studentDocs: Record<string, unknown>[] = [];
+          // Build linked manageduser docs with addedClasses referencing the adult + courses
+          const linkedmanagedUserIds: (typeof Types.ObjectId)[] = [];
+          const manageduserDocs: Record<string, unknown>[] = [];
 
           // Compute expected counts per course index
           const expectedCounts = new Array<number>(courses.length).fill(0);
 
-          for (const spec of studentEnrollmentSpecs) {
-            const studentId = new Types.ObjectId();
-            linkedStudentIds.push(studentId as never);
+          for (const spec of manageduserEnrollmentSpecs) {
+            const managedUserId = new Types.ObjectId();
+            linkedmanagedUserIds.push(managedUserId as never);
 
             const addedClasses: {
               adult: typeof Types.ObjectId;
@@ -2101,13 +2101,13 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
               hoursCompleted: number;
             }[] = [];
 
-            // For each course, add spec.enrollmentCounts[i] entries (capped to 1 per student per course
-            // since we're counting students, not entries — but the spec says "count of linked students
-            // whose addedClasses contain an entry", so one entry per student per course is sufficient)
+            // For each course, add spec.enrollmentCounts[i] entries (capped to 1 per manageduser per course
+            // since we're counting managedusers, not entries — but the spec says "count of linked managedusers
+            // whose addedClasses contain an entry", so one entry per manageduser per course is sufficient)
             for (let i = 0; i < courses.length; i++) {
               const count = spec.enrollmentCounts[i] ?? 0;
               if (count > 0 && courses[i]._id) {
-                // Add one enrollment entry for this student+course combination
+                // Add one enrollment entry for this manageduser+course combination
                 addedClasses.push({
                   adult: userId as never,
                   course: courses[i]._id as never,
@@ -2117,8 +2117,8 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
               }
             }
 
-            studentDocs.push({
-              _id: studentId,
+            manageduserDocs.push({
+              _id: managedUserId,
               deleted: false,
               addedClasses,
             });
@@ -2127,11 +2127,11 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
           const userDoc = {
             _id: userId,
             cognitoSub,
-            accountType: AccountType.Manager,
-            ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
+            accountType: AccountType.Adult,
+            ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
             deleted: false,
             teachableCourses: courses,
-            linkedStudents: linkedStudentIds,
+            linkedManagedUsers: linkedmanagedUserIds,
             managedAccountsView: [],
           };
 
@@ -2145,10 +2145,10 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
 
           users.findOneByCognitoSub.mockResolvedValue(userDoc as never);
 
-          // findOneById returns each student in order
+          // findOneById returns each manageduser in order
           let callIdx = 0;
           users.findOneById.mockImplementation((() => {
-            const doc = studentDocs[callIdx++];
+            const doc = manageduserDocs[callIdx++];
             return Promise.resolve(doc ?? null) as never;
           }) as never);
 
@@ -2178,7 +2178,7 @@ describe('Property 14: GET /profile includes activeEnrollmentCount for every cou
   });
 });
 
-describe('ProfileService household student drafts', () => {
+describe('ProfileService household manageduser drafts', () => {
   let service: ProfileService;
   let usersService: jest.Mocked<UsersService>;
   let cognitoService: jest.Mocked<CognitoService>;
@@ -2270,10 +2270,10 @@ describe('ProfileService household student drafts', () => {
     cognitoService = module.get<jest.Mocked<CognitoService>>(CognitoService);
   });
 
-  it('getMe returns householdStudents active-only and managedAccountsViewAll for adults', async () => {
+  it('getMe returns managedUsers active-only and managedAccountsViewAll for adults', async () => {
     const cognitoSub = 'sub-adult';
-    const activeStudentId = new Types.ObjectId();
-    const archivedStudentId = new Types.ObjectId();
+    const activemanagedUserId = new Types.ObjectId();
+    const archivedmanagedUserId = new Types.ObjectId();
     cognitoService.getUser.mockResolvedValue({
       UserAttributes: [
         { Name: 'email', Value: 'a@ex.com' },
@@ -2284,18 +2284,18 @@ describe('ProfileService household student drafts', () => {
     usersService.findOneByCognitoSub.mockResolvedValue({
       _id: new Types.ObjectId(),
       cognitoSub,
-      accountType: AccountType.Manager,
-      ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
+      accountType: AccountType.Adult,
+      ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
       deleted: false,
       managedAccountsView: [
         {
-          studentId: activeStudentId,
+          managedUserId: activemanagedUserId,
           displayName: 'Active',
           currentGrade: 3,
           lastPromotionYear: 2025,
         },
         {
-          studentId: archivedStudentId,
+          managedUserId: archivedmanagedUserId,
           displayName: 'Old',
           currentGrade: 5,
           lastPromotionYear: 2024,
@@ -2306,8 +2306,8 @@ describe('ProfileService household student drafts', () => {
 
     const profile = await service.getMe('tok', { sub: cognitoSub });
 
-    expect(profile.householdStudents).toHaveLength(1);
-    expect(profile.householdStudents![0].studentId).toEqual(activeStudentId);
+    expect(profile.managedUsers).toHaveLength(1);
+    expect(profile.managedUsers![0].managedUserId).toEqual(activemanagedUserId);
     expect(profile.managedAccountsViewAll).toHaveLength(2);
     expect(profile.managedAccountsViewAll![1].archivedAt).toBe(
       archivedDate.toISOString(),
@@ -2335,8 +2335,8 @@ describe('ProfileService household student drafts', () => {
     usersService.findOneByCognitoSub.mockResolvedValue({
       _id: new Types.ObjectId(),
       cognitoSub,
-      accountType: AccountType.Manager,
-      ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
+      accountType: AccountType.Adult,
+      ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
       deleted: false,
       managedAccountsView: [],
     } as never);
@@ -2345,7 +2345,7 @@ describe('ProfileService household student drafts', () => {
       cognitoSub,
       managedAccountsView: [
         {
-          studentId: '00000000-0000-4000-8000-000000000001',
+          managedUserId: '00000000-0000-4000-8000-000000000001',
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: new Date().getFullYear(),
@@ -2377,16 +2377,16 @@ describe('ProfileService household student drafts', () => {
 
   it('archiveManagedUser sets archivedAt', async () => {
     const cognitoSub = 'adult';
-    const studentId = new Types.ObjectId();
+    const managedUserId = new Types.ObjectId();
     usersService.findOneByCognitoSub.mockResolvedValue({
       _id: new Types.ObjectId(),
       cognitoSub,
-      accountType: AccountType.Manager,
-      ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
+      accountType: AccountType.Adult,
+      ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
       deleted: false,
       managedAccountsView: [
         {
-          studentId,
+          managedUserId,
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: 2025,
@@ -2398,7 +2398,7 @@ describe('ProfileService household student drafts', () => {
       cognitoSub,
       managedAccountsView: [
         {
-          studentId,
+          managedUserId,
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: 2025,
@@ -2407,22 +2407,22 @@ describe('ProfileService household student drafts', () => {
       ],
     } as never);
 
-    const rows = await service.archiveManagedUser(cognitoSub, studentId);
+    const rows = await service.archiveManagedUser(cognitoSub, managedUserId);
     expect(rows[0].archivedAt).not.toBeNull();
   });
 
   it('restoreManagedUser clears archivedAt', async () => {
     const cognitoSub = 'adult';
-    const studentId = new Types.ObjectId();
+    const managedUserId = new Types.ObjectId();
     usersService.findOneByCognitoSub.mockResolvedValue({
       _id: new Types.ObjectId(),
       cognitoSub,
-      accountType: AccountType.Manager,
-      ageBandAtRegistration: AgeBandAtRegistration.Manager18Plus,
+      accountType: AccountType.Adult,
+      ageBandAtRegistration: AgeBandAtRegistration.Adult18Plus,
       deleted: false,
       managedAccountsView: [
         {
-          studentId,
+          managedUserId,
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: 2025,
@@ -2435,7 +2435,7 @@ describe('ProfileService household student drafts', () => {
       cognitoSub,
       managedAccountsView: [
         {
-          studentId,
+          managedUserId,
           displayName: 'Sam',
           currentGrade: 2,
           lastPromotionYear: 2025,
@@ -2444,7 +2444,7 @@ describe('ProfileService household student drafts', () => {
       ],
     } as never);
 
-    const rows = await service.restoreManagedUser(cognitoSub, studentId);
+    const rows = await service.restoreManagedUser(cognitoSub, managedUserId);
     expect(rows[0].archivedAt).toBeNull();
   });
 });

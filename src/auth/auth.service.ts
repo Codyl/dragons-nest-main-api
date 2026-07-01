@@ -126,7 +126,7 @@ export class AuthService {
       givenName: account?.givenName ?? null,
       familyName: account?.familyName ?? null,
       coppaConsentAt:
-        account?.accountType === AccountType.Manager && account?.coppaConsent
+        account?.accountType === AccountType.Adult && account?.coppaConsent
           ? new Date()
           : null,
     });

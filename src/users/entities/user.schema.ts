@@ -133,7 +133,7 @@ export const EnrolledClassSchema = SchemaFactory.createForClass(EnrolledClass);
 export class User extends Document {
   @ApiProperty({
     enum: AccountType,
-    description: 'Account kind: adult or student.',
+    description: 'Account kind: adult or manageduser.',
     required: true,
   })
   @Prop({
@@ -304,12 +304,12 @@ export class User extends Document {
 
   @ApiProperty({
     description:
-      'Student profiles collected at onboarding before full child accounts exist.',
+      'ManagedUser profiles collected at onboarding before full child accounts exist.',
   })
   @Prop({
     type: [
       {
-        studentId: { type: Types.ObjectId, required: true, ref: 'User' },
+        managedUserId: { type: Types.ObjectId, required: true, ref: 'User' },
         displayName: { type: String, required: true },
         currentGrade: { type: Number, required: true, min: 0, max: 13 },
         lastPromotionYear: { type: Number, required: true },
@@ -319,7 +319,7 @@ export class User extends Document {
     default: [],
   })
   managedAccountsView?: {
-    studentId: Types.ObjectId;
+    managedUserId: Types.ObjectId;
     displayName: string;
     currentGrade: number;
     lastPromotionYear: number;

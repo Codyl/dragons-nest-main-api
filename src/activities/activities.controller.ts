@@ -29,11 +29,11 @@ export class ActivitiesController {
   @Get()
   async findAll(
     @Query('subjectId', MongoIdPipe) subjectId: Types.ObjectId,
-    @Query('studentId') studentId: string,
+    @Query('managedUserId') managedUserId: string,
   ) {
-    const data = await this.activitiesService.findBySubjectAndStudent(
+    const data = await this.activitiesService.findBySubjectAndManagedUser(
       subjectId.toHexString(),
-      studentId,
+      managedUserId,
     );
     return { message: 'Activities retrieved', data };
   }

@@ -23,7 +23,7 @@ export class CurriculumItem extends Document {
   subjectId: Types.ObjectId;
 
   @Prop({ type: String, default: null, maxlength: 128 })
-  studentId: Types.ObjectId | null;
+  managedUserId: Types.ObjectId | null;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
@@ -37,7 +37,7 @@ export const CurriculumItemSchema =
   SchemaFactory.createForClass(CurriculumItem);
 
 CurriculumItemSchema.index(
-  { subjectId: 1, householdId: 1, studentId: 1 },
+  { subjectId: 1, householdId: 1, managedUserId: 1 },
   { name: 'curriculum_scope_idx' },
 );
 

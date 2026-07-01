@@ -75,7 +75,7 @@ export class CurriculumService {
   async getCurriculumItems(params: {
     subjectId: string;
     householdId: string;
-    studentId?: string;
+    managedUserId?: string;
     cognitoSub: string;
   }) {
     const user = await this.resolveUser(params.cognitoSub);
@@ -86,10 +86,10 @@ export class CurriculumService {
       householdId: new Types.ObjectId(params.householdId),
     };
 
-    if (params.studentId) {
-      filter.studentId = params.studentId;
+    if (params.managedUserId) {
+      filter.managedUserId = params.managedUserId;
     } else {
-      filter.studentId = null;
+      filter.managedUserId = null;
     }
 
     const items = await this.curriculumModel
@@ -107,7 +107,7 @@ export class CurriculumService {
           : item.uploadedAt,
       url: item.url,
       subjectId: item.subjectId.toString(),
-      studentId: item.studentId ?? null,
+      managedUserId: item.managedUserId ?? null,
       householdId: item.householdId.toString(),
     }));
   }
@@ -116,7 +116,7 @@ export class CurriculumService {
     file: Express.Multer.File;
     subjectId: string;
     householdId: string;
-    studentId?: string;
+    managedUserId?: string;
     cognitoSub: string;
   }) {
     const user = await this.resolveUser(params.cognitoSub);
@@ -147,17 +147,17 @@ export class CurriculumService {
       );
     }
 
-    // Validate studentId if provided
-    if (params.studentId) {
+    // Validate managedUserId if provided
+    if (params.managedUserId) {
       const managedAccounts = user.managedAccountsView ?? [];
       const match = managedAccounts.find(
         (managedAccount) =>
-          managedAccount.studentId.toString() === params.studentId,
+          managedAccount.managedUserId.toString() === params.managedUserId,
       );
 
       if (!match) {
         throw new BadRequestException(
-          'Invalid student: the specified student does not belong to this household.',
+          'Invalid manageduser: the specified manageduser does not belong to this household.',
         );
       }
     }
@@ -195,7 +195,7 @@ export class CurriculumService {
       url: s3Key,
       subjectId: new Types.ObjectId(params.subjectId),
       householdId: new Types.ObjectId(params.householdId),
-      studentId: params.studentId ?? null,
+      managedUserId: params.managedUserId ?? null, // ponytail: DB field name
     });
 
     return {
@@ -205,7 +205,7 @@ export class CurriculumService {
       uploadedAt: doc.uploadedAt.toISOString(),
       url: doc.url,
       subjectId: doc.subjectId.toString(),
-      studentId: doc.studentId ?? null,
+      managedUserId: doc.managedUserId ?? null,
       householdId: doc.householdId.toString(),
     };
   }
@@ -249,7 +249,7 @@ export class CurriculumService {
   }
 
   /**
-   * Removes curriculumId references to a deleted item from any student's addedClasses.
+   * Removes curriculumId references to a deleted item from any manageduser's addedClasses.
    */
   private clearSelectionsForItem(curriculumItemId: string): void {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -261,29 +261,29 @@ export class CurriculumService {
   }
 
   /**
-   * Sets the curriculum selection for a student+subject combination.
-   * Updates the `curriculumId` field on the student's addedClasses entry
+   * Sets the curriculum selection for a manageduser+subject combination.
+   * Updates the `curriculumId` field on the manageduser's addedClasses entry
    * that matches the given subjectId.
    */
   async setSelection(params: {
     subjectId: string;
-    studentId: Types.ObjectId;
+    managedUserId: Types.ObjectId;
     curriculumItemId: string;
     cognitoSub: string;
   }): Promise<{
     subjectId: string;
-    studentId: Types.ObjectId;
+    managedUserId: Types.ObjectId;
     curriculumItemId: string;
   }> {
     const user = await this.resolveUser(params.cognitoSub);
 
-    // Validate studentId belongs to user's household
+    // Validate managedUserId belongs to user's managed accounts
     const managedAccounts = user.managedAccountsView ?? [];
     const match = managedAccounts.find((d) =>
-      d.studentId.equals(params.studentId),
+      d.managedUserId.equals(params.managedUserId),
     );
     if (!match) {
-      throw new ForbiddenException('Student does not belong to your household');
+      throw new ForbiddenException('ManagedUser does not belong to your household');
     }
 
     // Validate curriculumItemId exists
@@ -298,61 +298,65 @@ export class CurriculumService {
       throw new BadRequestException('Curriculum item not found');
     }
 
-    // Find the student user by studentId
-    const studentUser = await this.usersService.findOneById(params.studentId);
-    if (!studentUser) {
+    // Find the managed user
+    const managedUserDoc = await this.usersService.findOneById(
+      params.managedUserId,
+    );
+    if (!managedUserDoc) {
       throw new BadRequestException(
-        'Student user account not found for the given studentId',
+        'Managed user account not found for the given managedUserId',
       );
     }
 
     // Update the addedClasses entry for this subject
     const updated = await this.usersService.setCurriculumSelection(
-      studentUser._id,
+      managedUserDoc._id,
       params.subjectId,
       params.curriculumItemId,
     );
 
     if (!updated) {
       throw new BadRequestException(
-        'No enrolled class found for this subject. The student must be enrolled in the subject first.',
+        'No enrolled class found for this subject. The manageduser must be enrolled in the subject first.',
       );
     }
 
     return {
       subjectId: params.subjectId,
-      studentId: params.studentId,
+      managedUserId: params.managedUserId,
       curriculumItemId: params.curriculumItemId,
     };
   }
 
   /**
-   * Gets the current curriculum selection for a student+subject combination.
+   * Gets the current curriculum selection for a manageduser+subject combination.
    */
   async getSelection(params: {
     subjectId: Types.ObjectId;
-    studentId: Types.ObjectId;
+    managedUserId: Types.ObjectId;
     cognitoSub: string;
   }): Promise<{ curriculumItemId: string } | null> {
     const user = await this.resolveUser(params.cognitoSub);
 
-    // Validate studentId belongs to household
+    // Validate managedUserId belongs to managed accounts
     const managedAccounts = user.managedAccountsView ?? [];
     const match = managedAccounts.find(
-      (d) => d.studentId.toString() === params.studentId.toString(),
+      (d) => d.managedUserId.toString() === params.managedUserId.toString(),
     );
     if (!match) {
-      throw new ForbiddenException('Student does not belong to your household');
+      throw new ForbiddenException('ManagedUser does not belong to your household');
     }
 
-    // Find the student user
-    const studentUser = await this.usersService.findOneById(params.studentId);
-    if (!studentUser) {
+    // Find the managed user
+    const managedUserDoc = await this.usersService.findOneById(
+      params.managedUserId,
+    );
+    if (!managedUserDoc) {
       return null;
     }
 
     // Find the addedClasses entry for this subject
-    const classes = studentUser.addedClasses ?? [];
+    const classes = managedUserDoc.addedClasses ?? [];
     const entry = classes.find(
       (c) =>
         c.subjectId && c.subjectId.toString() === params.subjectId.toString(),

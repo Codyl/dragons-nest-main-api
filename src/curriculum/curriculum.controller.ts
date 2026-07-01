@@ -45,7 +45,7 @@ export class CurriculumController {
 
   @ApiOperation({
     summary:
-      'Retrieves curriculum items for a subject scoped to a household/student',
+      'Retrieves curriculum items for a subject scoped to a managed user',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
@@ -69,7 +69,7 @@ export class CurriculumController {
     const data = await this.curriculumService.getCurriculumItems({
       subjectId: query.subjectId,
       householdId: query.householdId,
-      studentId: query.studentId,
+      managedUserId: query.managedUserId,
       cognitoSub,
     });
 
@@ -91,7 +91,7 @@ export class CurriculumController {
   })
   @ApiBadRequestResponse({
     description:
-      'Invalid file type, file too large, invalid subject, or invalid student.',
+      'Invalid file type, file too large, invalid subject, or invalid managed user.',
   })
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
@@ -119,7 +119,7 @@ export class CurriculumController {
       file,
       subjectId: body.subjectId,
       householdId: body.householdId,
-      studentId: body.studentId,
+      managedUserId: body.managedUserId,
       cognitoSub,
     });
 
@@ -191,17 +191,17 @@ export class CurriculumController {
   }
 
   @ApiOperation({
-    summary: 'Sets the curriculum selection for a student and subject',
+    summary: 'Sets the curriculum selection for a managed user and subject',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
   @ApiForbiddenResponse({
-    description: 'Student does not belong to the authenticated user household.',
+    description: 'Managed user does not belong to the authenticated adult.',
   })
   @ApiBadRequestResponse({
     description:
-      'Invalid curriculum item ID or student not enrolled in subject.',
+      'Invalid curriculum item ID or managed user not enrolled in subject.',
   })
   @Put('selection')
   async setSelection(
@@ -215,7 +215,7 @@ export class CurriculumController {
 
     const data = await this.curriculumService.setSelection({
       subjectId: body.subjectId,
-      studentId: body.studentId,
+      managedUserId: body.managedUserId,
       curriculumItemId: body.curriculumItemId,
       cognitoSub,
     });
@@ -227,17 +227,17 @@ export class CurriculumController {
   }
 
   @ApiOperation({
-    summary: 'Gets the curriculum selection for a student and subject',
+    summary: 'Gets the curriculum selection for a managed user and subject',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
   @ApiForbiddenResponse({
-    description: 'Student does not belong to the authenticated user household.',
+    description: 'Managed user does not belong to the authenticated adult.',
   })
   @Get('selection')
   async getSelection(
-    @Query('studentId', MongoIdPipe) studentId: Types.ObjectId,
+    @Query('managedUserId', MongoIdPipe) managedUserId: Types.ObjectId,
     @Query('subjectId', MongoIdPipe) subjectId: Types.ObjectId,
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
   ): Promise<ApiResponseDto<unknown>> {
@@ -248,7 +248,7 @@ export class CurriculumController {
 
     const data = await this.curriculumService.getSelection({
       subjectId,
-      studentId,
+      managedUserId,
       cognitoSub,
     });
 

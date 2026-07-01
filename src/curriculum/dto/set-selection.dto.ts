@@ -8,7 +8,7 @@ export class SetSelectionDto {
 
   @IsString()
   @Length(24, 24)
-  studentId: Types.ObjectId;
+  managedUserId: Types.ObjectId;
 
   @IsString()
   @Length(24, 24)

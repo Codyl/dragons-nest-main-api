@@ -12,5 +12,5 @@ export class UploadCurriculumDto {
   @IsOptional()
   @IsMongoId({ message: 'householdId must be a valid MongoDB ObjectId' })
   @MaxLength(64)
-  studentId?: string;
+  managedUserId?: string;
 }

@@ -181,10 +181,10 @@ export class ProfileController {
   @ApiBadRequestResponse({
     description: 'Not August, already promoted, or invalid draft.',
   })
-  @Patch('household-students/:studentId/promote')
-  async promoteHouseholdStudent(
+  @Patch('managed-users/:managedUserId/promote')
+  async promoteHouseholdManagedUser(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
-    @Param('studentId', MongoIdPipe) studentId: Types.ObjectId,
+    @Param('managedUserId', MongoIdPipe) managedUserId: Types.ObjectId,
   ): Promise<ApiResponseDto<ManagedUserSummary>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
@@ -193,7 +193,7 @@ export class ProfileController {
 
     const data = await this.profileService.promoteManagedUserDraft(
       cognitoSub,
-      studentId,
+      managedUserId,
     );
     return {
       message: 'Managed user grade updated',
@@ -202,19 +202,19 @@ export class ProfileController {
   }
 
   @ApiOperation({
-    summary: 'Adds a new managed user for the authenticated manager',
+    summary: 'Adds a new managed user for the authenticated adult',
   })
   @ApiBadRequestResponse({
     description: 'Validation failed (displayName or currentGrade).',
   })
   @ApiForbiddenResponse({
     description:
-      'User is not a manager (accountType or ageBandAtRegistration mismatch).',
+      'User is not a adult (accountType or ageBandAtRegistration mismatch).',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
-  @Post('household-students')
+  @Post('managed-users')
   async addManagedUser(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
     @Body() dto: AddManagedUserDto,
@@ -240,7 +240,7 @@ export class ProfileController {
   })
   @ApiForbiddenResponse({
     description:
-      'User is not a manager (accountType or ageBandAtRegistration mismatch).',
+      'User is not a adult (accountType or ageBandAtRegistration mismatch).',
   })
   @ApiNotFoundResponse({
     description: 'Managed user draft id not found on this user.',
@@ -248,10 +248,10 @@ export class ProfileController {
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
-  @Patch('household-students/:studentId/archive')
+  @Patch('managed-users/:managedUserId/archive')
   async archiveManagedUser(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
-    @Param('studentId') studentId: Types.ObjectId,
+    @Param('managedUserId') managedUserId: Types.ObjectId,
   ): Promise<ApiResponseDto<{ managedAccountsView: ManagedUserSummary[] }>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
@@ -260,7 +260,7 @@ export class ProfileController {
 
     const managedAccountsView = await this.profileService.archiveManagedUser(
       cognitoSub,
-      studentId,
+      managedUserId,
     );
     return {
       message: 'Managed user archived',
@@ -273,7 +273,7 @@ export class ProfileController {
   })
   @ApiForbiddenResponse({
     description:
-      'User is not a manager (accountType or ageBandAtRegistration mismatch).',
+      'User is not a adult (accountType or ageBandAtRegistration mismatch).',
   })
   @ApiNotFoundResponse({
     description: 'Managed user draft id not found on this user.',
@@ -281,10 +281,10 @@ export class ProfileController {
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
-  @Patch('household-students/:studentId/restore')
+  @Patch('managed-users/:managedUserId/restore')
   async restoreManagedUser(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
-    @Param('studentId') studentId: Types.ObjectId,
+    @Param('managedUserId') managedUserId: Types.ObjectId,
   ): Promise<ApiResponseDto<{ managedAccountsView: ManagedUserSummary[] }>> {
     const cognitoSub = user?.sub;
     if (!cognitoSub || typeof cognitoSub !== 'string') {
@@ -293,7 +293,7 @@ export class ProfileController {
 
     const managedAccountsView = await this.profileService.restoreManagedUser(
       cognitoSub,
-      studentId,
+      managedUserId,
     );
     return {
       message: 'Managed user restored',
@@ -309,15 +309,15 @@ export class ProfileController {
     description: 'Managed user draft not found on this user.',
   })
   @ApiForbiddenResponse({
-    description: 'User is not a manager.',
+    description: 'User is not a adult.',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
-  @Get('household-students/:studentId/classes')
+  @Get('managed-users/:managedUserId/subjects')
   async getManagedUserSubjects(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
-    @Param('studentId', MongoIdPipe) studentId: Types.ObjectId,
+    @Param('managedUserId', MongoIdPipe) managedUserId: Types.ObjectId,
   ): Promise<
     ApiResponseDto<
       {
@@ -335,7 +335,7 @@ export class ProfileController {
 
     const classes = await this.profileService.getManagedUserSubjects(
       cognitoSub,
-      studentId,
+      managedUserId,
     );
     return {
       message: 'Managed user subjects retrieved successfully',
@@ -355,11 +355,11 @@ export class ProfileController {
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
-  @Post('students/:studentId/subjects')
+  @Post('managed-users/:managedUserId/subjects')
   @HttpCode(HttpStatus.CREATED)
-  async addSubjectToStudent(
+  async addSubjectToManagedUser(
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
-    @Param('studentId', MongoIdPipe) studentId: Types.ObjectId,
+    @Param('managedUserId', MongoIdPipe) managedUserId: Types.ObjectId,
     @Body() dto: AddSubjectDto,
   ): Promise<
     ApiResponseDto<{
@@ -373,9 +373,9 @@ export class ProfileController {
       throw new Error('Not authenticated');
     }
 
-    const data = await this.profileService.addSubjectToStudent(
+    const data = await this.profileService.addSubjectToManagedUser(
       cognitoSub,
-      studentId,
+      managedUserId,
       dto.subjectId,
     );
     return {
@@ -772,19 +772,19 @@ export class ProfileController {
   }
 
   @ApiOperation({
-    summary: 'Adds a new teachable subject to the authenticated manager',
+    summary: 'Adds a new teachable subject to the authenticated adult',
   })
   @ApiBadRequestResponse({
-    description: 'Request body failed validation or user is not a manager.',
+    description: 'Request body failed validation or user is not a adult.',
   })
   @ApiForbiddenResponse({
     description:
-      'User is not a manager (accountType or ageBandAtRegistration mismatch).',
+      'User is not a adult (accountType or ageBandAtRegistration mismatch).',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
-  @Patch('teachable-courses')
+  @Patch('teachable-subjects')
   async addTeachableSubject(
     @CurrentUser() currentUser: Record<string, unknown> & { sub?: string },
     @Body() dto: AddTeachableSubjectDto,
@@ -808,19 +808,19 @@ export class ProfileController {
 
   @ApiOperation({
     summary:
-      'Removes a teachable subject at the given index from the authenticated manager',
+      'Removes a teachable subject at the given index from the authenticated adult',
   })
   @ApiBadRequestResponse({
     description: 'Index is invalid (negative, non-integer, or out of range).',
   })
   @ApiForbiddenResponse({
     description:
-      'User is not a manager (accountType or ageBandAtRegistration mismatch).',
+      'User is not a adult (accountType or ageBandAtRegistration mismatch).',
   })
   @ApiUnauthorizedResponse({
     description: 'Access token is missing, invalid, or expired.',
   })
-  @Delete('teachable-courses/:index')
+  @Delete('teachable-subjects/:index')
   async removeTeachableSubject(
     @CurrentUser() currentUser: Record<string, unknown> & { sub?: string },
     @Param('index') index: string,

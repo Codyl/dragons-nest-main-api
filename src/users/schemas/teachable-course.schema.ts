@@ -61,19 +61,20 @@ export class TeachableCourse {
   curriculum!: HomeschoolCurriculum;
 
   @ApiProperty({
-    description: 'Maximum concurrent students for this offering (onboarding).',
+    description:
+      'Maximum concurrent managedusers for this offering (onboarding).',
     minimum: 1,
     maximum: 20,
     required: false,
   })
   @Prop({ type: Number, required: false, min: 1, max: 20 })
-  maxStudents?: number;
+  maxManagedUsers?: number;
 
   // ponytail: denormalized counter — maintained at enroll/unenroll write time.
   // Ceiling: can drift if a mutation path is missed; reconcile via admin script.
   @ApiProperty({
     description:
-      'Current number of students enrolled in this course (denormalized counter).',
+      'Current number of managedusers enrolled in this course (denormalized counter).',
     default: 0,
   })
   @Prop({ type: Number, default: 0 })

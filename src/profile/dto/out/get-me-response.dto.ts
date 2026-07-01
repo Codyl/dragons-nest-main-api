@@ -15,7 +15,7 @@ export class GetMeResponseDto {
   /** Set after the user completes the account-setup wizard; null until then. */
   onboardingCompletedAt?: string | null;
 
-  /** `adult` | `student` from the user document. */
+  /** `adult` | `manageduser` from the user document. */
   accountType?: string | null;
 
   /** Household manager / can link and manage other profiles. */
@@ -24,8 +24,8 @@ export class GetMeResponseDto {
   /** Mongo ObjectId string of guardian user when this profile is a dependent. */
   parentId?: string | null;
 
-  /** Mongo ObjectId strings for students linked to this adult. */
-  linkedStudentIds?: string[];
+  /** Mongo ObjectId strings for managedusers linked to this adult. */
+  linkedmanagedUserIds?: string[];
 
   /**
    * MANAGED (under 13), INDEPENDENT (13–17), ADULT (18+); from attested age band or legacy birthDate.
@@ -36,8 +36,8 @@ export class GetMeResponseDto {
   ageBandAtRegistration?: string | null;
 
   /** Household learner drafts (adults only). */
-  householdStudents?: {
-    studentId: Types.ObjectId;
+  managedUsers?: {
+    managedUserId: Types.ObjectId;
     displayName: string;
     currentGrade: number;
     lastPromotionYear: number;
@@ -46,7 +46,7 @@ export class GetMeResponseDto {
 
   /** All drafts including archived (adults only); used by Child Accounts settings. */
   managedAccountsViewAll?: {
-    studentId: Types.ObjectId;
+    managedUserId: Types.ObjectId;
     displayName: string;
     currentGrade: number;
     lastPromotionYear: number;

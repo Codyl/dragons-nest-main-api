@@ -32,7 +32,7 @@ describe('SubjectsService.getStats', () => {
     curriculumItemModel.countDocuments.mockResolvedValue(0);
 
     const subjectId = new Types.ObjectId();
-    const result = await service.getStats(subjectId, 'student-1', new Types.ObjectId().toHexString());
+    const result = await service.getStats(subjectId, 'manageduser-1', new Types.ObjectId().toHexString());
 
     expect(result).toEqual({
       progressPercent: 0,
@@ -49,7 +49,7 @@ describe('SubjectsService.getStats', () => {
     curriculumItemModel.countDocuments.mockResolvedValue(3);
 
     const subjectId = new Types.ObjectId();
-    const result = await service.getStats(subjectId, 'student-1', new Types.ObjectId().toHexString());
+    const result = await service.getStats(subjectId, 'manageduser-1', new Types.ObjectId().toHexString());
 
     expect(result.hoursCompleted).toBe(2.5);
     expect(result.documentsCount).toBe(3);
@@ -80,7 +80,7 @@ describe('SubjectsService.getSummary', () => {
   it('returns nulls and zeros when no activities exist', async () => {
     activityModel.find.mockReturnValue({ lean: () => Promise.resolve([]) });
 
-    const result = await service.getSummary(new Types.ObjectId(), 'student-1');
+    const result = await service.getSummary(new Types.ObjectId(), 'manageduser-1');
 
     expect(result).toEqual({
       mostPracticedConcept: null,
@@ -99,7 +99,7 @@ describe('SubjectsService.getSummary', () => {
     ];
     activityModel.find.mockReturnValue({ lean: () => Promise.resolve(activities) });
 
-    const result = await service.getSummary(new Types.ObjectId(), 'student-1');
+    const result = await service.getSummary(new Types.ObjectId(), 'manageduser-1');
 
     expect(result.mostPracticedConcept).toBe(conceptA.toString());
   });
@@ -113,7 +113,7 @@ describe('SubjectsService.getSummary', () => {
     ];
     activityModel.find.mockReturnValue({ lean: () => Promise.resolve(activities) });
 
-    const result = await service.getSummary(new Types.ObjectId(), 'student-1');
+    const result = await service.getSummary(new Types.ObjectId(), 'manageduser-1');
     expect(result.averageDifficulty).toBe('High');
   });
 
@@ -125,7 +125,7 @@ describe('SubjectsService.getSummary', () => {
     ];
     activityModel.find.mockReturnValue({ lean: () => Promise.resolve(activities) });
 
-    const result = await service.getSummary(new Types.ObjectId(), 'student-1');
+    const result = await service.getSummary(new Types.ObjectId(), 'manageduser-1');
     expect(result.averageDifficulty).toBe('Low');
   });
 
@@ -139,7 +139,7 @@ describe('SubjectsService.getSummary', () => {
     ];
     activityModel.find.mockReturnValue({ lean: () => Promise.resolve(activities) });
 
-    const result = await service.getSummary(new Types.ObjectId(), 'student-1');
+    const result = await service.getSummary(new Types.ObjectId(), 'manageduser-1');
 
     // Only today's 90 minutes should count for this week
     expect(result.totalTimeThisWeek).toEqual({ hours: 1, minutes: 30 });

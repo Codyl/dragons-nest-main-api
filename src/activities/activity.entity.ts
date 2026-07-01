@@ -11,7 +11,7 @@ export class Activity extends Document {
   subjectId: Types.ObjectId;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' })
-  studentId: Types.ObjectId;
+  managedUserId: Types.ObjectId;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
@@ -42,4 +42,4 @@ export class Activity extends Document {
 
 export const ActivitySchema = SchemaFactory.createForClass(Activity);
 
-ActivitySchema.index({ subjectId: 1, studentId: 1, date: -1 });
+ActivitySchema.index({ subjectId: 1, managedUserId: 1, date: -1 });

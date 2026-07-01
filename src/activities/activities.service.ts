@@ -12,7 +12,7 @@ const VALID_DIFFICULTIES = ['Easy', 'Medium', 'Hard'] as const;
 
 export interface CreateActivityDto {
   subjectId: string;
-  studentId: string;
+  managedUserId: string;
   date: string;
   conceptId: string;
   difficulty: string;
@@ -26,9 +26,9 @@ export class ActivitiesService {
     @InjectModel(Activity.name) private activityModel: Model<Activity>,
   ) {}
 
-  async findBySubjectAndStudent(subjectId: string, studentId: string) {
+  async findBySubjectAndManagedUser(subjectId: string, managedUserId: string) {
     return this.activityModel
-      .find({ subjectId, studentId })
+      .find({ subjectId, managedUserId })
       .sort({ date: -1 })
       .populate('conceptId')
       .exec();
@@ -72,7 +72,7 @@ export class ActivitiesService {
 
     return this.activityModel.create({
       subjectId: new Types.ObjectId(dto.subjectId),
-      studentId: dto.studentId,
+      managedUserId: dto.managedUserId,
       householdId: new Types.ObjectId(householdId),
       date: activityDate,
       conceptId: new Types.ObjectId(dto.conceptId),

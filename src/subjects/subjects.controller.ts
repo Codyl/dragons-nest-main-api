@@ -30,13 +30,13 @@ export class SubjectsController {
   @UseGuards(AuthGuard)
   async getSummary(
     @Param('id', MongoIdPipe) id: Types.ObjectId,
-    @Query('studentId', MongoIdPipe) studentId: Types.ObjectId,
+    @Query('managedUserId', MongoIdPipe) managedUserId: Types.ObjectId,
   ) {
-    if (!studentId) {
-      throw new BadRequestException('studentId query parameter is required');
+    if (!managedUserId) {
+      throw new BadRequestException('managedUserId query parameter is required');
     }
 
-    const data = await this.subjectsService.getSummary(id, studentId);
+    const data = await this.subjectsService.getSummary(id, managedUserId);
     return { message: 'Subject summary retrieved successfully', data };
   }
 
@@ -44,15 +44,15 @@ export class SubjectsController {
   @UseGuards(AuthGuard)
   async getConcepts(
     @Param('id', MongoIdPipe) id: Types.ObjectId,
-    @Query('studentId', MongoIdPipe) studentId: Types.ObjectId,
+    @Query('managedUserId', MongoIdPipe) managedUserId: Types.ObjectId,
     @Query('limit') limitParam?: string,
   ) {
-    if (!studentId) {
-      throw new BadRequestException('studentId query parameter is required');
+    if (!managedUserId) {
+      throw new BadRequestException('managedUserId query parameter is required');
     }
 
     const limit = limitParam ? parseInt(limitParam, 10) || 50 : 50;
-    const data = await this.subjectsService.getConcepts(id, studentId, limit);
+    const data = await this.subjectsService.getConcepts(id, managedUserId, limit);
     return { message: 'Subject concepts retrieved successfully', data };
   }
 
@@ -60,11 +60,11 @@ export class SubjectsController {
   @UseGuards(AuthGuard)
   async getStats(
     @Param('id', MongoIdPipe) id: Types.ObjectId,
-    @Query('studentId') studentId: string,
+    @Query('managedUserId') managedUserId: string,
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
   ) {
-    if (!studentId) {
-      throw new BadRequestException('studentId query parameter is required');
+    if (!managedUserId) {
+      throw new BadRequestException('managedUserId query parameter is required');
     }
 
     const cognitoSub = user?.sub;
@@ -79,7 +79,7 @@ export class SubjectsController {
 
     const data = await this.subjectsService.getStats(
       id,
-      studentId,
+      managedUserId,
       userDoc._id.toString(),
     );
     return { message: 'Subject stats retrieved successfully', data };

@@ -15,7 +15,7 @@ import { StateComplianceLaws } from 'src/compliance/entities/state-compliance-la
 
 export type AccountStatus = 'MANAGED' | 'INDEPENDENT' | 'ADULT';
 
-/** COPPA-style bands: under 13 managed, 13–17 independent login, 18+ manager. */
+/** COPPA-style bands: under 13 managed, 13–17 independent login, 18+ adult. */
 export function accountStatusFromBirthDate(
   birthDate: Date | null | undefined,
   refDate?: Date,
@@ -54,8 +54,8 @@ export function accountStatusFromAgeBandAndAccountType(
   }
 
   if (
-    ageBand === AgeBandAtRegistration.Manager18Plus &&
-    accountType === AccountType.Manager
+    ageBand === AgeBandAtRegistration.Adult18Plus &&
+    accountType === AccountType.Adult
   ) {
     return 'ADULT';
   }
@@ -107,7 +107,7 @@ export type EnrolledClassLean = {
   createdAt?: Date;
 };
 
-function filterEnrolledSubjectsForManagerView(
+function filterEnrolledSubjectsForAccountManagerView(
   classes: EnrolledClassLean[] | undefined,
   birthDate: Date | null | undefined,
   ageBandAtRegistration: AgeBandAtRegistration | null | undefined,
@@ -172,13 +172,13 @@ export interface UserDoc {
   state?: State | null;
   zipCode?: string | null;
   parentId?: Types.ObjectId | null;
-  studentId?: string | null;
+  managedUserId?: string | null;
   canManageOthers?: boolean;
-  linkedStudents?: Types.ObjectId[];
+  linkedManagedUsers?: Types.ObjectId[];
   addedClasses?: EnrolledClassLean[];
   ageBandAtRegistration?: AgeBandAtRegistration | null;
   managedAccountsView?: {
-    studentId: Types.ObjectId;
+    managedUserId: Types.ObjectId;
     displayName: string;
     currentGrade: number;
     lastPromotionYear: number;
@@ -191,7 +191,7 @@ export interface UserDoc {
     matchesAllGrades?: boolean;
     grades?: string[];
     curriculum?: string;
-    maxStudents?: number;
+    maxManagedUsers?: number;
   }[];
   notificationEvents?: {
     type: 'COURSE_REMOVED';
@@ -251,7 +251,7 @@ export class UsersService {
   }
 
   /**
-   * Loads a user for API responses. When the viewer is the managed user's manager,
+   * Loads a user for API responses. When the viewer is the managed user's account manager,
    * {@link User.addedClasses} is limited to enrollments with `createdAt` strictly
    * before the managed user's 18th birthday (undated rows are omitted).
    */
@@ -274,11 +274,11 @@ export class UsersService {
         const tId = plain._id;
         if (vId.equals(tId)) {
           discloseEnrollments = 'self';
-        } else if (await this.isManagerOf(vId, tId)) {
+        } else if (await this.isAccountManagerOf(vId, tId)) {
           discloseEnrollments = 'parent';
           plain = {
             ...plain,
-            addedClasses: filterEnrolledSubjectsForManagerView(
+            addedClasses: filterEnrolledSubjectsForAccountManagerView(
               plain.addedClasses,
               plain.birthDate ? new Date(plain.birthDate) : null,
               plain.ageBandAtRegistration ?? null,
@@ -304,16 +304,16 @@ export class UsersService {
 
   /**
    * Sets the `curriculumId` on the `addedClasses` entry matching the given
-   * `subjectId` for the specified student user.
+   * `subjectId` for the specified manageduser user.
    */
   async setCurriculumSelection(
-    studentUserId: Types.ObjectId,
+    manageduserUserId: Types.ObjectId,
     subjectId: string,
     curriculumId: string,
   ) {
     return this.userModel.findOneAndUpdate(
       {
-        _id: studentUserId,
+        _id: manageduserUserId,
         'addedClasses.subjectId': new Types.ObjectId(subjectId),
       },
       {
@@ -381,7 +381,7 @@ export class UsersService {
 
   /**
    * Creates a managed user document (no Cognito login) and links it
-   * to the manager by pushing into `linkedStudents`. Populates `addedClasses`
+   * to the account manager by pushing into `linkedManagedUsers`. Populates `addedClasses`
    * with state-required subjects when a state is provided.
    */
   async createManagedUser(
@@ -389,7 +389,7 @@ export class UsersService {
     data: {
       givenName: string;
       currentGrade?: number;
-      studentId?: Types.ObjectId;
+      managedUserId?: Types.ObjectId;
       lastPromotionYear: number;
       state?: string | null;
     },
@@ -407,13 +407,11 @@ export class UsersService {
 
       if (complianceLaw?.requiredSubjectIds?.length) {
         const now = new Date();
-        addedClasses = complianceLaw.requiredSubjectIds.map(
-          (subjectId) => ({
-            subjectId: new Types.ObjectId(subjectId.toString()),
-            hoursCompleted: 0,
-            createdAt: now,
-          }),
-        );
+        addedClasses = complianceLaw.requiredSubjectIds.map((subjectId) => ({
+          subjectId: new Types.ObjectId(subjectId.toString()),
+          hoursCompleted: 0,
+          createdAt: now,
+        }));
       }
     }
 
@@ -427,19 +425,22 @@ export class UsersService {
     });
 
     // ponytail: callers already push managedAccountsView entry with a placeholder
-    // studentId. Patch that entry to reference the real child._id instead of
+    // managedUserId. Patch that entry to reference the real child._id instead of
     // adding a duplicate. Falls back to $addToSet only if no placeholder exists
     // (defensive; shouldn't happen in normal flow).
-    if (data.studentId) {
+    if (data.managedUserId) {
       await this.userModel.findOneAndUpdate(
-        { _id: parentId, 'managedAccountsView.studentId': data.studentId },
-        { $set: { 'managedAccountsView.$.studentId': child._id } },
+        {
+          _id: parentId,
+          'managedAccountsView.managedUserId': data.managedUserId,
+        },
+        { $set: { 'managedAccountsView.$.managedUserId': child._id } },
       );
     } else {
       await this.userModel.findByIdAndUpdate(parentId, {
         $addToSet: {
           managedAccountsView: {
-            studentId: child._id,
+            managedUserId: child._id,
             displayName: child.givenName,
             archivedAt: null,
           },
@@ -510,7 +511,7 @@ export class UsersService {
 
   /**
    * Recounts managed users enrolled in the given teachable subject and persists
-   * the result on the manager's `teachableCourses.$.activeEnrollmentCount`.
+   * the result on the teacher's `teachableCourses.$.activeEnrollmentCount`.
    *
    * Call after any mutation to a managed user's `addedClasses` that references
    * this manager + course pair.
@@ -553,9 +554,9 @@ export class UsersService {
   }
 
   /**
-   * True when `childId` lists `parentId` as manager and the managed user is under 18.
+   * True when `childId` lists `parentId` as account manager and the managed user is under 18.
    */
-  async isManagerOf(
+  async isAccountManagerOf(
     parentId: Types.ObjectId | string,
     childId: Types.ObjectId | string,
   ): Promise<boolean> {

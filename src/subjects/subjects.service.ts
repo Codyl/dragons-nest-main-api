@@ -18,7 +18,7 @@ export class SubjectsService {
     return this.subjectModel.find();
   }
 
-  async getSummary(subjectId: Types.ObjectId, studentId: Types.ObjectId) {
+  async getSummary(subjectId: Types.ObjectId, managedUserId: Types.ObjectId) {
     // Week boundaries: Monday 00:00 UTC to Sunday 23:59:59 UTC
     const now = new Date();
     const day = now.getUTCDay(); // 0=Sun,1=Mon...
@@ -49,7 +49,7 @@ export class SubjectsService {
       weekMinutes: number;
       avgDifficulty: number | null;
     }>([
-      { $match: { subjectId, studentId } },
+      { $match: { subjectId, managedUserId } },
       {
         $facet: {
           // Most practiced concept by session count
@@ -147,7 +147,7 @@ export class SubjectsService {
 
   async getConcepts(
     subjectId: Types.ObjectId,
-    studentId: Types.ObjectId,
+    managedUserId: Types.ObjectId,
     limit: number,
   ) {
     const cap = Math.min(Math.max(limit, 1), 50);
@@ -161,7 +161,7 @@ export class SubjectsService {
       sessionCount: number;
       lastSessionDate: string | null;
     }>([
-      { $match: { subjectId, studentId } },
+      { $match: { subjectId, managedUserId } },
       { $sort: { date: -1 } },
       {
         $group: {
@@ -205,18 +205,18 @@ export class SubjectsService {
 
   async getStats(
     subjectId: Types.ObjectId,
-    studentId: string,
+    managedUserId: string,
     householdId: string,
   ) {
     const [timeResult, documentsCount] = await Promise.all([
       this.activityModel.aggregate<{ totalMinutes: number }>([
-        { $match: { subjectId, studentId } },
+        { $match: { subjectId, managedUserId } },
         { $group: { _id: null, totalMinutes: { $sum: '$timeSpentMinutes' } } },
       ]),
       this.curriculumItemModel.countDocuments({
         subjectId,
         householdId: new Types.ObjectId(householdId),
-        studentId,
+        managedUserId,
       }),
     ]);
 

@@ -13,8 +13,8 @@ export class CreateActivityDto {
   @IsMongoId({ message: 'subjectId must be a valid MongoDB ObjectId' })
   subjectId: string;
 
-  @IsMongoId({ message: 'studentId must be a valid MongoDB ObjectId' })
-  studentId: string;
+  @IsMongoId({ message: 'managedUserId must be a valid MongoDB ObjectId' })
+  managedUserId: string;
 
   @IsDateString({}, { message: 'date must be a valid ISO 8601 date' })
   date: string;

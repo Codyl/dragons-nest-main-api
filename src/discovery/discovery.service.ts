@@ -41,7 +41,7 @@ export class DiscoveryService {
     const gradeStrings = ordinalGradesToHomeschoolGrades(ordinals);
     const docs = await this.userModel
       .find({
-        accountType: AccountType.Manager,
+        accountType: AccountType.Adult,
         deleted: { $ne: true },
         teachableCourses: {
           $elemMatch: {

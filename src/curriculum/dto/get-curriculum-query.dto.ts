@@ -8,6 +8,6 @@ export class GetCurriculumQueryDto {
   householdId: string;
 
   @IsOptional()
-  @IsString({ message: 'studentId must be a string' })
-  studentId?: string;
+  @IsString({ message: 'managedUserId must be a string' })
+  managedUserId?: string;
 }

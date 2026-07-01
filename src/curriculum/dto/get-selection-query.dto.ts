@@ -6,5 +6,5 @@ export class GetSelectionQueryDto {
   subjectId: string;
 
   @IsMongoId()
-  studentId: string;
+  managedUserId: string;
 }
