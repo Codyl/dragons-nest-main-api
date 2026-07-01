@@ -20,6 +20,10 @@ export class Concept extends Document {
 
   @Prop({ required: true })
   name: string;
+
+  // ponytail: optional — only set for user-created custom concepts
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User' })
+  createdBy?: Types.ObjectId;
 }
 
 export type ConceptDocument = Concept & Document;
@@ -27,3 +31,4 @@ export type ConceptDocument = Concept & Document;
 export const ConceptSchema = SchemaFactory.createForClass(Concept);
 
 ConceptSchema.index({ subject: 1, grade: 1 });
+ConceptSchema.index({ createdBy: 1, subject: 1 });
