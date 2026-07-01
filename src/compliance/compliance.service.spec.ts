@@ -3,6 +3,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { NotFoundException } from '@nestjs/common';
 import { ComplianceService } from './compliance.service';
 import { StateComplianceLaws } from './entities/state-compliance-laws.entity';
+import { ComplianceCompletionRecord } from './entities/compliance-completion.schema';
 
 describe('ComplianceService', () => {
   let service: ComplianceService;
@@ -19,6 +20,10 @@ describe('ComplianceService', () => {
         {
           provide: getModelToken(StateComplianceLaws.name),
           useValue: { findOne },
+        },
+        {
+          provide: getModelToken(ComplianceCompletionRecord.name),
+          useValue: { findOne: jest.fn(), findOneAndUpdate: jest.fn() },
         },
       ],
     }).compile();

@@ -3,6 +3,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ComplianceController } from './compliance.controller';
 import { ComplianceService } from './compliance.service';
 import {
+  ComplianceCompletionRecord,
+  ComplianceCompletionRecordSchema,
+} from './entities/compliance-completion.schema';
+import {
   StateComplianceLaws,
   StateComplianceLawsSchema,
 } from './entities/state-compliance-laws.entity';
@@ -12,6 +16,10 @@ import {
   imports: [
     MongooseModule.forFeature([
       { name: StateComplianceLaws.name, schema: StateComplianceLawsSchema },
+      {
+        name: ComplianceCompletionRecord.name,
+        schema: ComplianceCompletionRecordSchema,
+      },
     ]),
   ],
   controllers: [ComplianceController],
