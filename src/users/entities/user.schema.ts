@@ -327,6 +327,28 @@ export class User extends Document {
   }[];
 
   @ApiProperty({
+    description:
+      'Test scores recorded by the Manager for Managed Users in this household.',
+  })
+  @Prop({
+    type: [
+      {
+        managedUserId: { type: Types.ObjectId, required: true, ref: 'User' },
+        subjectName: { type: String, required: true, maxlength: 100 },
+        score: { type: Number, required: true, min: 0, max: 100 },
+        date: { type: Date, required: true },
+      },
+    ],
+    default: [],
+  })
+  testScores?: {
+    managedUserId: Types.ObjectId;
+    subjectName: string;
+    score: number;
+    date: Date;
+  }[];
+
+  @ApiProperty({
     description: 'Avatar id (e.g. dragon, owl) from onboarding.',
     nullable: true,
   })

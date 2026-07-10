@@ -20,6 +20,7 @@ import { FavoritesModule } from './favorites/favorites.module';
 import { ResourcesModule } from './resources/resources.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { ConceptsModule } from './concepts/concepts.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 const testOnlyImports =
   process.env.NODE_ENV === 'test' ? [TestSupportModule] : [];
@@ -103,6 +104,7 @@ const testOnlyImports =
     ResourcesModule,
     FavoritesModule,
     ConceptsModule,
+    DashboardModule,
   ],
   controllers: [],
   providers: [],
