@@ -372,6 +372,24 @@ export class StateComplianceLaws extends Document {
   })
   @Prop({ type: Boolean, default: false })
   immunizationRequired!: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Daily hours required (0.5–24), or null if no requirement.',
+  })
+  @Prop({ type: Number, default: null })
+  dailyHoursRequired!: number | null;
+
+  @ApiPropertyOptional({
+    description: 'Yearly hours required (1–8760), or null if no requirement.',
+  })
+  @Prop({ type: Number, default: null })
+  yearlyHoursRequired!: number | null;
+
+  @ApiPropertyOptional({
+    description: 'Comma-space-separated required subject names, or null.',
+  })
+  @Prop({ type: String, default: null })
+  requiredSubjects!: string | null;
 }
 
 export type StateComplianceLawsDocument = HydratedDocument<StateComplianceLaws>;

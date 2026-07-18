@@ -8,7 +8,7 @@
  * Requires MONGODB_URI (loads `.env.development.local` then `.env`).
  */
 import { config as loadEnv } from 'dotenv';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import mongoose, { type Model, Types } from 'mongoose';
 import { resolve } from 'path';
 
@@ -19,6 +19,138 @@ import {
 } from 'src/compliance/entities/state-compliance-laws.entity';
 import { Subject, SubjectSchema } from 'src/subjects/subject.entity';
 import { State } from 'src/users/enums/state.enum';
+
+// --- Exported pure parsing functions (used by property tests in task 1.3) ---
+
+/** Parse daily_hours_required CSV value → number in [0.5, 24] or null. */
+export function parseDailyHours(value: string | undefined | null): number | null {
+  if (value == null || value.trim() === '') return null;
+  const n = parseFloat(value);
+  if (isNaN(n)) return null;
+  if (n < 0.5 || n > 24) return null;
+  return n;
+}
+
+/** Parse yearly_attendance JSON column → integer in [1, 8760] or null. */
+export function parseYearlyAttendance(value: string | undefined | null): number | null {
+  if (value == null || value.trim() === '') return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== 'object' || parsed === null) return null;
+  const obj = parsed as Record<string, unknown>;
+  if (obj.required !== true || obj.hours == null) return null;
+  const hours = Number(obj.hours);
+  if (!Number.isInteger(hours)) return null;
+  if (hours < 1 || hours > 8760) return null;
+  return hours;
+}
+
+/** Parse required_subjects JSON array column → comma-space joined string or null. */
+export function parseRequiredSubjects(value: string | undefined | null): string | null {
+  if (value == null || value.trim() === '') return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed)) return null;
+  if (parsed.length === 0) return null;
+  return parsed.join(', ');
+}
+
+/** ponytail: single-pass RFC 4180 CSV parser — handles quoted fields with commas/newlines/escaped quotes. */
+function parseCSV(content: string): Record<string, string>[] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < content.length; i++) {
+    const ch = content[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (content[i + 1] === '"') {
+          field += '"';
+          i++; // escaped quote
+        } else {
+          inQuotes = false; // closing quote
+        }
+      } else {
+        field += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        row.push(field);
+        field = '';
+      } else if (ch === '\n') {
+        row.push(field);
+        field = '';
+        rows.push(row);
+        row = [];
+      } else if (ch === '\r') {
+        // skip, \n follows
+      } else {
+        field += ch;
+      }
+    }
+  }
+  // Flush last field/row
+  if (field || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+
+  if (rows.length === 0) return [];
+  const headers = rows[0];
+  return rows.slice(1).map((values) => {
+    const record: Record<string, string> = {};
+    for (let j = 0; j < headers.length; j++) {
+      record[headers[j]] = values[j] ?? '';
+    }
+    return record;
+  });
+}
+
+/** Read CSV and build a map of state → plan 1 parsed fields. */
+export function buildPlan1FieldsMap(csvPath: string): Map<string, {
+  dailyHoursRequired: number | null;
+  yearlyHoursRequired: number | null;
+  requiredSubjects: string | null;
+}> {
+  const map = new Map<string, {
+    dailyHoursRequired: number | null;
+    yearlyHoursRequired: number | null;
+    requiredSubjects: string | null;
+  }>();
+
+  if (!existsSync(csvPath)) return map;
+
+  const content = readFileSync(csvPath, 'utf-8');
+  const rows = parseCSV(content);
+
+  for (const row of rows) {
+    if (row.plan_number !== '1') continue;
+    const state = row.state?.trim().toLowerCase();
+    if (!state) continue;
+
+    map.set(state, {
+      dailyHoursRequired: parseDailyHours(row.daily_hours_required),
+      yearlyHoursRequired: parseYearlyAttendance(row.yearly_attendance),
+      requiredSubjects: parseRequiredSubjects(row.required_subjects),
+    });
+  }
+
+  return map;
+}
+
+// --- End parsing functions ---
 
 const cwd = process.cwd();
 for (const name of ['.env.development.local', '.env']) {
@@ -466,21 +598,41 @@ async function main(): Promise<void> {
         ? allEntries
         : allEntries.filter((entry) => entry.state === selectedState);
 
+    // Parse CSV plan 1 data for new fields
+    const csvPath = resolve(cwd, 'src/scripts/state-compliance-laws.csv');
+    const plan1Fields = buildPlan1FieldsMap(csvPath);
+
+    // ponytail: remove legacy documents that used full state names (e.g. "alabama") instead of abbreviations ("al")
+    const validAbbreviations = Object.values(State);
+    const deleteResult = await ComplianceModel.deleteMany({ state: { $nin: validAbbreviations } });
+    if (deleteResult.deletedCount > 0) {
+      console.log(`Removed ${deleteResult.deletedCount} legacy document(s) with non-abbreviation state values.`);
+    }
+
     await ComplianceModel.bulkWrite(
-      entriesToUpsert.map((entry) => ({
-        updateOne: {
-          filter: { state: entry.state },
-          update: {
-            $set: {
-              ...entry,
-              pathways: [DEFAULT_PATHWAY_MAIN],
-              requiredSubjectIds,
-              immunizationRequired,
+      entriesToUpsert.map((entry) => {
+        const csvData = plan1Fields.get(entry.state) ?? {
+          dailyHoursRequired: null,
+          yearlyHoursRequired: null,
+          requiredSubjects: null,
+        };
+
+        return {
+          updateOne: {
+            filter: { state: entry.state },
+            update: {
+              $set: {
+                ...entry,
+                pathways: [DEFAULT_PATHWAY_MAIN],
+                requiredSubjectIds,
+                immunizationRequired,
+                ...csvData,
+              },
             },
+            upsert: true,
           },
-          upsert: true,
-        },
-      })),
+        };
+      }),
     );
 
     console.log(

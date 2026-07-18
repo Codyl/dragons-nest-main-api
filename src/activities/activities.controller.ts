@@ -28,13 +28,13 @@ export class ActivitiesController {
 
   @Get()
   async findAll(
-    @Query('subjectId', MongoIdPipe) subjectId: Types.ObjectId,
+    @Query('subjectId') subjectId: string | undefined,
     @Query('managedUserId') managedUserId: string,
   ) {
-    const data = await this.activitiesService.findBySubjectAndManagedUser(
-      subjectId.toHexString(),
-      managedUserId,
-    );
+    // ponytail: subjectId optional — when omitted, return all activities for managed user
+    const data = subjectId
+      ? await this.activitiesService.findBySubjectAndManagedUser(subjectId, managedUserId)
+      : await this.activitiesService.findByManagedUser(managedUserId);
     return { message: 'Activities retrieved', data };
   }
 

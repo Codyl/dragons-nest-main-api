@@ -34,6 +34,15 @@ export class ActivitiesService {
       .exec();
   }
 
+  // ponytail: returns all activities for a managed user (used by compliance hours computation)
+  async findByManagedUser(managedUserId: string) {
+    return this.activityModel
+      .find({ managedUserId })
+      .sort({ date: -1 })
+      .populate('conceptId')
+      .exec();
+  }
+
   async create(dto: CreateActivityDto, householdId: string) {
     // Validate difficulty
     if (
