@@ -300,7 +300,9 @@ describe('UsersService', () => {
         select: jest.fn().mockReturnThis(),
         lean: jest.fn().mockResolvedValue(null),
       });
-      await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(false);
+      await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(
+        false,
+      );
     });
 
     it('returns false when child is deleted', async () => {
@@ -312,7 +314,9 @@ describe('UsersService', () => {
           birthDate: refBirthFor11,
         }),
       });
-      await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(false);
+      await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(
+        false,
+      );
     });
 
     it('returns false when child has no parentId', async () => {
@@ -324,7 +328,9 @@ describe('UsersService', () => {
           birthDate: refBirthFor11,
         }),
       });
-      await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(false);
+      await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(
+        false,
+      );
     });
 
     it('returns true for minor age band without birthDate', async () => {
@@ -336,7 +342,9 @@ describe('UsersService', () => {
           ageBandAtRegistration: AgeBandAtRegistration.Teen13To17,
         }),
       });
-      await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(true);
+      await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(
+        true,
+      );
     });
 
     it('returns false when birthDate and age band are both absent', async () => {
@@ -347,7 +355,9 @@ describe('UsersService', () => {
           parentId,
         }),
       });
-      await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(false);
+      await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(
+        false,
+      );
     });
 
     it('returns false when parentId does not match', async () => {
@@ -360,7 +370,9 @@ describe('UsersService', () => {
           birthDate: refBirthFor11,
         }),
       });
-      await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(false);
+      await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(
+        false,
+      );
     });
 
     it('returns false when child is 18 or older', async () => {
@@ -375,9 +387,9 @@ describe('UsersService', () => {
             birthDate: new Date(2008, 3, 8),
           }),
         });
-        await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(
-          false,
-        );
+        await expect(
+          service.isAccountManagerOf(parentId, childId),
+        ).resolves.toBe(false);
       } finally {
         jest.useRealTimers();
       }
@@ -395,7 +407,9 @@ describe('UsersService', () => {
             birthDate: new Date(2014, 3, 8),
           }),
         });
-        await expect(service.isAccountManagerOf(parentId, childId)).resolves.toBe(true);
+        await expect(
+          service.isAccountManagerOf(parentId, childId),
+        ).resolves.toBe(true);
       } finally {
         jest.useRealTimers();
       }

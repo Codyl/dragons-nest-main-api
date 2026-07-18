@@ -730,9 +730,7 @@ export class ProfileService {
       row.accountType !== AccountType.Adult ||
       row.ageBandAtRegistration !== AgeBandAtRegistration.Adult18Plus
     ) {
-      throw new ForbiddenException(
-        'Only adults may manage teachable subjects',
-      );
+      throw new ForbiddenException('Only adults may manage teachable subjects');
     }
 
     const newCourse = {
@@ -799,9 +797,7 @@ export class ProfileService {
       row.accountType !== AccountType.Adult ||
       row.ageBandAtRegistration !== AgeBandAtRegistration.Adult18Plus
     ) {
-      throw new ForbiddenException(
-        'Only adults may manage teachable subjects',
-      );
+      throw new ForbiddenException('Only adults may manage teachable subjects');
     }
 
     // Validate index

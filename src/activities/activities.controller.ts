@@ -33,7 +33,10 @@ export class ActivitiesController {
   ) {
     // ponytail: subjectId optional — when omitted, return all activities for managed user
     const data = subjectId
-      ? await this.activitiesService.findBySubjectAndManagedUser(subjectId, managedUserId)
+      ? await this.activitiesService.findBySubjectAndManagedUser(
+          subjectId,
+          managedUserId,
+        )
       : await this.activitiesService.findByManagedUser(managedUserId);
     return { message: 'Activities retrieved', data };
   }

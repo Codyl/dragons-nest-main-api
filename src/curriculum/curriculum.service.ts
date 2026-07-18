@@ -283,7 +283,9 @@ export class CurriculumService {
       d.managedUserId.equals(params.managedUserId),
     );
     if (!match) {
-      throw new ForbiddenException('ManagedUser does not belong to your household');
+      throw new ForbiddenException(
+        'ManagedUser does not belong to your household',
+      );
     }
 
     // Validate curriculumItemId exists
@@ -344,7 +346,9 @@ export class CurriculumService {
       (d) => d.managedUserId.toString() === params.managedUserId.toString(),
     );
     if (!match) {
-      throw new ForbiddenException('ManagedUser does not belong to your household');
+      throw new ForbiddenException(
+        'ManagedUser does not belong to your household',
+      );
     }
 
     // Find the managed user

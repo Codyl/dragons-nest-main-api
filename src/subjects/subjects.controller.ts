@@ -33,7 +33,9 @@ export class SubjectsController {
     @Query('managedUserId', MongoIdPipe) managedUserId: Types.ObjectId,
   ) {
     if (!managedUserId) {
-      throw new BadRequestException('managedUserId query parameter is required');
+      throw new BadRequestException(
+        'managedUserId query parameter is required',
+      );
     }
 
     const data = await this.subjectsService.getSummary(id, managedUserId);
@@ -48,11 +50,17 @@ export class SubjectsController {
     @Query('limit') limitParam?: string,
   ) {
     if (!managedUserId) {
-      throw new BadRequestException('managedUserId query parameter is required');
+      throw new BadRequestException(
+        'managedUserId query parameter is required',
+      );
     }
 
     const limit = limitParam ? parseInt(limitParam, 10) || 50 : 50;
-    const data = await this.subjectsService.getConcepts(id, managedUserId, limit);
+    const data = await this.subjectsService.getConcepts(
+      id,
+      managedUserId,
+      limit,
+    );
     return { message: 'Subject concepts retrieved successfully', data };
   }
 
@@ -64,7 +72,9 @@ export class SubjectsController {
     @CurrentUser() user: Record<string, unknown> & { sub?: string },
   ) {
     if (!managedUserId) {
-      throw new BadRequestException('managedUserId query parameter is required');
+      throw new BadRequestException(
+        'managedUserId query parameter is required',
+      );
     }
 
     const cognitoSub = user?.sub;

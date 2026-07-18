@@ -61,6 +61,7 @@ export class ConceptsController {
     if (!matchingUser) {
       throw new BadRequestException('User not found');
     }
+
     const data = await this.conceptsService.create(dto, matchingUser._id);
     return { message: 'Concept created', data };
   }

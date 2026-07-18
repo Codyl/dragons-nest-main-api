@@ -18,32 +18,43 @@ function parseCSV(text) {
     const ch = text[i];
     if (inQuotes) {
       if (ch === '"') {
-        if (text[i + 1] === '"') { field += '"'; i++; } // escaped quote
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } // escaped quote
         else inQuotes = false;
       } else {
         field += ch;
       }
     } else {
-      if (ch === '"') { inQuotes = true; }
-      else if (ch === ',') { row.push(field); field = ''; }
-      else if (ch === '\n' || (ch === '\r' && text[i + 1] === '\n')) {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        row.push(field);
+        field = '';
+      } else if (ch === '\n' || (ch === '\r' && text[i + 1] === '\n')) {
         if (ch === '\r') i++; // skip \n after \r
-        row.push(field); field = '';
-        rows.push(row); row = [];
+        row.push(field);
+        field = '';
+        rows.push(row);
+        row = [];
       } else {
         field += ch;
       }
     }
   }
   // last field/row
-  if (field || row.length) { row.push(field); rows.push(row); }
+  if (field || row.length) {
+    row.push(field);
+    rows.push(row);
+  }
   return rows;
 }
 
 const text = fs.readFileSync(filePath, 'utf8');
 const rows = parseCSV(text);
 
-const grades = rows[0].map(v => v.trim());
+const grades = rows[0].map((v) => v.trim());
 const results = [];
 
 for (let r = 1; r < rows.length; r++) {
@@ -59,7 +70,10 @@ for (let r = 1; r < rows.length; r++) {
     if (!grade) continue;
 
     // Split on newline or semicolon, filter blanks
-    const concepts = cell.split(/\n|;/).map(c => c.trim()).filter(Boolean);
+    const concepts = cell
+      .split(/\n|;/)
+      .map((c) => c.trim())
+      .filter(Boolean);
     for (const name of concepts) {
       results.push({ subject: subjectId, grade, name });
     }

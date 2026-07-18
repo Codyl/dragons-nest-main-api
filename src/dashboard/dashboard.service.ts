@@ -104,7 +104,7 @@ export class DashboardService {
         subjectName: s.subjectName,
         score: s.score,
         letterGrade: computeLetterGrade(s.score),
-        date: (s.date as Date).toISOString().slice(0, 10),
+        date: s.date.toISOString().slice(0, 10),
       }));
     const recentTestScores = sortTestScores(allScores);
 
@@ -180,9 +180,9 @@ export class DashboardService {
       });
   }
 
-  private async buildConceptMap(
+  private buildConceptMap(
     activities: any[],
-  ): Promise<Map<string, ConceptActivities>> {
+  ): Map<string, ConceptActivities> {
     const map = new Map<string, ConceptActivities>();
 
     for (const a of activities) {

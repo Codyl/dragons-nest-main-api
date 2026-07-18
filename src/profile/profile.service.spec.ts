@@ -1367,7 +1367,10 @@ describe('Property 9: PATCH endpoint appends course (round-trip)', () => {
             teachableCourses: updatedCourses,
           } as never);
 
-          const result = await svc.addTeachableSubject(cognitoSub, dto as never);
+          const result = await svc.addTeachableSubject(
+            cognitoSub,
+            dto as never,
+          );
 
           // Assert: returned array length = original length + 1
           expect(result).toHaveLength(existingCourses.length + 1);

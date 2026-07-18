@@ -32,13 +32,10 @@ describe('Property 1: Daily hours parsing produces number or null', () => {
 
   it('returns number for valid numeric strings in range', () => {
     fc.assert(
-      fc.property(
-        fc.double({ min: 0.5, max: 24, noNaN: true }),
-        (n) => {
-          const result = parseDailyHours(String(n));
-          return result === n;
-        },
-      ),
+      fc.property(fc.double({ min: 0.5, max: 24, noNaN: true }), (n) => {
+        const result = parseDailyHours(String(n));
+        return result === n;
+      }),
       { numRuns: 100 },
     );
   });
@@ -65,27 +62,21 @@ describe('Property 2: Yearly attendance extraction produces integer or null', ()
 
   it('returns hours when JSON has required=true and valid integer hours', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 8760 }),
-        (hours) => {
-          const json = JSON.stringify({ required: true, hours });
-          const result = parseYearlyAttendance(json);
-          return result === hours;
-        },
-      ),
+      fc.property(fc.integer({ min: 1, max: 8760 }), (hours) => {
+        const json = JSON.stringify({ required: true, hours });
+        const result = parseYearlyAttendance(json);
+        return result === hours;
+      }),
       { numRuns: 100 },
     );
   });
 
   it('returns null for required=false regardless of hours', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 8760 }),
-        (hours) => {
-          const json = JSON.stringify({ required: false, hours });
-          return parseYearlyAttendance(json) === null;
-        },
-      ),
+      fc.property(fc.integer({ min: 1, max: 8760 }), (hours) => {
+        const json = JSON.stringify({ required: false, hours });
+        return parseYearlyAttendance(json) === null;
+      }),
       { numRuns: 100 },
     );
   });
@@ -93,7 +84,9 @@ describe('Property 2: Yearly attendance extraction produces integer or null', ()
   it('returns null for non-integer hours', () => {
     fc.assert(
       fc.property(
-        fc.double({ min: 0.1, max: 8760, noNaN: true }).filter((n) => !Number.isInteger(n)),
+        fc
+          .double({ min: 0.1, max: 8760, noNaN: true })
+          .filter((n) => !Number.isInteger(n)),
         (hours) => {
           const json = JSON.stringify({ required: true, hours });
           return parseYearlyAttendance(json) === null;
@@ -129,7 +122,12 @@ describe('Property 3: Required subjects join formatting', () => {
     fc.assert(
       fc.property(
         fc.string().filter((s) => {
-          try { JSON.parse(s); return false; } catch { return true; }
+          try {
+            JSON.parse(s);
+            return false;
+          } catch {
+            return true;
+          }
         }),
         (input) => parseRequiredSubjects(input) === null,
       ),
@@ -175,54 +173,61 @@ describe('Property 6: Plan 1 filtering', () => {
       fc.double({ min: 0.5, max: 24, noNaN: true }).map(String),
     );
 
-    const rowArb = fc.tuple(stateArb, planArb, hoursArb).map(
-      ([state, plan, hours]) => ({ state, plan_number: plan, daily_hours_required: hours }),
-    );
+    const rowArb = fc
+      .tuple(stateArb, planArb, hoursArb)
+      .map(([state, plan, hours]) => ({
+        state,
+        plan_number: plan,
+        daily_hours_required: hours,
+      }));
 
     fc.assert(
-      fc.property(
-        fc.array(rowArb, { minLength: 1, maxLength: 20 }),
-        (rows) => {
-          // Build CSV
-          const header = 'state,plan_number,daily_hours_required,yearly_attendance,required_subjects';
-          const csvLines = rows.map(
-            (r) => `${r.state},${r.plan_number},${r.daily_hours_required},,`,
+      fc.property(fc.array(rowArb, { minLength: 1, maxLength: 20 }), (rows) => {
+        // Build CSV
+        const header =
+          'state,plan_number,daily_hours_required,yearly_attendance,required_subjects';
+        const csvLines = rows.map(
+          (r) => `${r.state},${r.plan_number},${r.daily_hours_required},,`,
+        );
+        const csv = [header, ...csvLines].join('\n');
+
+        const csvPath = join(
+          tempDir,
+          `test-${Date.now()}-${Math.random()}.csv`,
+        );
+        writeFileSync(csvPath, csv, 'utf-8');
+
+        const result = buildPlan1FieldsMap(csvPath);
+
+        // Verify: every state in the result should only have data from plan 1 rows
+        for (const [state, fields] of result) {
+          const plan1Rows = rows.filter(
+            (r) => r.state === state && r.plan_number === '1',
           );
-          const csv = [header, ...csvLines].join('\n');
+          // State must have had at least one plan 1 row to appear in map
+          if (plan1Rows.length === 0) return false;
 
-          const csvPath = join(tempDir, `test-${Date.now()}-${Math.random()}.csv`);
-          writeFileSync(csvPath, csv, 'utf-8');
-
-          const result = buildPlan1FieldsMap(csvPath);
-
-          // Verify: every state in the result should only have data from plan 1 rows
-          for (const [state, fields] of result) {
-            const plan1Rows = rows.filter(
-              (r) => r.state === state && r.plan_number === '1',
-            );
-            // State must have had at least one plan 1 row to appear in map
-            if (plan1Rows.length === 0) return false;
-
-            // The fields should match what parseDailyHours would produce for
-            // the LAST plan 1 row (since the loop overwrites)
-            const lastPlan1Row = plan1Rows[plan1Rows.length - 1];
-            const expectedDaily = parseDailyHours(lastPlan1Row.daily_hours_required);
-            if (fields.dailyHoursRequired !== expectedDaily) return false;
-          }
-
-          // States without plan 1 rows should not appear in map
-          const statesWithoutPlan1 = [
-            ...new Set(rows.map((r) => r.state)),
-          ].filter(
-            (s) => !rows.some((r) => r.state === s && r.plan_number === '1'),
+          // The fields should match what parseDailyHours would produce for
+          // the LAST plan 1 row (since the loop overwrites)
+          const lastPlan1Row = plan1Rows[plan1Rows.length - 1];
+          const expectedDaily = parseDailyHours(
+            lastPlan1Row.daily_hours_required,
           );
-          for (const s of statesWithoutPlan1) {
-            if (result.has(s)) return false;
-          }
+          if (fields.dailyHoursRequired !== expectedDaily) return false;
+        }
 
-          return true;
-        },
-      ),
+        // States without plan 1 rows should not appear in map
+        const statesWithoutPlan1 = [
+          ...new Set(rows.map((r) => r.state)),
+        ].filter(
+          (s) => !rows.some((r) => r.state === s && r.plan_number === '1'),
+        );
+        for (const s of statesWithoutPlan1) {
+          if (result.has(s)) return false;
+        }
+
+        return true;
+      }),
       { numRuns: 100 },
     );
   });

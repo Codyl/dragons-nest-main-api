@@ -23,17 +23,25 @@ import { State } from 'src/users/enums/state.enum';
 // --- Exported pure parsing functions (used by property tests in task 1.3) ---
 
 /** Parse daily_hours_required CSV value → number in [0.5, 24] or null. */
-export function parseDailyHours(value: string | undefined | null): number | null {
+export function parseDailyHours(
+  value: string | undefined | null,
+): number | null {
   if (value == null || value.trim() === '') return null;
+
   const n = parseFloat(value);
   if (isNaN(n)) return null;
+
   if (n < 0.5 || n > 24) return null;
+
   return n;
 }
 
 /** Parse yearly_attendance JSON column → integer in [1, 8760] or null. */
-export function parseYearlyAttendance(value: string | undefined | null): number | null {
+export function parseYearlyAttendance(
+  value: string | undefined | null,
+): number | null {
   if (value == null || value.trim() === '') return null;
+
   let parsed: unknown;
   try {
     parsed = JSON.parse(value);
@@ -41,17 +49,24 @@ export function parseYearlyAttendance(value: string | undefined | null): number 
     return null;
   }
   if (typeof parsed !== 'object' || parsed === null) return null;
+
   const obj = parsed as Record<string, unknown>;
   if (obj.required !== true || obj.hours == null) return null;
+
   const hours = Number(obj.hours);
   if (!Number.isInteger(hours)) return null;
+
   if (hours < 1 || hours > 8760) return null;
+
   return hours;
 }
 
 /** Parse required_subjects JSON array column → comma-space joined string or null. */
-export function parseRequiredSubjects(value: string | undefined | null): string | null {
+export function parseRequiredSubjects(
+  value: string | undefined | null,
+): string | null {
   if (value == null || value.trim() === '') return null;
+
   let parsed: unknown;
   try {
     parsed = JSON.parse(value);
@@ -59,7 +74,9 @@ export function parseRequiredSubjects(value: string | undefined | null): string 
     return null;
   }
   if (!Array.isArray(parsed)) return null;
+
   if (parsed.length === 0) return null;
+
   return parsed.join(', ');
 }
 
@@ -108,6 +125,7 @@ function parseCSV(content: string): Record<string, string>[] {
   }
 
   if (rows.length === 0) return [];
+
   const headers = rows[0];
   return rows.slice(1).map((values) => {
     const record: Record<string, string> = {};
@@ -119,16 +137,22 @@ function parseCSV(content: string): Record<string, string>[] {
 }
 
 /** Read CSV and build a map of state → plan 1 parsed fields. */
-export function buildPlan1FieldsMap(csvPath: string): Map<string, {
-  dailyHoursRequired: number | null;
-  yearlyHoursRequired: number | null;
-  requiredSubjects: string | null;
-}> {
-  const map = new Map<string, {
+export function buildPlan1FieldsMap(csvPath: string): Map<
+  string,
+  {
     dailyHoursRequired: number | null;
     yearlyHoursRequired: number | null;
     requiredSubjects: string | null;
-  }>();
+  }
+> {
+  const map = new Map<
+    string,
+    {
+      dailyHoursRequired: number | null;
+      yearlyHoursRequired: number | null;
+      requiredSubjects: string | null;
+    }
+  >();
 
   if (!existsSync(csvPath)) return map;
 
@@ -137,6 +161,7 @@ export function buildPlan1FieldsMap(csvPath: string): Map<string, {
 
   for (const row of rows) {
     if (row.plan_number !== '1') continue;
+
     const state = row.state?.trim().toLowerCase();
     if (!state) continue;
 
@@ -604,9 +629,13 @@ async function main(): Promise<void> {
 
     // ponytail: remove legacy documents that used full state names (e.g. "alabama") instead of abbreviations ("al")
     const validAbbreviations = Object.values(State);
-    const deleteResult = await ComplianceModel.deleteMany({ state: { $nin: validAbbreviations } });
+    const deleteResult = await ComplianceModel.deleteMany({
+      state: { $nin: validAbbreviations },
+    });
     if (deleteResult.deletedCount > 0) {
-      console.log(`Removed ${deleteResult.deletedCount} legacy document(s) with non-abbreviation state values.`);
+      console.log(
+        `Removed ${deleteResult.deletedCount} legacy document(s) with non-abbreviation state values.`,
+      );
     }
 
     await ComplianceModel.bulkWrite(

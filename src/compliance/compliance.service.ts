@@ -52,6 +52,6 @@ export class ComplianceService {
         { upsert: true, new: true },
       )
       .exec();
-    return Object.fromEntries(record!.items);
+    return Object.fromEntries(record.items);
   }
 }

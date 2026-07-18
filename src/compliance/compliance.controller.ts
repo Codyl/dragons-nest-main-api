@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiCookieAuth,
   ApiNotFoundResponse,
@@ -19,9 +27,13 @@ import { StateComplianceLaws } from './entities/state-compliance-laws.entity';
 export class ComplianceController {
   constructor(private readonly complianceService: ComplianceService) {}
 
-  @ApiOperation({ summary: 'Get completion states for a managed user in a state' })
+  @ApiOperation({
+    summary: 'Get completion states for a managed user in a state',
+  })
   @ApiOkResponse({ description: 'Completion items returned.' })
-  @ApiUnauthorizedResponse({ description: 'Access token is missing, invalid, or expired.' })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
   @Get('completion')
   async getCompletion(
     @Query() query: GetCompletionQueryDto,
@@ -37,7 +49,9 @@ export class ComplianceController {
 
   @ApiOperation({ summary: 'Toggle a compliance completion item' })
   @ApiOkResponse({ description: 'Updated completion items returned.' })
-  @ApiUnauthorizedResponse({ description: 'Access token is missing, invalid, or expired.' })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing, invalid, or expired.',
+  })
   @Patch('completion')
   async toggleCompletion(
     @Body() body: ToggleCompletionDto,
