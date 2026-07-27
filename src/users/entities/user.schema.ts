@@ -359,22 +359,6 @@ export class User extends Document {
   })
   avatar?: string | null;
 
-  @ApiProperty({ description: 'Interest ids selected during onboarding.' })
-  @Prop({ type: [String], default: [] })
-  interests?: string[];
-
-  @ApiProperty({ nullable: true })
-  @Prop({ type: String, default: null })
-  shortTermGoal?: string | null;
-
-  @ApiProperty({ nullable: true })
-  @Prop({ type: String, default: null })
-  longTermGoal?: string | null;
-
-  @ApiProperty({ description: 'Learning style ids from onboarding.' })
-  @Prop({ type: [String], default: [] })
-  learningStyles?: string[];
-
   @Prop({ type: [EnrolledClassSchema], default: [] })
   addedClasses?: EnrolledClass[];
 
