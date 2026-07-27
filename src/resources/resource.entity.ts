@@ -17,7 +17,7 @@ export class Resource extends Document {
   subjectId: Types.ObjectId;
 
   @Prop({ required: true, maxlength: 50 })
-  subjectTag: string;
+  subjectName: string;
 
   @Prop({ default: 0, min: 0 })
   favoriteCount: number;

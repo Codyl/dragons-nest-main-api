@@ -30,6 +30,9 @@ export class Activity extends Document {
   })
   conceptId: Types.ObjectId;
 
+  @Prop({ required: true })
+  conceptName: string;
+
   @Prop({ required: true, enum: ['Easy', 'Medium', 'Hard'] })
   difficulty: string;
 

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { Activity } from 'src/activities/activity.entity';
 import { Concept } from './entities/concept.entity';
 import { CreateConceptDto } from './dto/create-concept.dto';
 
@@ -8,6 +9,7 @@ import { CreateConceptDto } from './dto/create-concept.dto';
 export class ConceptsService {
   constructor(
     @InjectModel(Concept.name) private readonly conceptModel: Model<Concept>,
+    @InjectModel(Activity.name) private readonly activityModel: Model<Activity>,
   ) {}
 
   async findBySubject(subjectId: string, grade?: string, userId?: string) {
@@ -37,5 +39,12 @@ export class ConceptsService {
       name: dto.name,
       createdBy: userId,
     });
+  }
+
+  async propagateConceptRename(conceptId: string, newName: string) {
+    await this.activityModel.updateMany(
+      { conceptId: new Types.ObjectId(conceptId) },
+      { $set: { conceptName: newName } },
+    );
   }
 }

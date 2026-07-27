@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Activity } from 'src/activities/activity.entity';
-import { Concept } from 'src/concepts/entities/concept.entity';
 import { Subject } from 'src/subjects/subject.entity';
 import { User } from 'src/users/entities/user.schema';
 import { DashboardResponse } from './dto/dashboard-response.dto';
@@ -18,13 +17,13 @@ import {
   computeLetterGrade,
   sortTestScores,
   type ConceptActivities,
+  type Difficulty,
 } from './dashboard.helpers';
 
 @Injectable()
 export class DashboardService {
   constructor(
     @InjectModel(Activity.name) private activityModel: Model<Activity>,
-    @InjectModel(Concept.name) private conceptModel: Model<Concept>,
     @InjectModel(Subject.name) private subjectModel: Model<Subject>,
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
@@ -60,7 +59,7 @@ export class DashboardService {
     const averageHoursPerDay = computeAverageHoursPerDay(activityFrequency);
 
     // Concept mastery & struggling (current month)
-    const conceptMap = await this.buildConceptMap(monthActivities);
+    const conceptMap = this.buildConceptMap(monthActivities);
     const conceptsMasteredCount = computeConceptMastery(conceptMap);
     const strugglingConcepts = computeStrugglingConcepts(conceptMap);
 
@@ -152,7 +151,6 @@ export class DashboardService {
         managedUserId,
         date: { $gte: monthStart, $lte: monthEnd },
       })
-      .populate('conceptId', 'name')
       .lean()
       .exec();
   }
@@ -181,20 +179,24 @@ export class DashboardService {
   }
 
   private buildConceptMap(
-    activities: any[],
+    activities: Pick<Activity, 'conceptId' | 'conceptName' | 'difficulty'>[],
   ): Map<string, ConceptActivities> {
     const map = new Map<string, ConceptActivities>();
 
     for (const a of activities) {
-      const conceptId = a.conceptId?._id?.toString() ?? a.conceptId?.toString();
+      const conceptId = a.conceptId?.toString();
       if (!conceptId) continue;
 
       if (!map.has(conceptId)) {
-        const conceptName = a.conceptId?.name ?? 'Unknown Concept';
-        map.set(conceptId, { conceptName, activities: [] });
+        map.set(conceptId, {
+          conceptName: a.conceptName ?? 'Unknown Concept',
+          activities: [],
+        });
       }
 
-      map.get(conceptId)!.activities.push({ difficulty: a.difficulty });
+      map.get(conceptId)!.activities.push({
+        difficulty: a.difficulty as Difficulty,
+      });
     }
 
     return map;

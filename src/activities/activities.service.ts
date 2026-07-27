@@ -7,6 +7,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Activity } from './activity.entity';
+import { Concept } from 'src/concepts/entities/concept.entity';
 
 const VALID_DIFFICULTIES = ['Easy', 'Medium', 'Hard'] as const;
 
@@ -24,23 +25,19 @@ export interface CreateActivityDto {
 export class ActivitiesService {
   constructor(
     @InjectModel(Activity.name) private activityModel: Model<Activity>,
+    @InjectModel(Concept.name) private conceptModel: Model<Concept>,
   ) {}
 
   async findBySubjectAndManagedUser(subjectId: string, managedUserId: string) {
     return this.activityModel
       .find({ subjectId, managedUserId })
       .sort({ date: -1 })
-      .populate('conceptId')
       .exec();
   }
 
   // ponytail: returns all activities for a managed user (used by compliance hours computation)
   async findByManagedUser(managedUserId: string) {
-    return this.activityModel
-      .find({ managedUserId })
-      .sort({ date: -1 })
-      .populate('conceptId')
-      .exec();
+    return this.activityModel.find({ managedUserId }).sort({ date: -1 }).exec();
   }
 
   async create(dto: CreateActivityDto, householdId: string) {
@@ -79,12 +76,18 @@ export class ActivitiesService {
       throw new BadRequestException('date must not be in the future');
     }
 
+    const concept = await this.conceptModel.findById(dto.conceptId);
+    if (!concept) {
+      throw new BadRequestException('Unable to find concept');
+    }
+
     return this.activityModel.create({
       subjectId: new Types.ObjectId(dto.subjectId),
       managedUserId: dto.managedUserId,
       householdId: new Types.ObjectId(householdId),
       date: activityDate,
       conceptId: new Types.ObjectId(dto.conceptId),
+      conceptName: concept.name,
       difficulty: dto.difficulty,
       timeSpentMinutes: dto.timeSpentMinutes,
       notes: dto.notes,

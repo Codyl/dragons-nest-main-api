@@ -17,5 +17,5 @@ export class CreateResourceDto {
   @IsString()
   @MinLength(1)
   @MaxLength(50)
-  subjectTag: string;
+  subjectName: string;
 }

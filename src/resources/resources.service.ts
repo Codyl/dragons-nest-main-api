@@ -10,7 +10,7 @@ export interface PaginatedResources {
     _id: string;
     title: string;
     description: string;
-    subjectTag: string;
+    subjectName: string;
     favoriteCount: number;
     isFavoritedByCurrentUser: boolean;
   }>;
@@ -69,7 +69,7 @@ export class ResourcesService {
       _id: r._id.toString(),
       title: r.title,
       description: r.description,
-      subjectTag: r.subjectTag,
+      subjectName: r.subjectName,
       favoriteCount: r.favoriteCount,
       isFavoritedByCurrentUser: favoritedIds.has(r._id.toString()),
     }));
@@ -82,7 +82,7 @@ export class ResourcesService {
       title: dto.title,
       description: dto.description,
       subjectId: new Types.ObjectId(dto.subjectId),
-      subjectTag: dto.subjectTag,
+      subjectName: dto.subjectName,
       createdBy: userId,
     });
   }
