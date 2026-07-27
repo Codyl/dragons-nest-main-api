@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { Favorite } from './favorite.entity';
 import { Resource } from 'src/resources/resource.entity';
 
@@ -19,22 +19,34 @@ export class FavoritesService {
     const resource = await this.resourceModel.exists({ _id: resourceOid });
     if (!resource) throw new NotFoundException('Resource not found');
 
+    const session = await mongoose.startSession();
     try {
-      await this.favoriteModel.create({
-        userId: new Types.ObjectId(userId),
-        resourceId: resourceOid,
+      await session.withTransaction(async () => {
+        try {
+          await this.favoriteModel.create({
+            userId: new Types.ObjectId(userId),
+            resourceId: resourceOid,
+          });
+        } catch (err: unknown) {
+          // ponytail: duplicate key (E11000) means already favorited — idempotent no-op
+          if (
+            err instanceof Error &&
+            'code' in err &&
+            (err as Error & { code: number }).code === 11000
+          )
+            return;
+
+          throw err;
+        }
+
+        await this.resourceModel.updateOne(
+          { _id: resourceOid },
+          { $inc: { favoriteCount: 1 } },
+        );
       });
-    } catch (err: any) {
-      // ponytail: duplicate key (E11000) means already favorited — idempotent no-op
-      if (err?.code === 11000) return;
-
-      throw err;
+    } finally {
+      await session.endSession();
     }
-
-    await this.resourceModel.updateOne(
-      { _id: resourceOid },
-      { $inc: { favoriteCount: 1 } },
-    );
   }
 
   async unfavorite(
