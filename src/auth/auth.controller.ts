@@ -102,6 +102,7 @@ export class AuthController {
   async initiateSignup(
     @Body() body: InitiateSignupDto,
   ): Promise<ApiResponseDto<InitiateSignupResponseDto>> {
+    // This could move to amplify
     const response = await this.authService.initiateSignup(
       body.email,
       body.password,
@@ -207,6 +208,7 @@ export class AuthController {
   async confirmSignupResendCode(
     @Body() body: ConfirmSignupResendCodeDto,
   ): Promise<ApiResponseDto<EmptyDataDto>> {
+    // This can be moved to amplify
     await this.authService.confirmSignupResendCode(body.username);
     return {
       message: 'Verification code resent successfully',
@@ -239,6 +241,7 @@ export class AuthController {
   })
   @Post('mfa')
   async mfa(@Body() body: MfaDto, @Res({ passthrough: true }) res: Response) {
+    // potentially remove
     const response = await this.authService.mfa(
       body.email,
       body.session,
@@ -293,6 +296,7 @@ export class AuthController {
     @Body() body: GenerateAuthenticatorSecretDto,
     @Cookies('ACCESS_TOKEN') cookieAccessToken: string,
   ): Promise<ApiResponseDto<GenerateAuthenticatorSecretResponseDto>> {
+    // potential replace with amplify
     const response = await this.authService.generateAuthenticatorSecret(
       body.username,
       body.session,

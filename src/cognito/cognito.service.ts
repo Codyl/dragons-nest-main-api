@@ -33,6 +33,7 @@ import {
   UpdateUserAttributesCommand,
   VerifySoftwareTokenCommand,
   InitiateAuthCommandOutput,
+  GetTokensFromRefreshTokenCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 import {
   BadRequestException,
@@ -400,12 +401,10 @@ export class CognitoService {
 
   async refreshToken(refreshToken: string) {
     try {
-      const command = new InitiateAuthCommand({
-        AuthFlow: AuthFlowType.REFRESH_TOKEN_AUTH,
-        ClientId: this.configService.get<string>(COGNITO_CLIENT_ID)!,
-        AuthParameters: {
-          REFRESH_TOKEN: refreshToken,
-        },
+      const clientId = this.configService.get<string>(COGNITO_CLIENT_ID)!;
+      const command = new GetTokensFromRefreshTokenCommand({
+        RefreshToken: refreshToken,
+        ClientId: clientId,
       });
 
       const response = await this.cognitoClient.send(command);

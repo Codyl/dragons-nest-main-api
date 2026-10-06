@@ -10,7 +10,7 @@
     "format": "prettier --write \"src/**/*.{ts,js}\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:test": "nest start --watch --env-file=.env.test.local",
-    "start:dev": "nest start --watch",
+    "start:dev": "nest start",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "openapi:types": "openapi-typescript http://localhost:8080/api-json -o ./openapi-types.generated.ts",
